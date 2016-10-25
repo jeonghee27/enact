@@ -1,3 +1,4 @@
+import ri from '@enact/ui/resolution';
 import {Scroller, ScrollerBase} from '@enact/moonstone/Scroller';
 import React from 'react';
 import {storiesOf} from '@kadira/storybook';
@@ -16,12 +17,12 @@ const prop = {
 const
 	style = {
 		scroller : {
-			height: '550px',
+			height: ri.scale(550) + 'px',
 			width: '100%'
 		},
 		content : {
-			height: '1000px',
-			width: '2000px'
+			height: ri.scale(1000) + 'px',
+			width: ri.scale(2000) + 'px'
 		}
 	};
 

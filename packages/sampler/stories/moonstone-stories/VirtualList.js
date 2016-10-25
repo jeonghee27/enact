@@ -46,13 +46,8 @@ for (let i = 0; i < 1000; i++) {
 	data.push('Item ' + ('00' + i).slice(-3));
 }
 
-const renderVerticalItem = ({index, key}) =>
-	<Item key={key} style={style.verticalItem}>
-		{data[index]}
-	</Item>;
-
-const renderHorizontalItem = ({index, key}) =>
-	<Item key={key} style={style.horizontalItem}>
+const renderItem = (direction) => ({index, key}) =>
+	<Item key={key} style={style[direction + 'Item']}>
 		{data[index]}
 	</Item>;
 
@@ -69,7 +64,7 @@ storiesOf('VirtualList')
 				itemSize={ri.scale(number('itemSize', 72))}
 				spacing={ri.scale(number('spacing', 0))}
 				style={style.listHeight}
-				component={renderVerticalItem}
+				component={renderItem('vertical')}
 			/>
 		)
 	)
@@ -83,7 +78,7 @@ storiesOf('VirtualList')
 				itemSize={ri.scale(number('itemSize', 270))}
 				spacing={ri.scale(number('spacing', 0))}
 				style={style.listHeight}
-				component={renderHorizontalItem}
+				component={renderItem('horizontal')}
 			/>
 		)
 	);
