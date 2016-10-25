@@ -741,6 +741,8 @@ class VirtualListCore extends Component {
 }
 
 const VirtualListBase = SpotlightContainerDecorator({restrict: 'self-first'}, Scrollable(VirtualListCore));
+VirtualListBase.propTypes = VirtualListCore.propTypes;
+VirtualListBase.defaultProps = VirtualListCore.defaultProps;
 
 export default VirtualListBase;
 export {VirtualListBase};

@@ -1,9 +1,17 @@
-import Scroller from '@enact/moonstone/Scroller';
+import {Scroller, ScrollerBase} from '@enact/moonstone/Scroller';
 import React from 'react';
 import {storiesOf} from '@kadira/storybook';
 import {withKnobs, select} from '@kadira/storybook-addon-knobs';
 
 Scroller.displayName = 'Scroller';
+Scroller.propTypes = Object.assign({}, ScrollerBase.propTypes);
+Scroller.defaultProps = Object.assign({}, ScrollerBase.defaultProps);
+
+// Set up some defaults for info and knobs
+const prop = {
+	horizontal: {'auto': 'auto', 'hidden': 'hidden', 'scroll': 'scroll'},
+	vertical: {'auto': 'auto', 'hidden': 'hidden', 'scroll': 'scroll'}
+};
 
 const
 	style = {
@@ -24,8 +32,8 @@ storiesOf('Scroller')
 		'Basic usage of Scroller',
 		() => (
 			<Scroller
-				horizontal={select('horizontal', ['auto', 'default', 'hidden', 'scroll'], '')}
-				vertical={select('vertical', ['auto', 'default', 'hidden', 'scroll'], '')}
+				horizontal={select('horizontal', prop.horizontal, 'auto')}
+				vertical={select('vertical', prop.vertical, 'auto')}
 				style={style.scroller}
 			>
 				<div style={style.content}>
