@@ -3,7 +3,7 @@ import Item from '@enact/moonstone/Item';
 import VirtualList from '@enact/moonstone/VirtualList';
 import VirtualListBase from '@enact/moonstone/VirtualList/VirtualListBase';
 import React from 'react';
-import {storiesOf} from '@kadira/storybook';
+import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, number} from '@kadira/storybook-addon-knobs';
 
 VirtualList.displayName = 'VirtualList';
@@ -12,7 +12,7 @@ VirtualList.defaultProps = Object.assign({}, VirtualListBase.defaultProps);
 
 const
 	style = {
-		verticalItem : {
+		verticalItem: {
 			position: 'absolute',
 			width: '100%',
 			height: ri.scale(72) + 'px',
@@ -24,7 +24,7 @@ const
 			lineHeight: ri.scale(70) + 'px',
 			textAlign: 'center'
 		},
-		horizontalItem : {
+		horizontalItem: {
 			position: 'absolute',
 			hieght: ri.scale(550) + 'px',
 			width: ri.scale(270) + 'px',
@@ -36,20 +36,20 @@ const
 			lineHeight: ri.scale(550) + 'px',
 			textAlign: 'center'
 		},
-		listHeight : {
+		listHeight: {
 			height: ri.scale(550) + 'px'
 		}
 	},
-	data = [];
+	data = [],
+	renderItem = (direction) => ({index, key}) => (
+		<Item key={key} style={style[direction + 'Item']}>
+			{data[index]}
+		</Item>
+	);
 
 for (let i = 0; i < 1000; i++) {
 	data.push('Item ' + ('00' + i).slice(-3));
 }
-
-const renderItem = (direction) => ({index, key}) =>
-	<Item key={key} style={style[direction + 'Item']}>
-		{data[index]}
-	</Item>;
 
 storiesOf('VirtualList')
 	.addDecorator(withKnobs)
@@ -58,6 +58,11 @@ storiesOf('VirtualList')
 		'Basic usage of VirtualList',
 		() => (
 			<VirtualList
+				/* To see action logger, enable commented code
+				onScroll={action('onScroll')}
+				onScrollStart={action('onScrollStart')}
+				onScrollStop={action('onScrollStop')}
+				*/
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction='vertical'
@@ -72,6 +77,11 @@ storiesOf('VirtualList')
 		'with horizontal direction',
 		() => (
 			<VirtualList
+				/* To see action logger, enable commented code
+				onScroll={action('onScroll')}
+				onScrollStart={action('onScrollStart')}
+				onScrollStop={action('onScrollStop')}
+				*/
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction='horizontal'
