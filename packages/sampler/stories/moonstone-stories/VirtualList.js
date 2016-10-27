@@ -6,7 +6,6 @@ import React from 'react';
 import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, number} from '@kadira/storybook-addon-knobs';
 
-VirtualList.displayName = 'VirtualList';
 VirtualList.propTypes = Object.assign({}, VirtualListBase.propTypes);
 VirtualList.defaultProps = Object.assign({}, VirtualListBase.defaultProps);
 
@@ -59,7 +58,6 @@ storiesOf('VirtualList')
 		() => (
 			<VirtualList
 				/* To see action logger, enable commented code
-				onScroll={action('onScroll')}
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
 				*/
@@ -78,7 +76,6 @@ storiesOf('VirtualList')
 		() => (
 			<VirtualList
 				/* To see action logger, enable commented code
-				onScroll={action('onScroll')}
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
 				*/

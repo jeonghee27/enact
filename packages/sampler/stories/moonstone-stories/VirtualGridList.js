@@ -1,6 +1,6 @@
 import ri from '@enact/ui/resolution';
 import {VirtualGridList} from '@enact/moonstone/VirtualList';
-import VirtualListBase from '@enact/moonstone/VirtualList/VirtualListBase';
+import {VirtualListCore} from '@enact/moonstone/VirtualList/VirtualListBase';
 import GridListImageItem from '@enact/moonstone/VirtualList/GridListImageItem';
 import React from 'react';
 import {storiesOf, action} from '@kadira/storybook';
@@ -8,9 +8,8 @@ import {withKnobs, number, select} from '@kadira/storybook-addon-knobs';
 
 import defaultImage from '../../images/placeholder.png';
 
-VirtualGridList.displayName = 'VirtualGridList';
-VirtualGridList.propTypes = Object.assign({}, VirtualListBase.propTypes);
-VirtualGridList.defaultProps = Object.assign({}, VirtualListBase.defaultProps);
+VirtualGridList.propTypes = Object.assign({}, VirtualListCore.propTypes);
+VirtualGridList.defaultProps = Object.assign({}, VirtualListCore.defaultProps);
 
 const
 	// Set up some defaults for info and knobs
@@ -57,7 +56,6 @@ storiesOf('VirtualGridList')
 		() => (
 			<VirtualGridList
 				/* To see action logger, enable commented code
-				onScroll={action('onScroll')}
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
 				*/

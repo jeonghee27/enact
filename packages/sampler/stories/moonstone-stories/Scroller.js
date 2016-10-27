@@ -33,7 +33,6 @@ storiesOf('Scroller')
 		() => (
 			<Scroller
 				/* To see action logger, enable commented code
-				onScroll={action('onScroll')}
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
 				*/
