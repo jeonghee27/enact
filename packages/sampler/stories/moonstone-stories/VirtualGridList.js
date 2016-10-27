@@ -6,8 +6,6 @@ import React from 'react';
 import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, number, select} from '@kadira/storybook-addon-knobs';
 
-import defaultImage from '../../images/placeholder.png';
-
 VirtualGridList.propTypes = Object.assign({}, VirtualListCore.propTypes);
 VirtualGridList.defaultProps = Object.assign({}, VirtualListCore.defaultProps);
 
@@ -33,6 +31,7 @@ const
 		}
 	},
 	data = [],
+	defaultImage = 'http://placehold.it/193x150/',
 	renderItem = ({index, key}) => (
 		<GridListImageItem
 			caption={data[index].text}
