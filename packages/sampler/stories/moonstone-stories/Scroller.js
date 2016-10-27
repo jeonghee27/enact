@@ -35,10 +35,8 @@ storiesOf('Scroller')
 		'Basic usage of Scroller',
 		() => (
 			<Scroller
-				/* To see action logger, enable commented code
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
-				*/
 				horizontal={select('horizontal', prop.horizontal, 'auto')}
 				vertical={select('vertical', prop.vertical, 'auto')}
 				hideScrollbars={boolean('hideScrollbars', false)}

@@ -702,7 +702,7 @@ class VirtualListCore extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
-		delete props.hasThumb;
+		delete props.hideScrollbars;
 		delete props.itemSize;
 		delete props.onScroll;
 		delete props.onScrolling;

@@ -57,8 +57,6 @@ storiesOf('VirtualList')
 		'Basic usage of VirtualList',
 		() => (
 			<VirtualList
-				/* To see action logger, enable commented code
-				*/
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
 				data={data}
@@ -76,10 +74,8 @@ storiesOf('VirtualList')
 		'with horizontal direction',
 		() => (
 			<VirtualList
-				/* To see action logger, enable commented code
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
-				*/
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction='horizontal'

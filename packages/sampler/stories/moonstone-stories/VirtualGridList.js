@@ -54,10 +54,8 @@ storiesOf('VirtualGridList')
 		'Basic usage of VirtualGridList',
 		() => (
 			<VirtualGridList
-				/* To see action logger, enable commented code
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
-				*/
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction={select('direction', prop.direction, 'vertical')}
