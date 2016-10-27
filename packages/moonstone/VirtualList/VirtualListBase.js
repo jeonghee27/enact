@@ -185,7 +185,11 @@ class VirtualListCore extends Component {
 
 		super(props);
 
-		this.state = {firstIndex: 0, numOfItems: 0};
+		this.state = {
+			firstIndex: 0,
+			firstIndexForItems: [],
+			numOfItems: 0
+		};
 		this.initContainerRef = this.initRef('containerRef');
 		this.initWrapperRef = this.initRef('wrapperRef');
 
@@ -205,9 +209,9 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	isVertical = () => this.isPrimaryDirectionVertical
+	isVertical = () => true // this.isPrimaryDirectionVertical
 
-	isHorizontal = () => !this.isPrimaryDirectionVertical
+	isHorizontal = () => true // !this.isPrimaryDirectionVertical
 
 	getScrollBounds = () => this.scrollBounds
 
@@ -333,7 +337,9 @@ class VirtualListCore extends Component {
 
 		scrollBounds.clientWidth = clientWidth;
 		scrollBounds.clientHeight = clientHeight;
-		scrollBounds.scrollWidth = this.getScrollWidth();
+		// scrollBounds.scrollWidth = this.getScrollWidth();
+		// scrollBounds.scrollHeight = this.getScrollHeight();
+		scrollBounds.scrollWidth = this.props.numOfPages * clientWidth;
 		scrollBounds.scrollHeight = this.getScrollHeight();
 		scrollBounds.maxLeft = Math.max(0, scrollBounds.scrollWidth - clientWidth);
 		scrollBounds.maxTop = Math.max(0, scrollBounds.scrollHeight - clientHeight);
@@ -373,7 +379,9 @@ class VirtualListCore extends Component {
 		let
 			delta, numOfGridLines, newFirstIndex = firstIndex, pos, dir = 0;
 
-		if (isPrimaryDirectionVertical) {
+		if (this.props.both) {
+			dir = undefined;
+		} else if (isPrimaryDirectionVertical) {
 			pos = y;
 			dir = dirY;
 		} else {
@@ -381,7 +389,45 @@ class VirtualListCore extends Component {
 			dir = dirX;
 		}
 
-		if (dir === 1 && pos > threshold.max) {
+		if (dir === undefined) {
+			pos = y;
+			dir = dirY;
+
+			if (dir === 1 && pos > threshold.max) {
+				delta = pos - threshold.max;
+				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
+				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
+				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
+				newFirstIndex = Math.min(maxFirstIndex, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
+			} else if (dir === -1 && pos < threshold.min) {
+				delta = threshold.min - pos;
+				numOfGridLines = Math.ceil(delta / gridSize);
+				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
+				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
+				newFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+			}
+
+			pos = x;
+			dir = dirX;
+
+			/*
+			if (dir === 1 && pos > threshold.max) {
+				delta = pos - threshold.max;
+				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
+				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
+				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
+				newFirstIndex = Math.min(maxFirstIndex, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
+			} else if (dir === -1 && pos < threshold.min) {
+				delta = threshold.min - pos;
+				numOfGridLines = Math.ceil(delta / gridSize);
+				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
+				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
+				newFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+			}
+			*/
+
+			pos = {x: x, y: y};
+		} else if (dir === 1 && pos > threshold.max) {
 			delta = pos - threshold.max;
 			numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
 			threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
@@ -474,21 +520,31 @@ class VirtualListCore extends Component {
 			{primaryPosition, secondaryPosition} = this.getGridPosition(updateFrom),
 			width, height;
 
-		primaryPosition -= (positioningOption === 'byItem') ? scrollPosition : 0;
-		width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
-		height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
-
+		if (scrollPosition instanceof Object) {
+			primaryPosition -= (positioningOption === 'byItem') ? scrollPosition.y : 0;
+			secondaryPosition -= (positioningOption === 'byItem') ? scrollPosition.x : 0;
+			width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
+			height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
+		} else {
+			primaryPosition -= (positioningOption === 'byItem') ? scrollPosition : 0;
+			width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
+			height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
+		}
 		// positioning items
 		for (let i = updateFrom, j = updateFrom % dimensionToExtent; i < updateTo; i++) {
 
 			applyStyle(i, width, height, primaryPosition, secondaryPosition);
 
-			if (++j === dimensionToExtent) {
-				secondaryPosition = 0;
+			if (scrollPosition instanceof Object) {
 				primaryPosition += primary.gridSize;
-				j = 0;
 			} else {
-				secondaryPosition += secondary.gridSize;
+				if (++j === dimensionToExtent) {
+					secondaryPosition = 0;
+					primaryPosition += primary.gridSize;
+					j = 0;
+				} else {
+					secondaryPosition += secondary.gridSize;
+				}
 			}
 		}
 	}
