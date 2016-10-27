@@ -1,13 +1,13 @@
 import ri from '@enact/ui/resolution';
 import Item from '@enact/moonstone/Item';
 import VirtualList from '@enact/moonstone/VirtualList';
-import VirtualListBase from '@enact/moonstone/VirtualList/VirtualListBase';
+import {VirtualListCore} from '@enact/moonstone/VirtualList/VirtualListBase';
 import React from 'react';
 import {storiesOf, action} from '@kadira/storybook';
-import {withKnobs, number} from '@kadira/storybook-addon-knobs';
+import {withKnobs, boolean, number} from '@kadira/storybook-addon-knobs';
 
-VirtualList.propTypes = Object.assign({}, VirtualListBase.propTypes);
-VirtualList.defaultProps = Object.assign({}, VirtualListBase.defaultProps);
+VirtualList.propTypes = Object.assign({}, VirtualListCore.propTypes);
+VirtualList.defaultProps = Object.assign({}, VirtualListCore.defaultProps);
 
 const
 	style = {
@@ -58,12 +58,13 @@ storiesOf('VirtualList')
 		() => (
 			<VirtualList
 				/* To see action logger, enable commented code
+				*/
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
-				*/
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction='vertical'
+				hideScrollbars={boolean('hideScrollbars', false)}
 				itemSize={ri.scale(number('itemSize', 72))}
 				spacing={ri.scale(number('spacing', 0))}
 				style={style.listHeight}
@@ -82,6 +83,7 @@ storiesOf('VirtualList')
 				data={data}
 				dataSize={number('dataSize', data.length)}
 				direction='horizontal'
+				hideScrollbars={boolean('hideScrollbars', false)}
 				itemSize={ri.scale(number('itemSize', 270))}
 				spacing={ri.scale(number('spacing', 0))}
 				style={style.listHeight}
