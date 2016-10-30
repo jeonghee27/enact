@@ -165,7 +165,7 @@ class VirtualListCore extends Component {
 
 	dimensionToExtent = 0
 	threshold = 0
-	maxFirstIndex = 0
+	maxPrimaryFirstIndex = 0
 	curDataSize = 0
 	cc = []
 	scrollPosition = 0
@@ -186,8 +186,8 @@ class VirtualListCore extends Component {
 		super(props);
 
 		this.state = {
-			firstIndex: 0,
-			firstIndexForItems: [],
+			primaryFirstIndex: 0,
+			secondaryFirstIndexes: [],
 			numOfItems: 0
 		};
 		this.initContainerRef = this.initRef('containerRef');
@@ -305,7 +305,7 @@ class VirtualListCore extends Component {
 		// reset
 		this.scrollPosition = 0;
 		// eslint-disable-next-line react/no-direct-mutation-state
-		this.state.firstIndex = 0;
+		this.state.primaryFirstIndex = 0;
 		// eslint-disable-next-line react/no-direct-mutation-state
 		this.state.numOfItems = 0;
 	}
@@ -316,10 +316,10 @@ class VirtualListCore extends Component {
 			{dimensionToExtent, primary} = this,
 			numOfItems = Math.min(dataSize, dimensionToExtent * (Math.ceil(primary.clientSize / primary.gridSize) + overhang));
 
-		this.maxFirstIndex = dataSize - numOfItems;
+		this.maxPrimaryFirstIndex = dataSize - numOfItems;
 		this.curDataSize = dataSize;
 
-		this.setState({firstIndex: Math.min(this.state.firstIndex, this.maxFirstIndex), numOfItems});
+		this.setState({primaryFirstIndex: Math.min(this.state.primaryFirstIndex, this.maxPrimaryFirstIndex), numOfItems});
 		this.calculateScrollBounds(props);
 	}
 
@@ -337,10 +337,13 @@ class VirtualListCore extends Component {
 
 		scrollBounds.clientWidth = clientWidth;
 		scrollBounds.clientHeight = clientHeight;
-		// scrollBounds.scrollWidth = this.getScrollWidth();
-		// scrollBounds.scrollHeight = this.getScrollHeight();
-		scrollBounds.scrollWidth = this.props.numOfPages * clientWidth;
-		scrollBounds.scrollHeight = this.getScrollHeight();
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			scrollBounds.scrollWidth = this.props.clientSize.width;
+			scrollBounds.scrollHeight = this.getScrollHeight();
+		} else {
+			scrollBounds.scrollWidth = this.getScrollWidth();
+			scrollBounds.scrollHeight = this.getScrollHeight();
+		}
 		scrollBounds.maxLeft = Math.max(0, scrollBounds.scrollWidth - clientWidth);
 		scrollBounds.maxTop = Math.max(0, scrollBounds.scrollHeight - clientHeight);
 
@@ -370,16 +373,17 @@ class VirtualListCore extends Component {
 
 	setScrollPosition (x, y, dirX, dirY, skipPositionContainer = false) {
 		const
-			{firstIndex} = this.state,
-			{isPrimaryDirectionVertical, threshold, dimensionToExtent, maxFirstIndex, scrollBounds} = this,
+			{directionOption} = this.props,
+			{primaryFirstIndex} = this.state,
+			{isPrimaryDirectionVertical, threshold, dimensionToExtent, maxPrimaryFirstIndex, scrollBounds} = this,
 			{gridSize} = this.primary,
 			maxPos = isPrimaryDirectionVertical ? scrollBounds.maxTop : scrollBounds.maxLeft,
 			minOfMax = threshold.base,
 			maxOfMin = maxPos - minOfMax;
 		let
-			delta, numOfGridLines, newFirstIndex = firstIndex, pos, dir = 0;
+			delta, numOfGridLines, newPrimaryFirstIndex = primaryFirstIndex, pos, dir = 0;
 
-		if (this.props.both) {
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			dir = undefined;
 		} else if (isPrimaryDirectionVertical) {
 			pos = y;
@@ -398,13 +402,13 @@ class VirtualListCore extends Component {
 				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
 				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
 				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
-				newFirstIndex = Math.min(maxFirstIndex, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
+				newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
 			} else if (dir === -1 && pos < threshold.min) {
 				delta = threshold.min - pos;
 				numOfGridLines = Math.ceil(delta / gridSize);
 				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
 				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
-				newFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+				newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 			}
 
 			pos = x;
@@ -416,13 +420,13 @@ class VirtualListCore extends Component {
 				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
 				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
 				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
-				newFirstIndex = Math.min(maxFirstIndex, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
+				newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
 			} else if (dir === -1 && pos < threshold.min) {
 				delta = threshold.min - pos;
 				numOfGridLines = Math.ceil(delta / gridSize);
 				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
 				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
-				newFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+				newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 			}
 			*/
 
@@ -432,13 +436,13 @@ class VirtualListCore extends Component {
 			numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
 			threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
 			threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
-			newFirstIndex = Math.min(maxFirstIndex, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
+			newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
 		} else if (dir === -1 && pos < threshold.min) {
 			delta = threshold.min - pos;
 			numOfGridLines = Math.ceil(delta / gridSize);
 			threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
 			threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
-			newFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(firstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+			newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 		}
 
 		this.syncThreshold(maxPos);
@@ -448,28 +452,32 @@ class VirtualListCore extends Component {
 			this.positionContainer();
 		}
 
-		if (firstIndex !== newFirstIndex) {
-			this.setState({firstIndex: newFirstIndex});
+		if (primaryFirstIndex !== newPrimaryFirstIndex) {
+			this.setState({primaryFirstIndex: newPrimaryFirstIndex});
 		} else {
-			this.positionItems(this.applyStyleToExistingNode, this.determineUpdatedNeededIndices(firstIndex));
+			if (directionOption === 'verticalFixedHorizontalVariable') {
+				this.positionItems(this.applyStyleToExistingNodes, this.determineUpdatedNeededIndices(primaryFirstIndex));
+			} else {
+				this.positionItems(this.applyStyleToExistingNode, this.determineUpdatedNeededIndices(primaryFirstIndex));
+			}
 		}
 	}
 
-	determineUpdatedNeededIndices (oldFirstIndex) {
+	determineUpdatedNeededIndices (oldPrimaryFirstIndex) {
 		const
 			{positioningOption} = this.props,
-			{firstIndex, numOfItems} = this.state;
+			{primaryFirstIndex, numOfItems} = this.state;
 
 		if (positioningOption === 'byItem') {
 			return {
-				updateFrom: firstIndex,
-				updateTo: firstIndex + numOfItems
+				updateFrom: primaryFirstIndex,
+				updateTo: primaryFirstIndex + numOfItems
 			};
 		} else {
-			let diff = firstIndex - oldFirstIndex;
+			let diff = primaryFirstIndex - oldPrimaryFirstIndex;
 			return {
-				updateFrom: (0 < diff && diff < numOfItems ) ? oldFirstIndex + numOfItems : firstIndex,
-				updateTo: (-numOfItems < diff && diff <= 0 ) ? oldFirstIndex : firstIndex + numOfItems
+				updateFrom: (0 < diff && diff < numOfItems ) ? oldPrimaryFirstIndex + numOfItems : primaryFirstIndex,
+				updateTo: (-numOfItems < diff && diff <= 0 ) ? oldPrimaryFirstIndex : primaryFirstIndex + numOfItems
 			};
 		}
 	}
@@ -510,9 +518,58 @@ class VirtualListCore extends Component {
 		);
 	}
 
+	applyStyleToExistingNodes = (i, primaryPosition, secondaryPosition) => {
+		for (let j = 0; j < 3; j++) {
+			const
+				{numOfItems} = this.state,
+				{width, height} = this.props.component,
+				key = (i % numOfItems) * 3 + j,
+				node = this.containerRef.children[key];
+
+			if (node) {
+				// spotlight
+				node.setAttribute(dataIndexAttribute, i);
+				/*
+				if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
+					node.blur();
+					this.nodeIndexToBeBlurred = null;
+				}
+				*/
+				this.composeStyle(node.style, primaryPosition, secondaryPosition, width, height);
+
+				secondaryPosition += width;
+			}
+		}
+	}
+
+	applyStyleToNewNodes = (i, primaryPosition, secondaryPosition) => {
+		for (let j = 0; j < 3; j++) {
+			const
+				{width, height, render} = this.props.component,
+				{numOfItems} = this.state,
+				key = (i % numOfItems) * 3 + j,
+				itemElement = render({
+					index: {primaryIndex: i, secondaryIndex: j},
+					key: key
+				}),
+				style = {};
+
+			this.composeStyle(style, primaryPosition, secondaryPosition, width, height);
+
+			this.cc[key] = React.cloneElement(
+				itemElement, {
+					style: {...itemElement.props.style, ...style},
+					[dataIndexAttribute]: key
+				}
+			);
+
+			secondaryPosition += width;
+		}
+	}
+
 	positionItems (applyStyle, {updateFrom, updateTo}) {
 		const
-			{positioningOption} = this.props,
+			{positioningOption, directionOption} = this.props,
 			{isPrimaryDirectionVertical, dimensionToExtent, primary, secondary, scrollPosition} = this;
 
 		// we only calculate position of the first child
@@ -533,7 +590,7 @@ class VirtualListCore extends Component {
 		// positioning items
 		for (let i = updateFrom, j = updateFrom % dimensionToExtent; i < updateTo; i++) {
 
-			applyStyle(i, width, height, primaryPosition, secondaryPosition);
+			applyStyle(i, primaryPosition, secondaryPosition, width, height);
 
 			if (scrollPosition instanceof Object) {
 				primaryPosition += primary.gridSize;
@@ -549,12 +606,12 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	composeStyle (style, w, h, ...rest) {
-		if (this.isItemSized) {
-			style.width = w;
-			style.height = h;
+	composeStyle (style, primary, secondary, width, height) {
+		if (this.isItemSized || this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			style.width = width;
+			style.height = height;
 		}
-		this.composeItemPosition(style, ...rest);
+		this.composeItemPosition(style, primary, secondary);
 	}
 
 	getXY = (primary, secondary) => ((this.isPrimaryDirectionVertical) ? {x: secondary, y: primary} : {x: primary, y: secondary})
@@ -738,12 +795,16 @@ class VirtualListCore extends Component {
 
 	renderCalculate () {
 		const
-			{dataSize} = this.props,
-			{firstIndex, numOfItems} = this.state,
-			max = Math.min(dataSize, firstIndex + numOfItems);
+			{dataSize, directionOption} = this.props,
+			{primaryFirstIndex, numOfItems} = this.state,
+			max = Math.min(dataSize, primaryFirstIndex + numOfItems);
 
 		this.cc.length = 0;
-		this.positionItems(this.applyStyleToNewNode, {updateFrom: firstIndex, updateTo: max});
+		if (directionOption === 'verticalFixedHorizontalVariable') {
+			this.positionItems(this.applyStyleToNewNodes, {updateFrom: primaryFirstIndex, updateTo: max});
+		} else {
+			this.positionItems(this.applyStyleToNewNode, {updateFrom: primaryFirstIndex, updateTo: max});
+		}
 		this.positionContainer();
 	}
 
