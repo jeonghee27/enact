@@ -17,6 +17,7 @@ const
 	keyUp	 = 38,
 	keyRight = 39,
 	keyDown	 = 40,
+	maxNumOfVariableWidthItems = 50,
 	nop = () => {};
 
 /**
@@ -165,7 +166,9 @@ class VirtualListCore extends Component {
 
 	dimensionToExtent = 0
 	primaryThreshold = 0
+	secondaryThreshold = []
 	maxPrimaryFirstIndex = 0
+	secondaryAccumulatedFirstIndexes = []
 	curDataSize = 0
 	cc = []
 	scrollPosition = 0
@@ -188,6 +191,7 @@ class VirtualListCore extends Component {
 		this.state = {
 			primaryFirstIndex: 0,
 			secondaryFirstIndexes: [],
+			secondaryLastIndexes: [],
 			numOfItems: 0
 		};
 		this.initContainerRef = this.initRef('containerRef');
@@ -308,6 +312,60 @@ class VirtualListCore extends Component {
 		this.state.primaryFirstIndex = 0;
 		// eslint-disable-next-line react/no-direct-mutation-state
 		this.state.numOfItems = 0;
+
+		this.initSecondaryThreshold(0);
+	}
+
+	// variable secondaryThreshold
+	initSecondaryThreshold (updateFrom) {
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			const
+				{component, data, dataSize, directionOption, overhang} = this.props,
+				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang)),
+				{getWidth, render} = component;
+
+			let accumulatedIndex = 0;
+
+			this.secondaryThreshold.prev = Array(numOfItems);
+			this.secondaryThreshold.next = Array(numOfItems);
+
+			for (let i = updateFrom; i < updateFrom + numOfItems; i++) {
+				let
+					size = 0,
+					width;
+
+				this.secondaryAccumulatedFirstIndexes[i] = accumulatedIndex;
+
+				for (let j = 0; j < data[i].length; j++) {
+					width = getWidth({primaryIndex: i, secondaryIndex: j});
+					if (size + width > this.secondary.clientSize) {
+						this.state.secondaryLastIndexes[i] = j + 1;
+						accumulatedIndex += (j + 1);
+						break;
+					}
+					size += width;
+				}
+
+				this.secondaryThreshold.prev[i] = {
+					min: 0,
+					max: getWidth({primaryIndex: i, secondaryIndex: 0}),
+					base: this.secondary.clientSize // TBD
+				};
+				this.secondaryThreshold.next[i] = {
+					min: size,
+					max: size + width,
+					base: this.secondary.clientSize // TBD
+				};
+
+				this.state.secondaryFirstIndexes[i] = 0;
+
+				/*console.log('####################################');
+				console.log(this.state.secondaryLastIndexes[i]);
+				console.log(this.secondaryAccumulatedFirstIndexes[i]);
+				console.log(this.secondaryThreshold.prev[i].min, this.secondaryThreshold.prev[i].max);
+				console.log(this.secondaryThreshold.next[i].min, this.secondaryThreshold.next[i].max);*/
+			}
+		}
 	}
 
 	updateStatesAndBounds (props) {
@@ -393,7 +451,7 @@ class VirtualListCore extends Component {
 			dir = dirX;
 		}
 
-		if (dir === undefined) {
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			pos = y;
 			dir = dirY;
 
@@ -453,6 +511,7 @@ class VirtualListCore extends Component {
 		}
 
 		if (primaryFirstIndex !== newPrimaryFirstIndex) {
+			this.initSecondaryThreshold(newPrimaryFirstIndex);
 			this.setState({primaryFirstIndex: newPrimaryFirstIndex});
 		} else {
 			if (directionOption === 'verticalFixedHorizontalVariable') {
@@ -519,11 +578,10 @@ class VirtualListCore extends Component {
 	}
 
 	applyStyleToExistingNodes = (i, primaryPosition, secondaryPosition) => {
-		for (let j = 0; j < 50; j++) {
-			const
+		for (let j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {			const
 				{numOfItems} = this.state,
 				{getWidth} = this.props.component,
-				key = (i % numOfItems) * 50 + j,
+				key = this.secondaryAccumulatedFirstIndexes[i] + j,
 				width = getWidth({primaryIndex: i, secondaryIndex: j}),
 				node = this.containerRef.children[key];
 
@@ -544,11 +602,11 @@ class VirtualListCore extends Component {
 	}
 
 	applyStyleToNewNodes = (i, primaryPosition, secondaryPosition) => {
-		for (let j = 0; j < 50; j++) {
+		for (let j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {
 			const
 				{getWidth, render} = this.props.component,
 				{numOfItems} = this.state,
-				key = (i % numOfItems) * 50 + j,
+				key = this.secondaryAccumulatedFirstIndexes[i] + j,
 				width = getWidth({primaryIndex: i, secondaryIndex: j}),
 				itemElement = render({
 					index: {primaryIndex: i, secondaryIndex: j},
