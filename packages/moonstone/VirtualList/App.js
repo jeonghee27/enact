@@ -25,23 +25,26 @@ const
 
 let data = [];
 
+function getRandomWidth() {
+    return Math.random() * 2000 / 10;
+}
+
 for (let i = 0; i < 10; i++) {
 	data[i] = [];
 	for(let j = 0; j < 1000; j++) {
-		data[i][j] = {title: ('00' + i).slice(-3) + ' - ' + language[j % 10]};
+		data[i][j] = {
+			width: getRandomWidth(),
+			title: ('00' + j).slice(-3) + ' - ' + language[i % 10]
+		};
 	}
 }
 
 const VirtualLists = kind({
 	computed: {
 		renderItem: () => ({
-			width: 200,
-			height: 50,
+			getWidth: (index) => data[index.primaryIndex][index.secondaryIndex].width,
 			render: ({index, key}) => (
-				<div key={key} className={css.div} style={{
-					position: 'absolute',
-					overflow: 'hidden'
-				}}>
+				<div key={key} className={css.item}>
 					{data[index.primaryIndex][index.secondaryIndex].title}
 				</div>
 			)
@@ -54,7 +57,7 @@ const VirtualLists = kind({
 				<VirtualList
 					data={data}
 					dataSize={data.length}
-					itemSize={50}
+					itemSize={70}
 					spacing={0}
 
 					clientSize={{

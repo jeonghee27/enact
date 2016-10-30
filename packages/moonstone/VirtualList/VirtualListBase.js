@@ -519,11 +519,12 @@ class VirtualListCore extends Component {
 	}
 
 	applyStyleToExistingNodes = (i, primaryPosition, secondaryPosition) => {
-		for (let j = 0; j < 3; j++) {
+		for (let j = 0; j < 50; j++) {
 			const
 				{numOfItems} = this.state,
-				{width, height} = this.props.component,
-				key = (i % numOfItems) * 3 + j,
+				{getWidth} = this.props.component,
+				key = (i % numOfItems) * 50 + j,
+				width = getWidth({primaryIndex: i, secondaryIndex: j}),
 				node = this.containerRef.children[key];
 
 			if (node) {
@@ -535,7 +536,7 @@ class VirtualListCore extends Component {
 					this.nodeIndexToBeBlurred = null;
 				}
 				*/
-				this.composeStyle(node.style, primaryPosition, secondaryPosition, width, height);
+				this.composeStyle(node.style, primaryPosition, secondaryPosition, width, this.props.itemSize);
 
 				secondaryPosition += width;
 			}
@@ -543,18 +544,19 @@ class VirtualListCore extends Component {
 	}
 
 	applyStyleToNewNodes = (i, primaryPosition, secondaryPosition) => {
-		for (let j = 0; j < 3; j++) {
+		for (let j = 0; j < 50; j++) {
 			const
-				{width, height, render} = this.props.component,
+				{getWidth, render} = this.props.component,
 				{numOfItems} = this.state,
-				key = (i % numOfItems) * 3 + j,
+				key = (i % numOfItems) * 50 + j,
+				width = getWidth({primaryIndex: i, secondaryIndex: j}),
 				itemElement = render({
 					index: {primaryIndex: i, secondaryIndex: j},
 					key: key
 				}),
 				style = {};
 
-			this.composeStyle(style, primaryPosition, secondaryPosition, width, height);
+			this.composeStyle(style, primaryPosition, secondaryPosition, width, this.props.itemSize);
 
 			this.cc[key] = React.cloneElement(
 				itemElement, {
