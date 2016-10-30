@@ -164,7 +164,7 @@ class VirtualListCore extends Component {
 	isItemSized = false
 
 	dimensionToExtent = 0
-	threshold = 0
+	primaryThreshold = 0
 	maxPrimaryFirstIndex = 0
 	curDataSize = 0
 	cc = []
@@ -266,7 +266,7 @@ class VirtualListCore extends Component {
 				itemSize: itemSize
 			};
 		let
-			primary, secondary, dimensionToExtent, thresholdBase;
+			primary, secondary, dimensionToExtent, primaryThresholdBase;
 
 		this.isPrimaryDirectionVertical = (direction === 'vertical');
 
@@ -294,9 +294,9 @@ class VirtualListCore extends Component {
 
 		primary.gridSize = primary.itemSize + spacing;
 		secondary.gridSize = secondary.itemSize + spacing;
-		thresholdBase = primary.gridSize * 2;
+		primaryThresholdBase = primary.gridSize * 2;
 
-		this.threshold = {min: -Infinity, max: thresholdBase, base: thresholdBase};
+		this.primaryThreshold = {min: -Infinity, max: primaryThresholdBase, base: primaryThresholdBase};
 		this.dimensionToExtent = dimensionToExtent;
 
 		this.primary = primary;
@@ -350,23 +350,23 @@ class VirtualListCore extends Component {
 		// correct position
 		maxPos = isPrimaryDirectionVertical ? scrollBounds.maxTop : scrollBounds.maxLeft;
 
-		this.syncThreshold(maxPos);
+		this.syncPrimaryThreshold(maxPos);
 
 		if (this.scrollPosition > maxPos) {
 			this.props.cbScrollTo({position: (isPrimaryDirectionVertical) ? {y: maxPos} : {x: maxPos}});
 		}
 	}
 
-	syncThreshold (maxPos) {
-		const {threshold} = this;
+	syncPrimaryThreshold (maxPos) {
+		const {primaryThreshold} = this;
 
-		if (threshold.max > maxPos) {
-			if (maxPos < threshold.base) {
-				threshold.max = threshold.base;
-				threshold.min = -Infinity;
+		if (primaryThreshold.max > maxPos) {
+			if (maxPos < primaryThreshold.base) {
+				primaryThreshold.max = primaryThreshold.base;
+				primaryThreshold.min = -Infinity;
 			} else {
-				threshold.max = maxPos;
-				threshold.min = maxPos - threshold.base;
+				primaryThreshold.max = maxPos;
+				primaryThreshold.min = maxPos - primaryThreshold.base;
 			}
 		}
 	}
@@ -375,10 +375,10 @@ class VirtualListCore extends Component {
 		const
 			{directionOption} = this.props,
 			{primaryFirstIndex} = this.state,
-			{isPrimaryDirectionVertical, threshold, dimensionToExtent, maxPrimaryFirstIndex, scrollBounds} = this,
+			{isPrimaryDirectionVertical, primaryThreshold, dimensionToExtent, maxPrimaryFirstIndex, scrollBounds} = this,
 			{gridSize} = this.primary,
 			maxPos = isPrimaryDirectionVertical ? scrollBounds.maxTop : scrollBounds.maxLeft,
-			minOfMax = threshold.base,
+			minOfMax = primaryThreshold.base,
 			maxOfMin = maxPos - minOfMax;
 		let
 			delta, numOfGridLines, newPrimaryFirstIndex = primaryFirstIndex, pos, dir = 0;
@@ -397,17 +397,17 @@ class VirtualListCore extends Component {
 			pos = y;
 			dir = dirY;
 
-			if (dir === 1 && pos > threshold.max) {
-				delta = pos - threshold.max;
+			if (dir === 1 && pos > primaryThreshold.max) {
+				delta = pos - primaryThreshold.max;
 				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
-				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
-				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
+				primaryThreshold.max = Math.min(maxPos, primaryThreshold.max + numOfGridLines * gridSize);
+				primaryThreshold.min = Math.min(maxOfMin, primaryThreshold.max - gridSize);
 				newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
-			} else if (dir === -1 && pos < threshold.min) {
-				delta = threshold.min - pos;
+			} else if (dir === -1 && pos < primaryThreshold.min) {
+				delta = primaryThreshold.min - pos;
 				numOfGridLines = Math.ceil(delta / gridSize);
-				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
-				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
+				primaryThreshold.max = Math.max(minOfMax, primaryThreshold.min - (numOfGridLines * gridSize - gridSize));
+				primaryThreshold.min = (primaryThreshold.max > minOfMax) ? primaryThreshold.max - gridSize : -Infinity;
 				newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 			}
 
@@ -415,37 +415,37 @@ class VirtualListCore extends Component {
 			dir = dirX;
 
 			/*
-			if (dir === 1 && pos > threshold.max) {
-				delta = pos - threshold.max;
+			if (dir === 1 && pos > primaryThreshold.max) {
+				delta = pos - primaryThreshold.max;
 				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
-				threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
-				threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
+				primaryThreshold.max = Math.min(maxPos, primaryThreshold.max + numOfGridLines * gridSize);
+				primaryThreshold.min = Math.min(maxOfMin, primaryThreshold.max - gridSize);
 				newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
-			} else if (dir === -1 && pos < threshold.min) {
-				delta = threshold.min - pos;
+			} else if (dir === -1 && pos < primaryThreshold.min) {
+				delta = primaryThreshold.min - pos;
 				numOfGridLines = Math.ceil(delta / gridSize);
-				threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
-				threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
+				primaryThreshold.max = Math.max(minOfMax, primaryThreshold.min - (numOfGridLines * gridSize - gridSize));
+				primaryThreshold.min = (primaryThreshold.max > minOfMax) ? primaryThreshold.max - gridSize : -Infinity;
 				newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 			}
 			*/
 
 			pos = {x: x, y: y};
-		} else if (dir === 1 && pos > threshold.max) {
-			delta = pos - threshold.max;
+		} else if (dir === 1 && pos > primaryThreshold.max) {
+			delta = pos - primaryThreshold.max;
 			numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
-			threshold.max = Math.min(maxPos, threshold.max + numOfGridLines * gridSize);
-			threshold.min = Math.min(maxOfMin, threshold.max - gridSize);
+			primaryThreshold.max = Math.min(maxPos, primaryThreshold.max + numOfGridLines * gridSize);
+			primaryThreshold.min = Math.min(maxOfMin, primaryThreshold.max - gridSize);
 			newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
-		} else if (dir === -1 && pos < threshold.min) {
-			delta = threshold.min - pos;
+		} else if (dir === -1 && pos < primaryThreshold.min) {
+			delta = primaryThreshold.min - pos;
 			numOfGridLines = Math.ceil(delta / gridSize);
-			threshold.max = Math.max(minOfMax, threshold.min - (numOfGridLines * gridSize - gridSize));
-			threshold.min = (threshold.max > minOfMax) ? threshold.max - gridSize : -Infinity;
+			primaryThreshold.max = Math.max(minOfMax, primaryThreshold.min - (numOfGridLines * gridSize - gridSize));
+			primaryThreshold.min = (primaryThreshold.max > minOfMax) ? primaryThreshold.max - gridSize : -Infinity;
 			newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 		}
 
-		this.syncThreshold(maxPos);
+		this.syncPrimaryThreshold(maxPos);
 		this.scrollPosition = pos;
 
 		if (!skipPositionContainer) {
