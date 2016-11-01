@@ -455,55 +455,41 @@ class VirtualListCore extends Component {
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			pos = {primary: y, secondary: x};
 			dir = {primary: dirY, secondary: dirX};
-		} else if (this.props.directionOption === 'horizontalFixedVerticalVariable') {
+		} else if (this.props.directionOption === 'horizontalFixedVerticalVariable') { // TBD : Not implemented yet
 			pos = {primary: x, secondary: y};
 			dir = {primary: dirX, secondary: dirY};
 		} else if (isPrimaryDirectionVertical) {
-			pos = y;
-			dir = dirY;
+			pos = {primary: y};
+			dir = {primary: dirY};
 		} else {
-			pos = x;
-			dir = dirX;
+			pos = {primary: x};
+			dir = {primary: dirX};
 		}
 
-		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
-			if (dir.secondary === 1 && pos.primary > primaryThreshold.max) {
-				delta = pos.primary - primaryThreshold.max;
-				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
-				primaryThreshold.max = Math.min(maxPos, primaryThreshold.max + numOfGridLines * gridSize);
-				primaryThreshold.min = Math.min(maxOfMin, primaryThreshold.max - gridSize);
-				newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
-			} else if (dir.secondary === -1 && pos.primary < primaryThreshold.min) {
-				delta = primaryThreshold.min - pos.primary;
-				numOfGridLines = Math.ceil(delta / gridSize);
-				primaryThreshold.max = Math.max(minOfMax, primaryThreshold.min - (numOfGridLines * gridSize - gridSize));
-				primaryThreshold.min = (primaryThreshold.max > minOfMax) ? primaryThreshold.max - gridSize : -Infinity;
-				newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
-			}
-
-			if (primaryFirstIndex === newPrimaryFirstIndex) {
-				for (let i = primaryFirstIndex; i < primaryFirstIndex + this.state.numOfItems; i++) {
-					if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) {
-						this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
-						isStateUpdated = true;
-					} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) {
-						this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
-						isStateUpdated = true;
-					}
-				}
-			}
-		} else if (dir === 1 && pos > primaryThreshold.max) {
-			delta = pos - primaryThreshold.max;
+		if (dir.primary === 1 && pos.primary > primaryThreshold.max) {
+			delta = pos.primary - primaryThreshold.max;
 			numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
 			primaryThreshold.max = Math.min(maxPos, primaryThreshold.max + numOfGridLines * gridSize);
 			primaryThreshold.min = Math.min(maxOfMin, primaryThreshold.max - gridSize);
 			newPrimaryFirstIndex = Math.min(maxPrimaryFirstIndex, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) + (numOfGridLines * dimensionToExtent));
-		} else if (dir === -1 && pos < primaryThreshold.min) {
-			delta = primaryThreshold.min - pos;
+		} else if (dir.primary === -1 && pos.primary < primaryThreshold.min) {
+			delta = primaryThreshold.min - pos.primary;
 			numOfGridLines = Math.ceil(delta / gridSize);
 			primaryThreshold.max = Math.max(minOfMax, primaryThreshold.min - (numOfGridLines * gridSize - gridSize));
 			primaryThreshold.min = (primaryThreshold.max > minOfMax) ? primaryThreshold.max - gridSize : -Infinity;
 			newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
+		}
+
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable' && primaryFirstIndex === newPrimaryFirstIndex) {
+			for (let i = primaryFirstIndex; i < primaryFirstIndex + this.state.numOfItems; i++) {
+				if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) {
+					this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+					isStateUpdated = true;
+				} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) {
+					this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+					isStateUpdated = true;
+				}
+			}
 		}
 
 		this.syncPrimaryThreshold(maxPos);
@@ -599,16 +585,12 @@ class VirtualListCore extends Component {
 			key = 0,
 			j;
 
+		primaryPosition -= (positioningOption === 'byItem') ? scrollPosition.primary : 0;
 		if (directionOption === 'verticalFixedHorizontalVariable') {
-			primaryPosition -= (positioningOption === 'byItem') ? scrollPosition.primary : 0;
 			secondaryPosition -= (positioningOption === 'byItem') ? scrollPosition.secondary : 0;
-			width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
-			height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
 		} else {
-			primaryPosition -= (positioningOption === 'byItem') ? scrollPosition : 0;
 			width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
 			height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
-
 			j = updateFrom % dimensionToExtent
 		}
 		// positioning items
