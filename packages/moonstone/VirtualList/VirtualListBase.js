@@ -165,7 +165,7 @@ class VirtualListCore extends Component {
 
 	dimensionToExtent = 0
 	primaryThreshold = 0
-	secondaryThreshold = {}
+	secondaryThreshold = []
 	maxPrimaryFirstIndex = 0
 	secondaryPositionOffset = []
 	curDataSize = 0
@@ -316,8 +316,7 @@ class VirtualListCore extends Component {
 			const
 				{dataSize, overhang} = this.props,
 				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
-			this.secondaryThreshold.prev = Array(numOfItems);
-			this.secondaryThreshold.next = Array(numOfItems);
+			this.secondaryThreshold = Array.from({length: numOfItems}, () => ({})); // Array(numOfItems);
 			this.secondaryPositionOffset = Array(numOfItems);
 			this.state.secondaryFirstIndexes = Array(numOfItems); //Array.from({length: numOfItems}, () => 0);
 
@@ -329,8 +328,6 @@ class VirtualListCore extends Component {
 
 	// variable secondaryThreshold
 	updateSecondaryThreshold (updateFrom, x) {
-		let isStateUpdated = false;
-
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			const
 				{component, data, dataSize, directionOption, overhang} = this.props,
@@ -351,37 +348,22 @@ class VirtualListCore extends Component {
 					}
 					if (accumulatedSize <= x && x < accumulatedSize + width) {
 						if (this.state.secondaryFirstIndexes[i] !== j) {
-							isStateUpdated = true;
-							this.state.secondaryFirstIndexes[i] = j;
-							// start = j;
-							// this.state.secondaryFirstIndexes = [
-							// 	...this.state.secondaryFirstIndexes.slice(0, i),
-							// 	j,
-							// 	...this.state.secondaryFirstIndexes.slice(i + 1)
-							// ];
-							this.secondaryThreshold.prev[i] = {
-								min: accumulatedSize,
-								max: accumulatedSize + width,
-								base: this.secondary.clientSize // TBD
-							};
+							this.state.secondaryFirstIndexes = [
+								...this.state.secondaryFirstIndexes.slice(0, i),
+								j,
+								...this.state.secondaryFirstIndexes.slice(i + 1)
+							];
+							this.secondaryThreshold[i].min = accumulatedSize;
 						}
 					}
 					if (accumulatedSize + width > x + this.secondary.clientSize) {
 						if (this.state.secondaryLastIndexes[i] !== j + 1) {
-							isStateUpdated = true;
-							this.state.secondaryLastIndexes[i] = j + 1;
-
-							// this.state.secondaryLastIndexes[i] = [
-							// 	...this.state.secondaryLastIndexes.slice(0, i),
-							// 	j + 1,
-							// 	...this.state.secondaryLastIndexes.slice(i + 1)
-							// ];
-
-							this.secondaryThreshold.next[i] = {
-								min: accumulatedSize,
-								max: accumulatedSize + width,
-								base: this.secondary.clientSize // TBD
-							};
+							this.state.secondaryLastIndexes = [
+								...this.state.secondaryLastIndexes.slice(0, i),
+								j + 1,
+								...this.state.secondaryLastIndexes.slice(i + 1)
+							];
+							this.secondaryThreshold[i].max = accumulatedSize + width;
 						}
 						break;
 					}
@@ -389,8 +371,6 @@ class VirtualListCore extends Component {
 				}
 			}
 		}
-
-		return isStateUpdated;
 	}
 
 	updateStatesAndBounds (props) {
@@ -487,7 +467,6 @@ class VirtualListCore extends Component {
 		}
 
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
-
 			if (dir.secondary === 1 && pos.primary > primaryThreshold.max) {
 				delta = pos.primary - primaryThreshold.max;
 				numOfGridLines = Math.ceil(delta / gridSize); // how many lines should we add
@@ -504,10 +483,12 @@ class VirtualListCore extends Component {
 
 			if (primaryFirstIndex === newPrimaryFirstIndex) {
 				for (let i = primaryFirstIndex; i < primaryFirstIndex + this.state.numOfItems; i++) {
-					if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold.next[i].max) {
-						isStateUpdated = this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
-					} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold.prev[i].min) {
-						isStateUpdated = this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+					if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) {
+						this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+						isStateUpdated = true;
+					} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) {
+						this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+						isStateUpdated = true;
 					}
 				}
 			}
@@ -532,7 +513,10 @@ class VirtualListCore extends Component {
 			this.positionContainer();
 		}
 
-		if (primaryFirstIndex !== newPrimaryFirstIndex || isStateUpdated === true) {
+		if (
+			(primaryFirstIndex !== newPrimaryFirstIndex) ||
+			(isStateUpdated === true && this.state.secondaryFirstIndexes !== newSecondaryFirstIndexes)
+		) {
 			this.setState({primaryFirstIndex: newPrimaryFirstIndex});
 		} else {
 			this.positionItems(this.applyStyleToExistingNode, this.determineUpdatedNeededIndices(primaryFirstIndex));
