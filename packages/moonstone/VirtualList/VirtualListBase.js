@@ -579,12 +579,13 @@ class VirtualListCore extends Component {
 
 	applyStyleToExistingNode = (params) => {
 		const
+			{directionOption} = this.props,
 			{i, key, primaryPosition, secondaryPosition, width, height} = params,
 			node = this.containerRef.children[key];
 
 		if (node) {
 			// spotlight
-			node.setAttribute(dataIndexAttribute, i);
+			node.setAttribute(dataIndexAttribute, (directionOption === 'verticalFixedHorizontalVariable') ? key : i);
 			if (key === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
 				node.blur();
 				this.nodeIndexToBeBlurred = null;
@@ -601,7 +602,7 @@ class VirtualListCore extends Component {
 			itemElement = (directionOption === 'verticalFixedHorizontalVariable') ?
 				component.render({
 					index: {primaryIndex: i, secondaryIndex: j},
-					key: key
+					key: i + '-' + j
 				}) :
 				component({
 					index: i,
@@ -614,7 +615,7 @@ class VirtualListCore extends Component {
 		this.cc[key] = React.cloneElement(
 			itemElement, {
 				style: {...itemElement.props.style, ...style},
-				[dataIndexAttribute]: i
+				[dataIndexAttribute]: (directionOption === 'verticalFixedHorizontalVariable') ? key : i,
 			}
 		);
 	}
