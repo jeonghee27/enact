@@ -313,13 +313,18 @@ class VirtualListCore extends Component {
 		// eslint-disable-next-line react/no-direct-mutation-state
 		this.state.numOfItems = 0;
 
-		const
-			{dataSize, overhang} = this.props,
-			numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
-		this.secondaryThreshold.prev = Array(numOfItems);
-		this.secondaryThreshold.next = Array(numOfItems);
-		this.secondaryPositionX = Array(numOfItems);
-		this.initSecondaryThreshold(0, 0);
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			const
+				{dataSize, overhang} = this.props,
+				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
+			this.secondaryThreshold.prev = Array(numOfItems);
+			this.secondaryThreshold.next = Array(numOfItems);
+			this.secondaryPositionX = Array(numOfItems);
+
+			this.scrollPosition = {x: 0, y: 0};
+
+			this.initSecondaryThreshold(0, 0);
+		}
 	}
 
 	// variable secondaryThreshold
@@ -577,35 +582,41 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	applyStyleToExistingNode = (i, ...rest) => {
+	applyStyleToExistingNode = (params) => {
 		const
-			{numOfItems} = this.state,
-			node = this.containerRef.children[i % numOfItems];
+			{i, key, primaryPosition, secondaryPosition, width, height} = params,
+			node = this.containerRef.children[key];
 
 		if (node) {
 			// spotlight
 			node.setAttribute(dataIndexAttribute, i);
-			if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
+			if (key === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
 				node.blur();
 				this.nodeIndexToBeBlurred = null;
 			}
-			this.composeStyle(node.style, ...rest);
+			this.composeStyle(node.style, primaryPosition, secondaryPosition, width, height);
 		}
 	}
 
-	applyStyleToNewNode = (i, ...rest) => {
+	applyStyleToNewNode = (params) => {
 		const
+			{i, j, key, primaryPosition, secondaryPosition, width, height} = params,
 			{component} = this.props,
 			{numOfItems} = this.state,
-			itemElement = component({
-				index: i,
-				key: i % numOfItems
-			}),
+			itemElement = component.render ?
+				component.render({
+					index: {primaryIndex: i, secondaryIndex: j},
+					key: key
+				}) :
+				component({
+					index: i,
+					key: key
+				}),
 			style = {};
 
-		this.composeStyle(style, ...rest);
+		this.composeStyle(style, primaryPosition, secondaryPosition, width, height);
 
-		this.cc[i % numOfItems] = React.cloneElement(
+		this.cc[key] = React.cloneElement(
 			itemElement, {
 				style: {...itemElement.props.style, ...style},
 				[dataIndexAttribute]: i
@@ -613,71 +624,57 @@ class VirtualListCore extends Component {
 		);
 	}
 
-	applyStyleToExistingNodes = (i, primaryPosition, secondaryPosition) => {
-		secondaryPosition = secondaryPosition + this.secondaryPositionX[i][this.state.secondaryFirstIndexes[i]];
+	applyStyleToExistingNodes = (params) => {
+		let {i, key, primaryPosition, secondaryPosition} = params;
 
-		for (let j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {			const
-				{numOfItems} = this.state,
-				{getWidth} = this.props.component,
-				key = this.start++,
-				width = getWidth({primaryIndex: i, secondaryIndex: j}),
-				node = this.containerRef.children[key];
-
-			if (node) {
-				// spotlight
-				node.setAttribute(dataIndexAttribute, i);
-				/*
-				if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
-					node.blur();
-					this.nodeIndexToBeBlurred = null;
-				}
-				*/
-				this.composeStyle(node.style, primaryPosition, secondaryPosition, width, this.props.itemSize);
-
-				secondaryPosition += width;
-			}
-		}
-	}
-
-	applyStyleToNewNodes = (i, primaryPosition, secondaryPosition) => {
 		secondaryPosition = secondaryPosition + this.secondaryPositionX[i][this.state.secondaryFirstIndexes[i]];
 
 		for (let j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {
 			const
-				{getWidth, render} = this.props.component,
-				{numOfItems} = this.state,
-				key = this.start++,
-				width = getWidth({primaryIndex: i, secondaryIndex: j}),
-				itemElement = render({
-					index: {primaryIndex: i, secondaryIndex: j},
-					key: key
-				}),
-				style = {};
+				{getWidth} = this.props.component,
+				width = getWidth({primaryIndex: i, secondaryIndex: j});
 
-			this.composeStyle(style, primaryPosition, secondaryPosition, width, this.props.itemSize);
-
-			this.cc[key] = React.cloneElement(
-				itemElement, {
-					style: {...itemElement.props.style, ...style},
-					[dataIndexAttribute]: key
-				}
-			);
+			this.applyStyleToExistingNode.call(this, {i, j, key, primaryPosition, secondaryPosition, width, height: this.props.itemSize});
 
 			secondaryPosition += width;
+			key++;
 		}
+
+		return key;
+	}
+
+	applyStyleToNewNodes = (params) => {
+		let {i, key, primaryPosition, secondaryPosition} = params;
+
+		secondaryPosition = secondaryPosition + this.secondaryPositionX[i][this.state.secondaryFirstIndexes[i]];
+
+		for (let j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {
+			const
+				{getWidth} = this.props.component,
+				width = getWidth({primaryIndex: i, secondaryIndex: j});
+
+			this.applyStyleToNewNode.call(this, {i, j, key, primaryPosition, secondaryPosition, width, height: this.props.itemSize});
+
+			secondaryPosition += width;
+			key++;
+		}
+
+		return key;
 	}
 
 	positionItems (applyStyle, {updateFrom, updateTo}) {
 		const
 			{positioningOption, directionOption} = this.props,
+			{numOfItems} = this.state,
 			{isPrimaryDirectionVertical, dimensionToExtent, primary, secondary, scrollPosition} = this;
 
 		// we only calculate position of the first child
 		let
 			{primaryPosition, secondaryPosition} = this.getGridPosition(updateFrom),
-			width, height;
+			width, height,
+			key = 0;
 
-		this.start = 0;
+		// this.start = 0;
 
 		if (scrollPosition instanceof Object) {
 			primaryPosition -= (positioningOption === 'byItem') ? scrollPosition.y : 0;
@@ -692,11 +689,14 @@ class VirtualListCore extends Component {
 		// positioning items
 		for (let i = updateFrom, j = updateFrom % dimensionToExtent; i < updateTo; i++) {
 
-			applyStyle.call(this, i, primaryPosition, secondaryPosition, width, height);
-
 			if (scrollPosition instanceof Object) {
+				key = applyStyle.call(this, {i, key, primaryPosition, secondaryPosition});
+
 				primaryPosition += primary.gridSize;
 			} else {
+				key = i % numOfItems;
+				applyStyle.call(this, {i, key, primaryPosition, secondaryPosition, width, height});
+
 				if (++j === dimensionToExtent) {
 					secondaryPosition = 0;
 					primaryPosition += primary.gridSize;
