@@ -316,59 +316,66 @@ class VirtualListCore extends Component {
 			const
 				{dataSize, overhang} = this.props,
 				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
-			this.secondaryThreshold = Array.from({length: numOfItems}, () => ({})); // Array(numOfItems);
-			this.secondaryPositionOffset = Array(numOfItems);
-			this.state.secondaryFirstIndexes = Array(numOfItems); //Array.from({length: numOfItems}, () => 0);
+			this.secondaryThreshold = Array.from({length: dataSize}, () => ({}));
+			this.secondaryPositionOffset = Array(dataSize);
+			this.state.secondaryFirstIndexes = Array(dataSize);
 
 			this.scrollPosition = {primary: 0, secondary: 0};
 
-			this.updateSecondaryThreshold(0, 0);
+			this.initSecondaryThresholds();
 		}
 	}
 
 	// variable secondaryThreshold
-	updateSecondaryThreshold (updateFrom, x) {
+	updateSecondaryThreshold (secondaryPosition, i) {
+		const
+			{component, data} = this.props,
+			{getWidth} = component;
+
+		let
+			accumulatedSize = 0,
+			width;
+
+		this.secondaryPositionOffset[i] = [];
+
+		for (let j = 0; j < data[i].length; j++) {
+			width = getWidth({primaryIndex: i, secondaryIndex: j});
+			if (!this.secondaryPositionOffset[i][j]) {
+				this.secondaryPositionOffset[i][j] = accumulatedSize;
+			}
+			if (accumulatedSize <= secondaryPosition && secondaryPosition < accumulatedSize + width) {
+				if (this.state.secondaryFirstIndexes[i] !== j) {
+					this.state.secondaryFirstIndexes = [
+						...this.state.secondaryFirstIndexes.slice(0, i),
+						j,
+						...this.state.secondaryFirstIndexes.slice(i + 1)
+					];
+					this.secondaryThreshold[i].min = accumulatedSize;
+				}
+			}
+			if (accumulatedSize + width > secondaryPosition + this.secondary.clientSize) {
+				if (this.state.secondaryLastIndexes[i] !== j + 1) {
+					this.state.secondaryLastIndexes = [
+						...this.state.secondaryLastIndexes.slice(0, i),
+						j + 1,
+						...this.state.secondaryLastIndexes.slice(i + 1)
+					];
+					this.secondaryThreshold[i].max = accumulatedSize + width;
+				}
+				break;
+			}
+			accumulatedSize += width;
+		}
+	}
+
+	initSecondaryThresholds (secondaryPosition) {
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			const
-				{component, data, dataSize, directionOption, overhang} = this.props,
-				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang)),
-				{getWidth, render} = component;
+				{dataSize, overhang} = this.props,
+				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
 
-			for (let i = updateFrom; i < updateFrom + numOfItems; i++) {
-				let
-					accumulatedSize = 0,
-					width;
-
-				this.secondaryPositionOffset[i] = [];
-
-				for (let j = 0; j < data[i].length; j++) {
-					width = getWidth({primaryIndex: i, secondaryIndex: j});
-					if (!this.secondaryPositionOffset[i][j]) {
-						this.secondaryPositionOffset[i][j] = accumulatedSize;
-					}
-					if (accumulatedSize <= x && x < accumulatedSize + width) {
-						if (this.state.secondaryFirstIndexes[i] !== j) {
-							this.state.secondaryFirstIndexes = [
-								...this.state.secondaryFirstIndexes.slice(0, i),
-								j,
-								...this.state.secondaryFirstIndexes.slice(i + 1)
-							];
-							this.secondaryThreshold[i].min = accumulatedSize;
-						}
-					}
-					if (accumulatedSize + width > x + this.secondary.clientSize) {
-						if (this.state.secondaryLastIndexes[i] !== j + 1) {
-							this.state.secondaryLastIndexes = [
-								...this.state.secondaryLastIndexes.slice(0, i),
-								j + 1,
-								...this.state.secondaryLastIndexes.slice(i + 1)
-							];
-							this.secondaryThreshold[i].max = accumulatedSize + width;
-						}
-						break;
-					}
-					accumulatedSize += width;
-				}
+			for (let i = 0; i < numOfItems; i++) {
+				this.updateSecondaryThreshold(0, i);
 			}
 		}
 	}
@@ -480,13 +487,16 @@ class VirtualListCore extends Component {
 			newPrimaryFirstIndex = Math.max(0, (dimensionToExtent * Math.ceil(primaryFirstIndex / dimensionToExtent)) - (numOfGridLines * dimensionToExtent));
 		}
 
-		if (this.props.directionOption === 'verticalFixedHorizontalVariable' && primaryFirstIndex === newPrimaryFirstIndex) {
-			for (let i = primaryFirstIndex; i < primaryFirstIndex + this.state.numOfItems; i++) {
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			for (let i = newPrimaryFirstIndex; i < newPrimaryFirstIndex + this.state.numOfItems; i++) {
 				if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) {
-					this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+					this.updateSecondaryThreshold(pos.secondary, i);
 					isStateUpdated = true;
 				} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) {
-					this.updateSecondaryThreshold(primaryFirstIndex, pos.secondary);
+					this.updateSecondaryThreshold(pos.secondary, i);
+					isStateUpdated = true;
+				} else if (!(this.secondaryThreshold[i].max || this.secondaryThreshold[i].min)) {
+					this.updateSecondaryThreshold(pos.secondary, i);
 					isStateUpdated = true;
 				}
 			}
@@ -501,7 +511,7 @@ class VirtualListCore extends Component {
 
 		if (
 			(primaryFirstIndex !== newPrimaryFirstIndex) ||
-			(isStateUpdated === true && this.state.secondaryFirstIndexes !== newSecondaryFirstIndexes)
+			(directionOption === 'verticalFixedHorizontalVariable' && isStateUpdated === true)
 		) {
 			this.setState({primaryFirstIndex: newPrimaryFirstIndex});
 		} else {
@@ -818,6 +828,7 @@ class VirtualListCore extends Component {
 			max = Math.min(dataSize, primaryFirstIndex + numOfItems);
 
 		this.cc.length = 0;
+
 		this.positionItems(this.applyStyleToNewNode, {updateFrom: primaryFirstIndex, updateTo: max});
 		this.positionContainer();
 	}
