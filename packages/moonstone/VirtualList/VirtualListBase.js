@@ -212,9 +212,9 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	isVertical = () => true // this.isPrimaryDirectionVertical
+	isVertical = () => ((this.props.directionOption === 'verticalFixedHorizontalVariable') || this.isPrimaryDirectionVertical)
 
-	isHorizontal = () => true // !this.isPrimaryDirectionVertical
+	isHorizontal = () => ((this.props.directionOption === 'verticalFixedHorizontalVariable') || !this.isPrimaryDirectionVertical)
 
 	getScrollBounds = () => this.scrollBounds
 
@@ -322,15 +322,15 @@ class VirtualListCore extends Component {
 
 			this.scrollPosition = {primary: 0, secondary: 0};
 
-			this.initSecondaryThresholds();
+			this.initSecondaryScrollInfo();
 		}
 	}
 
 	// variable secondaryThreshold
-	updateSecondaryThreshold (secondaryPosition, i) {
+	updateSecondaryScrollInfoWithPrimaryIndex (primaryIndex, secondaryPosition) {
 		const
-			{component, data} = this.props,
-			{getWidth} = component;
+			{component, data, getItemWidth} = this.props,
+			i = primaryIndex;
 
 		let
 			accumulatedSize = 0,
@@ -339,7 +339,7 @@ class VirtualListCore extends Component {
 		this.secondaryPositionOffset[i] = [];
 
 		for (let j = 0; j < data[i].length; j++) {
-			width = getWidth({primaryIndex: i, secondaryIndex: j});
+			width = getItemWidth({primaryIndex: i, secondaryIndex: j});
 			if (!this.secondaryPositionOffset[i][j]) {
 				this.secondaryPositionOffset[i][j] = accumulatedSize;
 			}
@@ -368,15 +368,13 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	initSecondaryThresholds (secondaryPosition) {
-		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
-			const
-				{dataSize, overhang} = this.props,
-				numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
+	initSecondaryScrollInfo (secondaryPosition) {
+		const
+			{dataSize, overhang} = this.props,
+			numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
 
-			for (let i = 0; i < numOfItems; i++) {
-				this.updateSecondaryThreshold(0, i);
-			}
+		for (let i = 0; i < numOfItems; i++) {
+			this.updateSecondaryScrollInfoWithPrimaryIndex(i, 0);
 		}
 	}
 
@@ -490,13 +488,13 @@ class VirtualListCore extends Component {
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			for (let i = newPrimaryFirstIndex; i < newPrimaryFirstIndex + this.state.numOfItems; i++) {
 				if (dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) {
-					this.updateSecondaryThreshold(pos.secondary, i);
+					this.updateSecondaryScrollInfoWithPrimaryIndex(i, pos.secondary);
 					isStateUpdated = true;
 				} else if (dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) {
-					this.updateSecondaryThreshold(pos.secondary, i);
+					this.updateSecondaryScrollInfoWithPrimaryIndex(i, pos.secondary);
 					isStateUpdated = true;
 				} else if (!(this.secondaryThreshold[i].max || this.secondaryThreshold[i].min)) {
-					this.updateSecondaryThreshold(pos.secondary, i);
+					this.updateSecondaryScrollInfoWithPrimaryIndex(i, pos.secondary);
 					isStateUpdated = true;
 				}
 			}
@@ -561,7 +559,7 @@ class VirtualListCore extends Component {
 			{component, directionOption} = this.props,
 			{numOfItems} = this.state,
 			itemElement = (directionOption === 'verticalFixedHorizontalVariable') ?
-				component.render({
+				component({
 					index: {primaryIndex: i, secondaryIndex: j},
 					key: i + '-' + j
 				}) :
@@ -583,7 +581,7 @@ class VirtualListCore extends Component {
 
 	positionItems (applyStyle, {updateFrom, updateTo}) {
 		const
-			{positioningOption, directionOption} = this.props,
+			{positioningOption, directionOption, getItemWidth} = this.props,
 			{numOfItems} = this.state,
 			{isPrimaryDirectionVertical, dimensionToExtent, primary, secondary, scrollPosition} = this;
 
@@ -609,11 +607,9 @@ class VirtualListCore extends Component {
 				let position = secondaryPosition + this.secondaryPositionOffset[i][this.state.secondaryFirstIndexes[i]];
 
 				for (j = this.state.secondaryFirstIndexes[i]; j <= this.state.secondaryLastIndexes[i]; j++) {
-					const
-						{getWidth} = this.props.component,
-						width = getWidth({primaryIndex: i, secondaryIndex: j});
+					width = getItemWidth({primaryIndex: i, secondaryIndex: j});
 
-					applyStyle.call(this, {i, j, key, primaryPosition, secondaryPosition: position, width, height: this.props.itemSize});
+					applyStyle({i, j, key, primaryPosition, secondaryPosition: position, width, height: this.props.itemSize});
 
 					position += width;
 					key++;
