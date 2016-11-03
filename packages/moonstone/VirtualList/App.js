@@ -26,12 +26,12 @@ const
 let data = [];
 
 function getRandomWidth() {
-    return Math.random() * 2000 / 10;
+    return parseInt(Math.random() * 20) * 50 + 50;
 }
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 100; i++) {
 	data[i] = [];
-	for(let j = 0; j < 1000; j++) {
+	for(let j = 0; j < 3000; j++) {
 		data[i][j] = {
 			width: getRandomWidth(),
 			title: ('00' + j).slice(-3) + ' - ' + language[i % 10]
@@ -39,33 +39,34 @@ for (let i = 0; i < 10; i++) {
 	}
 }
 
+const bgcolors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+
 const VirtualLists = kind({
 	computed: {
-		renderItem: () => ({
-			getWidth: (index) => data[index.primaryIndex][index.secondaryIndex].width,
-			render: ({index, key}) => (
-				<div key={key} className={css.item}>
+		getItemWidth: () => (index) => {
+			return data[index.primaryIndex][index.secondaryIndex].width;
+		},
+		renderItem: () => ({index, key}) => {
+			return (
+				<div key={key} className={css.item} style={{backgroundColor: bgcolors[Math.floor(Math.random() * bgcolors.length)]}}>
 					{data[index.primaryIndex][index.secondaryIndex].title}
 				</div>
-			)
-		})
+			);
+		}
 	},
 
-	render: ({renderItem, className}) => {
+	render: ({getItemWidth, renderItem, className}) => {
 		return (
 			<div className={className} style={inlineStyle}>
 				<VirtualList
+					clientSize={57600 /* 200 * 2 ( 2 per 1 hour )* 24 hr * 6 day */}
 					data={data}
 					dataSize={data.length}
-					itemSize={70}
-					spacing={0}
-
-					clientSize={{
-						width: 57600, // 200 * 2 ( 2 per 1 hour )* 24 hr * 6 day
-					}}
 					direction={'vertical'}
 					directionOption={'verticalFixedHorizontalVariable'}
-
+					getItemWidth={getItemWidth}
+					itemSize={70}
+					spacing={0}
 					className={css.list}
 					component={renderItem}
 				/>
