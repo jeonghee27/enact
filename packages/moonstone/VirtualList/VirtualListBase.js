@@ -45,15 +45,6 @@ class VirtualListCore extends Component {
 		]).isRequired,
 
 		/**
-		 * For variable width or variable height, we need to define client width or client height
-		 * instead of calculating them from all items.
-		 *
-		 * @type {Number}
-		 * @public
-		 */
-		clientSize: PropTypes.number,
-
-		/**
 		 * Callback method of scrollTo.
 		 * Normally, `Scrollable` should set this value.
 		 *
@@ -141,6 +132,15 @@ class VirtualListCore extends Component {
 		 * @private
 		 */
 		positioningOption: PropTypes.oneOf(['byItem', 'byContainer', 'byBrowser']),
+
+		/**
+		 * For variable width or variable height, we need to define client width or client height
+		 * instead of calculating them from all items.
+		 *
+		 * @type {Number}
+		 * @public
+		 */
+		scrollBoundsSize: PropTypes.number,
 
 		/**
 		 * Spacing between items.
@@ -349,11 +349,13 @@ class VirtualListCore extends Component {
 
 		let
 			accumulatedSize = 0,
-			width;
+			width,
+			j;
 
 		this.secondary.positionOffset[i] = [];
+		this.secondaryThreshold[i] = {};
 
-		for (let j = 0; j < data[i].length; j++) {
+		for (j = 0; j < data[i].length; j++) {
 			width = getItemWidth({primaryIndex: i, secondaryIndex: j});
 			if (!this.secondary.positionOffset[i][j]) {
 				this.secondary.positionOffset[i][j] = accumulatedSize;
@@ -365,13 +367,17 @@ class VirtualListCore extends Component {
 				}
 			}
 			if (accumulatedSize + width > secondaryPosition + this.secondary.clientSize) {
-				if (this.state.secondaryLastIndexes[i] !== j + 1) {
+				if (this.state.secondaryLastIndexes[i] !== j) {
 					this.state.secondaryLastIndexes[i] = j;
 					this.secondaryThreshold[i].max = accumulatedSize + width;
 				}
 				break;
 			}
 			accumulatedSize += width;
+		}
+		if (j === data[i].length || !this.secondaryThreshold.max) {
+			this.state.secondaryLastIndexes[i] = data[i].length - 1;
+			this.secondaryThreshold[i].max = this.props.scrollBoundsSize;
 		}
 	}
 
@@ -413,7 +419,7 @@ class VirtualListCore extends Component {
 		scrollBounds.clientWidth = clientWidth;
 		scrollBounds.clientHeight = clientHeight;
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
-			scrollBounds.scrollWidth = this.props.clientSize;
+			scrollBounds.scrollWidth = this.props.scrollBoundsSize;
 			scrollBounds.scrollHeight = this.getScrollHeight();
 		} else {
 			scrollBounds.scrollWidth = this.getScrollWidth();
@@ -494,15 +500,18 @@ class VirtualListCore extends Component {
 
 		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
 			for (let i = newPrimaryFirstIndex; i < newPrimaryFirstIndex + numOfItems; i++) {
+				const
+					secondaryThreshold = this.secondaryThreshold,
+					clientSize = this.secondary.clientSize;
 				if (
 					// primary boundary
 					(primaryFirstIndex < newPrimaryFirstIndex && i >= primaryFirstIndex + numOfItems) ||
 					(primaryFirstIndex > newPrimaryFirstIndex && i < primaryFirstIndex) ||
 					// secondary boundary
-					(dir.secondary === 1 && pos.secondary + this.secondary.clientSize > this.secondaryThreshold[i].max) ||
-					(dir.secondary === -1 && pos.secondary < this.secondaryThreshold[i].min) ||
+					(dir.secondary === 1 && pos.secondary + clientSize > secondaryThreshold[i].max) ||
+					(dir.secondary === -1 && pos.secondary < secondaryThreshold[i].min) ||
 					// threshold was not defined yet
-					(!(this.secondaryThreshold[i].max || this.secondaryThreshold[i].min))
+					(!(secondaryThreshold[i].max || secondaryThreshold[i].min))
 				) {
 					this.updateSecondaryScrollInfoWithPrimaryIndex(i, pos.secondary);
 					isStateUpdated = true;
@@ -846,11 +855,11 @@ class VirtualListCore extends Component {
 			{primary, cc} = this;
 
 		delete props.cbScrollTo;
-		delete props.clientSize;
 		delete props.component;
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
+		delete props.directionOption;
 		delete props.getItemWidth;
 		delete props.hideScrollbars;
 		delete props.itemSize;
@@ -860,6 +869,7 @@ class VirtualListCore extends Component {
 		delete props.onScrollStop;
 		delete props.overhang;
 		delete props.positioningOption;
+		delete props.scrollBoundsSize;
 		delete props.spacing;
 
 		if (primary) {
