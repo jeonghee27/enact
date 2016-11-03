@@ -327,62 +327,6 @@ class VirtualListCore extends Component {
 		this.state.primaryFirstIndex = 0;
 		// eslint-disable-next-line react/no-direct-mutation-state
 		this.state.numOfItems = 0;
-
-		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
-			const {dataSize} = this.props;
-
-			this.state.secondaryFirstIndexes = Array(dataSize);
-			this.secondary.positionOffset = Array(dataSize);
-			this.secondaryThreshold = Array.from({length: dataSize}, () => ({}));
-			this.scrollPosition = {primary: 0, secondary: 0};
-
-			this.initSecondaryScrollInfo();
-		}
-	}
-
-	// variable secondaryThreshold
-	updateSecondaryScrollInfoWithPrimaryIndex (primaryIndex, secondaryPosition) {
-		const
-			{data, getItemWidth} = this.props,
-			i = primaryIndex,
-			secondaryDataSize = data[i].length;
-
-		let
-			accumulatedSize = 0,
-			width,
-			j;
-
-		this.secondary.positionOffset[i] = [];
-		this.secondaryThreshold[i] = {};
-
-		for (j = 0; j < secondaryDataSize; j++) {
-			width = getItemWidth({primaryIndex: i, secondaryIndex: j});
-			this.secondary.positionOffset[i][j] = accumulatedSize;
-			if (accumulatedSize <= secondaryPosition && secondaryPosition < accumulatedSize + width) {
-				this.state.secondaryFirstIndexes[i] = j;
-				this.secondaryThreshold[i].min = accumulatedSize;
-			}
-			if (accumulatedSize + width > secondaryPosition + this.secondary.clientSize) {
-				this.state.secondaryLastIndexes[i] = j;
-				this.secondaryThreshold[i].max = accumulatedSize + width;
-				break;
-			}
-			accumulatedSize += width;
-		}
-		if (j === secondaryDataSize || !this.secondaryThreshold[i].max) {
-			this.state.secondaryLastIndexes[i] = secondaryDataSize - 1;
-			this.secondaryThreshold[i].max = this.props.scrollBoundsSize;
-		}
-	}
-
-	initSecondaryScrollInfo (secondaryPosition) {
-		const
-			{dataSize, overhang} = this.props,
-			numOfItems = Math.min(dataSize, this.dimensionToExtent * (Math.ceil(this.primary.clientSize / this.primary.gridSize) + overhang));
-
-		for (let i = 0; i < numOfItems; i++) {
-			this.updateSecondaryScrollInfoWithPrimaryIndex(i, 0);
-		}
 	}
 
 	updateStatesAndBounds (props) {
@@ -396,6 +340,9 @@ class VirtualListCore extends Component {
 
 		this.setState({primaryFirstIndex: Math.min(this.state.primaryFirstIndex, this.maxPrimaryFirstIndex), numOfItems});
 		this.calculateScrollBounds(props);
+		if (this.props.directionOption === 'verticalFixedHorizontalVariable') {
+			this.initSecondaryScrollInfo(numOfItems);
+		}
 	}
 
 	calculateScrollBounds (props) {
@@ -443,6 +390,53 @@ class VirtualListCore extends Component {
 				primaryThreshold.max = maxPos;
 				primaryThreshold.min = maxPos - primaryThreshold.base;
 			}
+		}
+	}
+
+	initSecondaryScrollInfo (numOfItems) {
+		const {dataSize} = this.props;
+
+		this.state.secondaryFirstIndexes = Array(dataSize);
+		this.secondary.positionOffset = Array(dataSize);
+		this.secondaryThreshold = Array.from({length: dataSize}, () => ({}));
+		this.scrollPosition = {primary: 0, secondary: 0};
+
+		for (let i = 0; i < numOfItems; i++) {
+			this.updateSecondaryScrollInfoWithPrimaryIndex(i, 0);
+		}
+	}
+
+	updateSecondaryScrollInfoWithPrimaryIndex (primaryIndex, secondaryPosition) {
+		const
+			{data, getItemWidth} = this.props,
+			i = primaryIndex,
+			secondaryDataSize = data[i].length;
+
+		let
+			accumulatedSize = 0,
+			width,
+			j;
+
+		this.secondary.positionOffset[i] = [];
+		this.secondaryThreshold[i] = {};
+
+		for (j = 0; j < secondaryDataSize; j++) {
+			width = getItemWidth({primaryIndex: i, secondaryIndex: j});
+			this.secondary.positionOffset[i][j] = accumulatedSize;
+			if (accumulatedSize <= secondaryPosition && secondaryPosition < accumulatedSize + width) {
+				this.state.secondaryFirstIndexes[i] = j;
+				this.secondaryThreshold[i].min = accumulatedSize;
+			}
+			if (accumulatedSize + width > secondaryPosition + this.secondary.clientSize) {
+				this.state.secondaryLastIndexes[i] = j;
+				this.secondaryThreshold[i].max = accumulatedSize + width;
+				break;
+			}
+			accumulatedSize += width;
+		}
+		if (j === secondaryDataSize || !this.secondaryThreshold[i].max) {
+			this.state.secondaryLastIndexes[i] = secondaryDataSize - 1;
+			this.secondaryThreshold[i].max = this.props.scrollBoundsSize;
 		}
 	}
 

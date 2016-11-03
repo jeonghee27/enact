@@ -9,32 +9,41 @@ import VirtualList from './VirtualList';
 import css from './App.less';
 
 const
-	language = [
-		'한국어 - 한국',
-		'English - United States',
-		'Português - Brasil',
-		'Português - Portugal',
-		'Čeština - Česká republika',
-		'Dansk - Danmark',
-		'Deutsch - Deutschland',
-		'Ελληνική γλώσσα - Ελλάδα',
-		'Español - España',
-		'Suomi - Suomi'
-	],
-	inlineStyle = {padding: '0'};
+	programName = [
+		'On Demand',
+		'To Be Announced',
+		'Newsedge',
+		'TMZ',
+		'Dish Nation',
+		'Access Hollywood',
+		'The Wendy Williams Show',
+		'Harry',
+		'Extra',
+		'Dish Nation',
+		'TMZ',
+		'FOX 2 News Morning',
+		'Secrets of the Dead',
+		'SciTech Now',
+		'Under the Radar Michigan',
+		'Tavis Smiley',
+		'Charlie Rose',
+		'Nature',
+		'NOVA',
+		'Secrets of the Dead'
+	];
 
 let data = [];
 
 function getRandomWidth() {
-    return parseInt(Math.random() * 20) * 50 + 50;
+    return parseInt(Math.random() * 20) * 100 + 100;
 }
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 2000; i++) {
 	data[i] = [];
-	for(let j = 0; j < 3000; j++) {
+	for(let j = 0; j < 200; j++) {
 		data[i][j] = {
 			width: getRandomWidth(),
-			title: ('00' + j).slice(-3) + ' - ' + language[i % 10]
+			programName: ('00' + i).slice(-3) + '/' + ('00' + j).slice(-3) + ' - ' + programName[(i + j) % 20]
 		};
 	}
 }
@@ -48,8 +57,13 @@ const VirtualLists = kind({
 		},
 		renderItem: () => ({index, key}) => {
 			return (
-				<div key={key} className={css.item} style={{backgroundColor: bgcolors[Math.floor(Math.random() * bgcolors.length)]}}>
-					{data[index.primaryIndex][index.secondaryIndex].title}
+				<div
+					key={key}
+					className={css.item}
+				>
+					<div>
+						{data[index.primaryIndex][index.secondaryIndex].programName}
+					</div>
 				</div>
 			);
 		}
@@ -57,20 +71,17 @@ const VirtualLists = kind({
 
 	render: ({getItemWidth, renderItem, className}) => {
 		return (
-			<div className={className} style={inlineStyle}>
-				<VirtualList
-					clientSize={57600 /* 200 * 2 ( 2 per 1 hour )* 24 hr * 6 day */}
-					data={data}
-					dataSize={data.length}
-					direction={'vertical'}
-					directionOption={'verticalFixedHorizontalVariable'}
-					getItemWidth={getItemWidth}
-					itemSize={70}
-					spacing={0}
-					className={css.list}
-					component={renderItem}
-				/>
-			</div>
+			<VirtualList
+				data={data}
+				dataSize={data.length}
+				direction={'vertical'}
+				directionOption={'verticalFixedHorizontalVariable'}
+				getItemWidth={getItemWidth}
+				itemSize={83}
+				scrollBoundsSize={57600 /* 200 * 2 ( 2 per 1 hour )* 24 hr * 6 day */}
+				className={css.list}
+				component={renderItem}
+			/>
 		);
 	}
 });

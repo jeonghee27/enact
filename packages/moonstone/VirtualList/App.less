@@ -9,22 +9,29 @@ div#root > div {
 
 .list {
 	overflow: hidden;
-	height: 300px;
+	width: 1920px;
+	height: 576px;
 }
 
 .item {
-	background: black;
 	position: absolute;
-	width: 100%;
-	height: 70px;
-	padding: 5px;
-	border: 5px solid #202328;
+	padding: 0 5px 5px 0;
 	box-sizing: border-box;
 	overflow: hidden;
 
-	color: white;
-	font-size: 20px;
-	line-height: 60px;
-
 	will-change: transform;
+
+	& > div {
+		background: #141416;
+		height: 100%;
+
+		font-size: 33px;
+		line-height: 78px;
+		color: white;
+		text-align: left;
+		white-space: nowrap;
+
+	    -webkit-user-select: none;
+	    user-select: none;
+	}
 }
