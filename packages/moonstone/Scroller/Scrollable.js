@@ -116,6 +116,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			onScrollStop: PropTypes.func,
 
 			/**
+			 * It scrolls by page when 'true'
+			 *
+			 * @type {Boolean}
+			 * @default true
+			 * @public
+			 */
+			pageScroll: PropTypes.bool,
+
+			/**
 			 * Options for positioning the items; valid values are `'byItem'`, `'byContainer'`,
 			 * and `'byBrowser'`.
 			 * If `'byItem'`, the list moves each item.
@@ -137,6 +146,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			onScroll: nop,
 			onScrollStart: nop,
 			onScrollStop: nop,
+			pageScroll: true,
 			positioningOption: 'byItem'
 		}
 
@@ -204,15 +214,23 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				};
 			} else {
 				const {onFocus, onKeyDown, onMouseDown, onMouseLeave, onMouseMove, onMouseUp, onWheel} = this;
-				this.eventHandlers = {
-					onFocus,
-					onKeyDown,
-					onMouseDown,
-					onMouseLeave,
-					onMouseMove,
-					onMouseUp,
-					onWheel
-				};
+				if (props.pageScroll) {
+					this.eventHandlers = {
+						onFocus,
+						onKeyDown,
+						onWheel
+					};
+				} else {
+					this.eventHandlers = {
+						onFocus,
+						onKeyDown,
+						onMouseDown,
+						onMouseLeave,
+						onMouseMove,
+						onMouseUp,
+						onWheel
+					};
+				}
 			}
 
 			this.verticalScrollbarProps = {

@@ -728,14 +728,14 @@ class VirtualListCore extends Component {
 
 		// First row
 		if (isVirtualVariableList && lockHeaders && updateFrom > 0) {
-			position = secondaryPosition + this.secondary.positionOffsets[0][secondary.firstIndices[0]];
+			position = secondaryPosition + secondary.positionOffsets[0][secondary.firstIndices[0]];
 			key = this.positionVariableItems(0, key, width, height, 0, position, applyStyle);
 		}
 
 		// positioning items
 		for (let i = updateFrom; i < updateTo; i++) {
 			if (isVirtualVariableList) {
-				position = secondaryPosition + this.secondary.positionOffsets[i][secondary.firstIndices[i]];
+				position = secondaryPosition + secondary.positionOffsets[i][secondary.firstIndices[i]];
 				key = this.positionVariableItems(i, key, width, height, primaryPosition, position, applyStyle);
 
 				primaryPosition += primary.gridSize;
@@ -816,16 +816,19 @@ class VirtualListCore extends Component {
 		return (Math.ceil(primary.dataSize / dimensionToExtent) * primary.gridSize) - spacing;
 	}
 
-	adjustPositionOnFocus = (info, pos, itemSize, offsetHeader) => {
-		const offsetToClientEnd = info.clientSize - itemSize;
+	adjustPositionOnFocus = (info, pos, itemSize, offsetHeader = 0) => {
+		const
+			{pageScroll} = this.props,
+			offsetToClientEnd = info.clientSize - itemSize;
 
+		// Adjust the position if itemSize is smaller than clientSize
 		if (info.clientSize - offsetHeader >= itemSize) {
-			if (pos > info.scrollPosition + offsetToClientEnd) {
-				pos -= offsetToClientEnd;
-			} else if (pos > info.scrollPosition + offsetHeader) {
+			if (pos > info.scrollPosition + offsetToClientEnd) { // forward over
+				pos -= pageScroll ? offsetHeader : offsetToClientEnd;
+			} else if (pos >= info.scrollPosition + offsetHeader) { // inside of client
 				pos = info.scrollPosition;
-			} else {
-				pos -= offsetHeader;
+			} else { // backward over
+				pos -= pageScroll ? offsetToClientEnd : offsetHeader;
 			}
 		}
 
