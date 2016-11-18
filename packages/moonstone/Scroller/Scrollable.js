@@ -385,17 +385,19 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onWheel = (e) => {
-			e.preventDefault();
 			if (!this.isDragging) {
 				const
 					isHorizontal = this.canScrollHorizontally(),
 					isVertical = this.canScrollVertically(),
 					delta = this.wheel(e, isHorizontal, isVertical);
 
-				doc.activeElement.blur();
-				this.childRef.setContainerDisabled(true);
+				if (!this.childRef.getContainerDisabled()) {
+					doc.activeElement.blur();
+					this.childRef.setContainerDisabled(true);
+				}
 				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical);
 			}
+			e.preventDefault();
 		}
 
 		onScrollbarBtnHandler = (orientation, direction) => {

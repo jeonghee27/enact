@@ -182,6 +182,7 @@ class VirtualListCore extends Component {
 	// spotlight
 	nodeIndexToBeBlurred = null
 	lastFocusedIndex = null
+	isDataContainerDisabled = false
 
 	constructor (props) {
 		const {positioningOption} = props;
@@ -603,8 +604,11 @@ class VirtualListCore extends Component {
 
 		if (containerNode) {
 			containerNode.setAttribute(dataContainerDisabledAttribute, bool);
+			this.isDataContainerDisabled = bool;
 		}
 	}
+
+	getContainerDisabled = () => this.isDataContainerDisabled
 
 	updateClientSize = () => {
 		const
