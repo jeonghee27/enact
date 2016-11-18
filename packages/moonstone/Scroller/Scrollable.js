@@ -762,7 +762,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			return (
 				(positioningOption !== 'byBrowser' && !hideScrollbars) ? (
 					<div ref={this.initContainerRef} className={scrollableClasses} style={style}>
-						<Wrapped {...props} {...this.eventHandlers} ref={this.initChildRef} cbScrollTo={this.scrollTo} className={css.container} />
 						<Scrollbar
 							className={verticalScrollbarClassnames}
 							{...this.verticalScrollbarProps}
@@ -771,6 +770,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 							className={horizontalScrollbarClassnames}
 							{...this.horizontalScrollbarProps}
 						/>
+						<Wrapped {...props} {...this.eventHandlers} ref={this.initChildRef} cbScrollTo={this.scrollTo} className={css.container} />
 					</div>
 				) : <Wrapped {...props} {...this.eventHandlers} ref={this.initChildRef} cbScrollTo={this.scrollTo} className={scrollableClasses} style={style} />
 			);
