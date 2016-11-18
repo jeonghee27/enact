@@ -11,6 +11,8 @@ import {Spotlight, SpotlightContainerDecorator} from '@enact/spotlight';
 
 import {dataIndexAttribute, Scrollable} from '../Scroller/Scrollable';
 
+import ListItem from './ListItem';
+
 const
 	dataContainerDisabledAttribute = 'data-container-disabled',
 	dataContainerIdAttribute = 'data-container-id',
@@ -439,7 +441,6 @@ class VirtualListCore extends Component {
 
 		if (node) {
 			// spotlight
-			node.setAttribute(dataIndexAttribute, i);
 			if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
 				node.blur();
 				this.nodeIndexToBeBlurred = null;
@@ -448,25 +449,22 @@ class VirtualListCore extends Component {
 		}
 	}
 
+	createNewNode = (props) => (<ListItem {...props} />)
+
 	applyStyleToNewNode = (i, ...rest) => {
 		const
 			{component, data} = this.props,
 			{numOfItems} = this.state,
-			itemElement = component({
-				data,
-				index: i,
-				key: i % numOfItems
-			}),
 			style = {};
 
 		this.composeStyle(style, ...rest);
 
-		this.cc[i % numOfItems] = React.cloneElement(
-			itemElement, {
-				style: {...itemElement.props.style, ...style},
-				[dataIndexAttribute]: i
-			}
-		);
+		this.cc[i % numOfItems] = this.createNewNode({
+			style,
+			index: i,
+			numOfItems,
+			child: component({data, index: i})
+		});
 	}
 
 	positionItems ({updateFrom, updateTo}) {
