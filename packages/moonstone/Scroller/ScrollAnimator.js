@@ -7,6 +7,7 @@
 
 import R from 'ramda';
 
+let cnt = 1;
 const
 	// Use eases library
 	timingFunctions = {
@@ -30,11 +31,16 @@ const
 				return curTime /= duration, curTime--, (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
 			}
 			*/
+			/*
 			if (target > source) {
 				return Math.floor(source + curTime / 16);
 			} else {
 				return Math.floor(source - curTime / 16);
 			}
+			*/
+
+			cnt = cnt * (-1);
+			return source + cnt;
 		},
 		'ease-in-out': function (source, target, duration, curTime) {
 			curTime /= duration / 2;

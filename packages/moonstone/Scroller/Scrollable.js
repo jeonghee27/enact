@@ -454,7 +454,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// scroll start/stop
 
-		start (targetX, targetY, animate = true, silent = false, duration = 500) {
+		start (targetX, targetY, animate = true, silent = false, duration = 10000) {
 			const
 				{animator, scrollLeft, scrollTop, bounds} = this,
 				{getTimingFn} = animator;
