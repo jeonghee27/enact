@@ -21,7 +21,7 @@ const
 	nop = () => {},
 	perf = (typeof window === 'object') ? window.performance : {},
 	holdTime = 50,
-	scrollWheelMultiplier = 5,
+	scrollWheelMultiplier = 1,
 	pixelPerLine = ri.scale(40) * scrollWheelMultiplier,
 	pixelPerScrollbarBtn = ri.scale(100),
 	epsilon = 1,
@@ -454,16 +454,18 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// scroll start/stop
 
-		start (targetX, targetY, animate = true, silent = false, duration) {
-			const {scrollLeft, scrollTop, bounds} = this;
+		start (targetX, targetY, animate = true, silent = false, duration = 500) {
+			const
+				{animator, scrollLeft, scrollTop, bounds} = this,
+				{getTimingFn} = animator;
 
-			this.animator.stop();
 			if (!silent) {
+				animator.stop();
 				this.doScrollStart();
 			}
 
-			targetX = R.clamp(0, this.bounds.maxLeft, targetX);
-			targetY = R.clamp(0, this.bounds.maxTop, targetY);
+			targetX = R.clamp(0, bounds.maxLeft, targetX);
+			targetY = R.clamp(0, bounds.maxTop, targetY);
 
 			if ((bounds.maxLeft - targetX) < epsilon) {
 				targetX = bounds.maxLeft;
@@ -473,39 +475,34 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (animate) {
-				this.animator.start({
-					sourceX: scrollLeft,
-					sourceY: scrollTop,
-					targetX,
-					targetY,
-					duration,
-					cbScrollAnimationHandler: this.scrollAnimation
-				});
+				const
+					curTimeAtTarget = duration,
+					sourceY = scrollTop,
+					sourceX = scrollLeft,
+					cbScrollAnimationRaf = (curTime) => {
+						if (curTime < curTimeAtTarget) {
+							// scrolling
+							this.scroll(
+								this.horizontalScrollability ? getTimingFn()(sourceX, targetX, duration, curTime) : sourceX,
+								this.verticalScrollability ? getTimingFn()(sourceY, targetY, duration, curTime) : sourceY
+							);
+						} else {
+							// scrolling to the target position before stopping
+							this.scroll(targetX, targetY);
+							this.stop();
+						}
+					};
+
+				// animate
+				if (silent) {
+					animator.update(cbScrollAnimationRaf);
+				} else {
+					animator.start(cbScrollAnimationRaf);
+				}
 			} else {
 				this.scroll(targetX, targetY);
 				this.stop();
 			}
-		}
-
-		scrollAnimation = ({sourceX, sourceY}, {targetX, targetY, duration}, {calcPosX, calcPosY}) => {
-			const
-				curTimeAtTarget = duration,
-				cbScrollAnimationRaf = (curTime) => {
-					if (curTime < curTimeAtTarget) {
-						// scrolling
-						this.scroll(
-							this.horizontalScrollability ? calcPosX(curTime) : sourceX,
-							this.verticalScrollability ? calcPosY(curTime) : sourceY
-						);
-					} else {
-						// scrolling to the target position before stopping
-						this.scroll(targetX, targetY);
-						this.stop();
-					}
-				};
-
-			// animate
-			this.animator.animate(cbScrollAnimationRaf);
 		}
 
 		scroll = (left, top, skipPositionContainer = false) => {
@@ -605,6 +602,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		)
 
 		updateThumb (scrollbarRef) {
+			/*
 			if (this.props.positioningOption !== 'byBrowser' && !this.props.hideScrollbars) {
 				const isVisible = scrollbarRef.props.isVertical ? this.canScrollVertically : this.canScrollHorizontally;
 				if (isVisible()) {
@@ -616,6 +614,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					});
 				}
 			}
+			*/
 		}
 
 		// component life cycle

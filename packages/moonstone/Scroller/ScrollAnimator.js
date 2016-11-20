@@ -19,9 +19,22 @@ const
 			return (target - source) * curTime * curTime * curTime * curTime + source;
 		},
 		'ease-out': function (source, target, duration, curTime) {
-			curTime /= duration;
-			curTime--;
-			return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+			/*
+			if (curTime < 80) {
+				if (target > source) {
+					return Math.floor(source + curTime / 16);
+				} else {
+					return Math.floor(source - curTime / 16);
+				}
+			} else {
+				return curTime /= duration, curTime--, (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+			}
+			*/
+			if (target > source) {
+				return Math.floor(source + curTime / 16);
+			} else {
+				return Math.floor(source - curTime / 16);
+			}
 		},
 		'ease-in-out': function (source, target, duration, curTime) {
 			curTime /= duration / 2;
@@ -56,8 +69,10 @@ const
  * @public
  */
 class ScrollAnimator {
+	useRAF = true
 	rAFId = null
 	timingFunction = 'ease-out'
+	newRAFCBFn = null // new rAF callback function
 
 	/**
 	 * @param {String|null} timingFunction - Timing function to use for animation.  Must be one of
@@ -92,88 +107,67 @@ class ScrollAnimator {
 		};
 	}
 
-	animate (cbScrollAnimationRaf) {
+	start (rAFCBFn) {
 		const
 			// start timestamp
 			startTimeStamp = perf.now(),
 			fn = () => {
-				const
-					// schedule next frame
-					rAFId = rAF(fn),
-					// current timestamp
-					curTimeStamp = perf.now(),
-					// current time if 0 at starting position
-					curTime = curTimeStamp - startTimeStamp;
+				if (this.newRAFCBFn) {
+					// update new rAF callback funtion
 
-				this.rAFId = rAFId;
-				cbScrollAnimationRaf(curTime);
+					const
+						// current timestamp
+						curTimeStamp = perf.now(),
+						// current time if 0 at starting position
+						curTime = curTimeStamp - startTimeStamp;
+
+					rAFCBFn(curTime);
+					if (!this.useRAF) {
+						clearInterval(this.rAFId);
+					}
+					this.rAFId = null;
+
+					this.start(this.newRAFCBFn);
+					this.newRAFCBFn = null;
+				} else {
+					// call rAF callback funtion
+
+					const
+						// schedule next frame
+						rAFId = (this.useRAF) ? rAF(fn) : this.rAFId,
+						// current timestamp
+						curTimeStamp = perf.now(),
+						// current time if 0 at starting position
+						curTime = curTimeStamp - startTimeStamp;
+
+					this.rAFId = rAFId;
+					rAFCBFn(curTime);
+				}
 			};
 
-		this.rAFId = rAF(fn);
+		if (this.useRAF) {
+			this.rAFId = rAF(fn);
+		} else {
+			this.rAFId = setInterval(fn, 16);
+		}
 	}
 
-	/**
-	 * Start an animation
-	 *
-	 * ```
-	 * let animator = new ScrollAnimator();
-	 *
-	 * animator.start({
-	 * 	sourceX: this.scrollLeft,
-	 * 	sourceY: this.scrollTop,
-	 * 	targetX: this.scrollLeft + 100,
-	 * 	targetY: this.scrollTop + 100,
-	 * 	duration: 500
-	 * });
-	 * ```
-	 *
-	 * @param {Object} options - Animation options
-	 * @param {Number} options.sourceX - source absolute position x
-	 * @param {Number} options.sourceY - source absolute position y
-	 * @param {Number} options.targetX - target absolute position x
-	 * @param {Number} options.targetY - target absolute position y
-	 * @param {Number} options.duration - the duration to move to the target
-	 * @param {Function} options.cbScrollAnimationHandler - A method to call for each animation
-	 * @returns {undefined}
-	 * @public
-	 */
-	start ({
-		sourceX, sourceY,
-		targetX, targetY,
-		duration = 500,
-		cbScrollAnimationHandler
-	}) {
-		// Rather than calling back to cbScrollAnimationHandler so it can call this.animate, start
-		// should probably make the first animate call. Also, seems odd to take an object,
-		// deconstruct it only to create new objects to pass to the callback which it immediately
-		// deconstructs again. In general, I'm not sure it's necessary for the animator to know
-		// start/end values. It is simpler to let it only be concerned with managing the rAF and
-		// the easing functions over a duration. The Scrollable can then calculate its scroll
-		// position based on its internal start/end data.
-		cbScrollAnimationHandler(
-			{sourceX, sourceY},
-			{targetX, targetY, duration},
-			{
-				// Curry these at create time. Alternatively, since you have a known usage, you can
-				// create your own pseudo-curried versions and skip the ramda dependency.
-				// (sourceX, targetX, duration) => (currentTime) => { /* function body */ }
-				calcPosX: R.curry(timingFunctions[this.timingFunction])(sourceX, targetX, duration),
-				calcPosY: R.curry(timingFunctions[this.timingFunction])(sourceY, targetY, duration)
-			}
-		);
-	}
+	update = (rAFCBFn) => {this.newRAFCBFn = rAFCBFn;}
 
-	/**
-	 * Stop an animation
-	 * @returns {undefined}
-	 * @public
-	 */
 	stop () {
-		if (this.rAFId !== null ) {
-			cAF(this.rAFId);
+		if (this.rAFId !== null) {
+			if (this.useRAF) {
+				cAF(this.rAFId);
+			} else {
+				clearInterval(this.rAFId);
+			}
 			this.rAFId = null;
 		}
 	}
+
+	getRAFId = () => this.rAFId
+
+	getTimingFn = () => (timingFunctions[this.timingFunction])
 }
 
 export default ScrollAnimator;
