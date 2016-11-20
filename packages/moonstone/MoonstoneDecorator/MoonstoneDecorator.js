@@ -7,7 +7,6 @@
 import {addCancelHandler, removeCancelHandler} from '@enact/ui/Cancelable';
 import {forKeyCode} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
-import I18nDecorator from '@enact/i18n/I18nDecorator';
 import React from 'react';
 import {ResolutionDecorator} from '@enact/ui/resolution';
 import {SpotlightRootDecorator} from '@enact/spotlight';
@@ -17,7 +16,7 @@ import css from './MoonstoneDecorator.less';
 
 const defaultConfig = {
 	cancelHandler: forKeyCode(461),
-	i18n: true,
+	i18n: false,
 	ri: {
 		screenTypes
 	},
@@ -38,12 +37,11 @@ const defaultConfig = {
  * @public
  */
 const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
-	const {ri, i18n, spotlight, cancelHandler} = config;
+	const {ri, spotlight, cancelHandler} = config;
 	let App = Wrapped;
 
 	if (cancelHandler) addCancelHandler(cancelHandler);
 	if (ri) App = ResolutionDecorator(ri, App);
-	if (i18n) App = I18nDecorator(App);
 	if (spotlight) App = SpotlightRootDecorator(App);
 
 	return class extends React.Component {

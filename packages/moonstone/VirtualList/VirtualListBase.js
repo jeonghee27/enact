@@ -431,23 +431,22 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	applyStyleToExistingNode = (i, ...rest) => {
+	applyStyleToExistingNode = (i, w, h, ...rest) => {
 		const
 			{numOfItems} = this.state,
 			node = this.containerRef.children[i % numOfItems];
 
 		if (node) {
 			// spotlight
-			node.setAttribute(dataIndexAttribute, i);
 			if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
 				node.blur();
 				this.nodeIndexToBeBlurred = null;
 			}
-			this.composeStyle(node.style, ...rest);
+			this.composeItemPosition(node.style, ...rest);
 		}
 	}
 
-	applyStyleToNewNode = (i, ...rest) => {
+	applyStyleToNewNode = (i, w, h, ...rest) => {
 		const
 			{component, data} = this.props,
 			{numOfItems} = this.state,
@@ -458,7 +457,11 @@ class VirtualListCore extends Component {
 			}),
 			style = {};
 
-		this.composeStyle(style, ...rest);
+		if (this.isItemSized) {
+			style.width = w;
+			style.height = h;
+		}
+		this.composeItemPosition(style, ...rest);
 
 		this.cc[i % numOfItems] = React.cloneElement(
 			itemElement, {
@@ -497,14 +500,6 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	composeStyle (style, w, h, ...rest) {
-		if (this.isItemSized) {
-			style.width = w;
-			style.height = h;
-		}
-		this.composeItemPosition(style, ...rest);
-	}
-
 	getXY = (primary, secondary) => {
 		const rtlDirection = this.context.rtl ? -1 : 1;
 		return (this.isPrimaryDirectionVertical ? {x: (secondary * rtlDirection), y: primary} : {x: (primary * rtlDirection), y: secondary});
@@ -513,7 +508,7 @@ class VirtualListCore extends Component {
 	composeTransform (style, primary, secondary = 0) {
 		const {x, y} = this.getXY(primary, secondary);
 
-		style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+		style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0)';
 	}
 
 	composeLeftTop (style, primary, secondary = 0) {
