@@ -11,54 +11,48 @@ let additionalValue = 0;
 const
 	// Use eases library
 	timingFunctions = {
-		'1px': function (source, target, duration, curTime) {
-			if (target >= source) {
-				return Math.ceil(source + curTime / 16);
-			} else {
-				return Math.ceil(source - curTime / 16);
-			}
-		},
-		'linear': function (source, target, duration, curTime) {
+		'linear': function (distance, duration, curTime) {
 			curTime /= duration;
-			return (target - source) * curTime + source;
+			return distance * curTime;
 		},
-		'ease-in': function (source, target, duration, curTime) {
+		'ease-in': function (distance, duration, curTime) {
 			curTime /= duration;
-			return (target - source) * curTime * curTime * curTime * curTime + source;
+			return distance * curTime * curTime * curTime * curTime;
 		},
-		'ease-out': function (source, target, duration, curTime) {
+		'ease-out': function (distance, duration, curTime) {
 			curTime /= duration;
 			curTime--;
-			return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+			return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 		},
-		'enhanced-ease-out': function (source, target, duration, curTime) {
-			if (target - source > 10) {
+		'flexible-ease-out': function (distance, duration, curTime) {
+			// console.log(distance, duration, curTime);
+			if (distance > 10) {
 				if (curTime < 80) {
 					additionalValue = (additionalValue + 1) % 2;
-					if (target > source) {
-						return Math.ceil(source + curTime / 8) + additionalValue;
+					if (distance >= 0) {
+						return Math.ceil(curTime / 8) + additionalValue;
 					} else {
-						return Math.ceil(source - curTime / 8) - additionalValue;
+						return Math.ceil(curTime / 8) - additionalValue;
 					}
 				} else {
 					curTime = (curTime - 80) / (duration - 80);
 					curTime--;
-					return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+					return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 				}
 			} else {
 				curTime /= duration;
 				curTime--;
-				return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+				return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 			}
 		},
-		'ease-in-out': function (source, target, duration, curTime) {
+		'ease-in-out': function (distance, duration, curTime) {
 			curTime /= duration / 2;
 			if (curTime < 1) {
-				return (target - source) / 2 * curTime * curTime * curTime * curTime + source;
+				return distance / 2 * curTime * curTime * curTime * curTime;
 			} else {
 				curTime -= 2;
 			}
-			return (source - target) / 2 * (curTime * curTime * curTime * curTime - 2) + source;
+			return -distance / 2 * (curTime * curTime * curTime * curTime - 2);
 		}
 	},
 
@@ -86,7 +80,7 @@ const
 class ScrollAnimator {
 	useRAF = true
 	rAFId = null
-	timingFunction = 'enhanced-ease-out'
+	timingFunction = 'flexible-ease-out'
 	animationInfo = null
 
 	/**
@@ -127,13 +121,17 @@ class ScrollAnimator {
 		if (this.useRAF) {
 			this.rAFId = rAF(this.animate);
 		}
-		animationInfo.curTimeStamp = perf.now();
+		animationInfo.curTimeStamp = Math.ceil(perf.now());
 		animationInfo.rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
 	}
 
 	start ({silent, ...info}) {
 		this.animationInfo = info;
 		this.animationInfo.curTimeStamp = info.startTimeStamp;
+		this.animationInfo.sourceX = Math.floor(info.sourceX);
+		this.animationInfo.sourceY = Math.floor(info.sourceY);
+		this.animationInfo.distanceX = Math.floor(info.targetX - info.sourceX);
+		this.animationInfo.distanceY = Math.floor(info.targetY - info.sourceY);
 
 		if (!silent) {
 			if (this.useRAF) {
@@ -156,17 +154,14 @@ class ScrollAnimator {
 		}
 	}
 
-	getRAFId = () => this.rAFId
-
 	getAnimationCurrentPos = () => {
 		const
-			{sourceX, sourceY, targetX, targetY, startTimeStamp, curTimeStamp, duration,
-			horizontalScrollability, verticalScrollability} = this.animationInfo,
+			{sourceX, sourceY, distanceX, distanceY, startTimeStamp, curTimeStamp, duration, horizontalScrollability, verticalScrollability} = this.animationInfo,
 			curTime = curTimeStamp - startTimeStamp;
 
 		return {
-			x: horizontalScrollability ? timingFunctions[this.timingFunction](sourceX, targetX, duration, curTime) : sourceX,
-			y: verticalScrollability ? timingFunctions[this.timingFunction](sourceY, targetY, duration, curTime) : sourceY
+			x: horizontalScrollability ? (sourceX + Math.ceil(timingFunctions[this.timingFunction](distanceX, duration, curTime))) : sourceX,
+			y: verticalScrollability ? (sourceY + Math.ceil(timingFunctions[this.timingFunction](distanceY, duration, curTime))) : sourceY
 		};
 	}
 
