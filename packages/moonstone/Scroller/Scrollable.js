@@ -385,17 +385,17 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onWheel = (e) => {
-			e.preventDefault();
 			if (!this.isDragging) {
 				const
 					isHorizontal = this.canScrollHorizontally(),
 					isVertical = this.canScrollVertically(),
 					delta = this.wheel(e, isHorizontal, isVertical);
 
-				doc.activeElement.blur();
-				this.childRef.setContainerDisabled(true);
+				// doc.activeElement.blur();
+				// this.childRef.setContainerDisabled(true);
 				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical);
 			}
+			e.preventDefault();
 		}
 
 		onScrollbarBtnHandler = (orientation, direction) => {
@@ -475,12 +475,29 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (animate) {
+				const curTime = perf.now();
+
+				this.animator.animationInfo = {
+					sourceX: scrollLeft,
+					sourceY: scrollTop,
+					targetX: targetX,
+					targetY: targetY,
+					startTimeStamp: curTime,
+					endTimeStamp: curTime + duration,
+					curTimeStamp: curTime,
+					duration: duration
+				};
+
 				const
-					curTimeAtTarget = duration,
-					sourceY = scrollTop,
-					sourceX = scrollLeft,
-					cbScrollAnimationRaf = (curTime) => {
-						if (curTime < curTimeAtTarget) {
+					cbScrollAnimationRaf = () => {
+						const
+							{sourceX, sourceY, targetX, targetY, startTimeStamp, endTimeStamp, duration} = this.animator.animationInfo,
+							curTimeStamp = perf.now(),
+							curTime = curTimeStamp - startTimeStamp;
+
+						this.animator.curTimeStamp = curTimeStamp;
+
+						if (curTimeStamp < endTimeStamp) {
 							// scrolling
 							this.scroll(
 								this.horizontalScrollability ? getTimingFn()(sourceX, targetX, duration, curTime) : sourceX,

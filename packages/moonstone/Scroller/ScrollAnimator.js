@@ -11,6 +11,13 @@ let cnt = 1;
 const
 	// Use eases library
 	timingFunctions = {
+		'1px': function (source, target, duration, curTime) {
+			if (target >= source) {
+				return Math.ceil(source + curTime / 16);
+			} else {
+				return Math.ceil(source - curTime / 16);
+			}
+		},
 		'linear': function (source, target, duration, curTime) {
 			curTime /= duration;
 			return (target - source) * curTime + source;
@@ -41,6 +48,8 @@ const
 
 			cnt = cnt * (-1);
 			return source + cnt;
+
+			// return source + global.direction * Math.floor(source + curTime / 16);
 		},
 		'ease-in-out': function (source, target, duration, curTime) {
 			curTime /= duration / 2;
@@ -77,8 +86,17 @@ const
 class ScrollAnimator {
 	useRAF = true
 	rAFId = null
-	timingFunction = 'ease-out'
+	timingFunction = '1px'
 	newRAFCBFn = null // new rAF callback function
+
+	animationInfo = {
+		sourceX: 0,
+		sourceY: 0,
+		startTimeStamp: 0,
+		endTimeStamp: 0,
+		curTimeStamp: 0,
+		duration: 0
+	}
 
 	/**
 	 * @param {String|null} timingFunction - Timing function to use for animation.  Must be one of
@@ -116,18 +134,11 @@ class ScrollAnimator {
 	start (rAFCBFn) {
 		const
 			// start timestamp
-			startTimeStamp = perf.now(),
 			fn = () => {
 				if (this.newRAFCBFn) {
 					// update new rAF callback funtion
 
-					const
-						// current timestamp
-						curTimeStamp = perf.now(),
-						// current time if 0 at starting position
-						curTime = curTimeStamp - startTimeStamp;
-
-					rAFCBFn(curTime);
+					rAFCBFn();
 					if (!this.useRAF) {
 						clearInterval(this.rAFId);
 					}
@@ -140,14 +151,10 @@ class ScrollAnimator {
 
 					const
 						// schedule next frame
-						rAFId = (this.useRAF) ? rAF(fn) : this.rAFId,
-						// current timestamp
-						curTimeStamp = perf.now(),
-						// current time if 0 at starting position
-						curTime = curTimeStamp - startTimeStamp;
+						rAFId = (this.useRAF) ? rAF(fn) : this.rAFId;
 
 					this.rAFId = rAFId;
-					rAFCBFn(curTime);
+					rAFCBFn();
 				}
 			};
 
