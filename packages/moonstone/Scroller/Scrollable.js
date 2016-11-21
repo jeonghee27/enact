@@ -456,8 +456,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		start (targetX, targetY, animate = true, silent = false, duration = 10000) {
 			const
-				{animator, scrollLeft, scrollTop, bounds} = this,
-				{getTimingFn} = animator;
+				{animator, scrollLeft, scrollTop, bounds} = this;
 
 			if (!silent) {
 				animator.stop();
@@ -477,7 +476,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (animate) {
 				const curTime = perf.now();
 
-				this.animator.animationInfo = {
+				animator.animationInfo = {
 					sourceX: scrollLeft,
 					sourceY: scrollTop,
 					targetX: targetX,
@@ -488,35 +487,34 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					duration: duration
 				};
 
-				const
-					cbScrollAnimationRaf = () => {
-						const
-							{sourceX, sourceY, targetX, targetY, startTimeStamp, endTimeStamp, duration} = this.animator.animationInfo,
-							curTimeStamp = perf.now(),
-							curTime = curTimeStamp - startTimeStamp;
-
-						this.animator.curTimeStamp = curTimeStamp;
-
-						if (curTimeStamp < endTimeStamp) {
-							// scrolling
-							this.scroll(
-								this.horizontalScrollability ? getTimingFn()(sourceX, targetX, duration, curTime) : sourceX,
-								this.verticalScrollability ? getTimingFn()(sourceY, targetY, duration, curTime) : sourceY
-							);
-						} else {
-							// scrolling to the target position before stopping
-							this.scroll(targetX, targetY);
-							this.stop();
-						}
-					};
-
 				// animate
-				if (silent) {
-					animator.update(cbScrollAnimationRaf);
-				} else {
-					animator.start(cbScrollAnimationRaf);
+				if (!silent) {
+					animator.start(this.cbScrollAnimationRaf);
 				}
 			} else {
+				this.scroll(targetX, targetY);
+				this.stop();
+			}
+		}
+
+		cbScrollAnimationRaf = () => {
+			const
+				animator = this.animator,
+				{sourceX, sourceY, targetX, targetY, startTimeStamp, endTimeStamp, duration} = animator.animationInfo,
+				curTimeStamp = perf.now(),
+				curTime = curTimeStamp - startTimeStamp,
+				{getTimingFn} = animator;
+
+			animator.curTimeStamp = curTimeStamp;
+
+			if (curTimeStamp < endTimeStamp) {
+				// scrolling
+				this.scroll(
+					this.horizontalScrollability ? getTimingFn()(sourceX, targetX, duration, curTime) : sourceX,
+					this.verticalScrollability ? getTimingFn()(sourceY, targetY, duration, curTime) : sourceY
+				);
+			} else {
+				// scrolling to the target position before stopping
 				this.scroll(targetX, targetY);
 				this.stop();
 			}

@@ -87,7 +87,6 @@ class ScrollAnimator {
 	useRAF = true
 	rAFId = null
 	timingFunction = '1px'
-	newRAFCBFn = null // new rAF callback function
 
 	animationInfo = {
 		sourceX: 0,
@@ -133,39 +132,15 @@ class ScrollAnimator {
 
 	start (rAFCBFn) {
 		const
-			// start timestamp
 			fn = () => {
-				if (this.newRAFCBFn) {
-					// update new rAF callback funtion
-
-					rAFCBFn();
-					if (!this.useRAF) {
-						clearInterval(this.rAFId);
-					}
-					this.rAFId = null;
-
-					this.start(this.newRAFCBFn);
-					this.newRAFCBFn = null;
-				} else {
-					// call rAF callback funtion
-
-					const
-						// schedule next frame
-						rAFId = (this.useRAF) ? rAF(fn) : this.rAFId;
-
-					this.rAFId = rAFId;
-					rAFCBFn();
+				if (this.useRAF) {
+					this.rAFId = rAF(fn);
 				}
+				rAFCBFn();
 			};
 
-		if (this.useRAF) {
-			this.rAFId = rAF(fn);
-		} else {
-			this.rAFId = setInterval(fn, 16);
-		}
+		this.rAFId = (this.useRAF) ? rAF(fn) : setInterval(fn, 16);
 	}
-
-	update = (rAFCBFn) => {this.newRAFCBFn = rAFCBFn;}
 
 	stop () {
 		if (this.rAFId !== null) {
