@@ -21,7 +21,7 @@ const
 	nop = () => {},
 	perf = (typeof window === 'object') ? window.performance : {},
 	holdTime = 50,
-	scrollWheelMultiplier = 1,
+	scrollWheelMultiplier = 5,
 	pixelPerLine = ri.scale(40) * scrollWheelMultiplier,
 	pixelPerScrollbarBtn = ri.scale(100),
 	epsilon = 1,
@@ -458,7 +458,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// scroll start/stop
 
-		start (targetX, targetY, startTimeStamp, animate = true, silent = false, duration = 10000) {
+		start (targetX, targetY, startTimeStamp, animate = true, silent = false, duration = 500) {
 			const
 				{animator, scrollLeft, scrollTop, bounds} = this;
 

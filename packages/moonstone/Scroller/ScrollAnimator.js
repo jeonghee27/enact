@@ -7,7 +7,7 @@
 
 import R from 'ramda';
 
-let cnt = 1;
+let additionalValue = 0;
 const
 	// Use eases library
 	timingFunctions = {
@@ -27,29 +27,29 @@ const
 			return (target - source) * curTime * curTime * curTime * curTime + source;
 		},
 		'ease-out': function (source, target, duration, curTime) {
-			/*
-			if (curTime < 80) {
-				if (target > source) {
-					return Math.floor(source + curTime / 16);
+			curTime /= duration;
+			curTime--;
+			return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+		},
+		'enhanced-ease-out': function (source, target, duration, curTime) {
+			if (target - source > 10) {
+				if (curTime < 80) {
+					additionalValue = (additionalValue + 1) % 2;
+					if (target > source) {
+						return Math.ceil(source + curTime / 8) + additionalValue;
+					} else {
+						return Math.ceil(source - curTime / 8) - additionalValue;
+					}
 				} else {
-					return Math.floor(source - curTime / 16);
+					curTime = (curTime - 80) / (duration - 80);
+					curTime--;
+					return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
 				}
 			} else {
-				return curTime /= duration, curTime--, (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+				curTime /= duration;
+				curTime--;
+				return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
 			}
-			*/
-			/*
-			if (target > source) {
-				return Math.floor(source + curTime / 16);
-			} else {
-				return Math.floor(source - curTime / 16);
-			}
-			*/
-
-			cnt = cnt * (-1);
-			return source + cnt;
-
-			// return source + global.direction * Math.floor(source + curTime / 16);
 		},
 		'ease-in-out': function (source, target, duration, curTime) {
 			curTime /= duration / 2;
@@ -86,7 +86,7 @@ const
 class ScrollAnimator {
 	useRAF = true
 	rAFId = null
-	timingFunction = '1px'
+	timingFunction = 'enhanced-ease-out'
 	animationInfo = null
 
 	/**
@@ -171,7 +171,8 @@ class ScrollAnimator {
 	}
 
 	getAnimationTargetPos = () => {
-		return {targetX: x, targetY: y} = this.animationInfo;
+		const {targetX: x, targetY: y} = this.animationInfo;
+		return {x, y};
 	}
 }
 
