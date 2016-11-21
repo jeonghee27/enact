@@ -598,7 +598,6 @@ class VirtualListCore extends Component {
 		let gridPosition = null;
 
 		if (willFocusIndex != null) {
-			console.log(willFocusIndex);
 			gridPosition = this.getGridPosition(willFocusIndex);
 			gridPosition.primaryPosition = this.adjustPositionOnKeyDown(primary, gridPosition.primaryPosition);
 			// Since the result is used as a target position to be scrolled,

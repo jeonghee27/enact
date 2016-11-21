@@ -382,34 +382,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				index = Number.parseInt(item.dataset.index);
 
 			if (item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnKeyDown) {
-				//console.log(item);
 				const pos = this.childRef.calculatePositionOnKeyDown(e.keyCode, index);
 				if (pos) {
-					console.log(pos.top);
 					if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 						this.start(pos.left, pos.top, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
 					}
 					this.lastFocusedItem = item;
 				}
 			}
-
-			/*if (!this.isDragging && !isNaN(index) && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnKeyDown) {
-				const pos = this.childRef.calculatePositionOnKeyDown(e.keyCode, index);
-				if (pos) {
-					if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
-						this.start(pos.left, pos.top, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
-					}
-					this.lastFocusedItem = item;
-				}
-			}*/
 		}
-
-		/*onKeyDown = (e) => {
-			if (this.childRef.setSpotlightContainerRestrict) {
-				const index = Number.parseInt(e.target.getAttribute(dataIndexAttribute));
-				this.childRef.setSpotlightContainerRestrict(e.keyCode, index);
-			}
-		}*/
 
 		onWheel = (e) => {
 			e.preventDefault();
