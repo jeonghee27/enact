@@ -133,10 +133,12 @@ class ScrollAnimator {
 	start (rAFCBFn) {
 		const
 			fn = () => {
+				const animationInfo = this.animationInfo;
 				if (this.useRAF) {
 					this.rAFId = rAF(fn);
 				}
-				rAFCBFn();
+				animationInfo.curTimeStamp = perf.now();
+				rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
 			};
 
 		this.rAFId = (this.useRAF) ? rAF(fn) : setInterval(fn, 16);
@@ -155,7 +157,17 @@ class ScrollAnimator {
 
 	getRAFId = () => this.rAFId
 
-	getTimingFn = () => (timingFunctions[this.timingFunction])
+	getAnimationPos = () => {
+		const
+			{sourceX, sourceY, targetX, targetY, startTimeStamp, endTimeStamp, curTimeStamp, duration,
+			horizontalScrollability, verticalScrollability} = this.animationInfo,
+			curTime = curTimeStamp - startTimeStamp;
+
+		return {
+			x: horizontalScrollability ? timingFunctions[this.timingFunction](sourceX, targetX, duration, curTime) : sourceX,
+			y: verticalScrollability ? timingFunctions[this.timingFunction](sourceY, targetY, duration, curTime) : sourceY
+		};
+	}
 }
 
 export default ScrollAnimator;
