@@ -182,6 +182,7 @@ class VirtualListCore extends Component {
 	// spotlight
 	nodeIndexToBeBlurred = null
 	lastFocusedIndex = null
+	isRestrictSelfOnly = false
 
 	constructor (props) {
 		const {positioningOption} = props;
@@ -438,7 +439,7 @@ class VirtualListCore extends Component {
 
 		if (node) {
 			// spotlight
-			node.setAttribute(dataIndexAttribute, i);
+			node.dataset.index = i;
 			if ((i % numOfItems) === this.nodeIndexToBeBlurred && i !== this.lastFocusedIndex) {
 				node.blur();
 				this.nodeIndexToBeBlurred = null;
@@ -551,28 +552,67 @@ class VirtualListCore extends Component {
 		return (Math.ceil(curDataSize / dimensionToExtent) * primary.gridSize) - spacing;
 	}
 
-	calculatePositionOnFocus = (focusedIndex) => {
+	getWillFocusIndex = (keyCode, currentIndex) => {
 		const
-			{primary, numOfItems, scrollPosition} = this,
-			offsetToClientEnd = primary.clientSize - primary.itemSize;
-		let
-			gridPosition = this.getGridPosition(focusedIndex);
+			{dataSize} = this.props,
+			{isPrimaryDirectionVertical, dimensionToExtent} = this;
+		let index = null;
 
-		this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
-		this.lastFocusedIndex = focusedIndex;
+		if ((isPrimaryDirectionVertical && keyCode === keyUp) || (!isPrimaryDirectionVertical && keyCode === keyLeft)) {
+			index = (currentIndex - dimensionToExtent);
+		} else if ((isPrimaryDirectionVertical && keyCode === keyDown) || (!isPrimaryDirectionVertical && keyCode === keyRight)) {
+			index = currentIndex + dimensionToExtent;
+		}
 
-		if (primary.clientSize >= primary.itemSize) {
-			if (gridPosition.primaryPosition > scrollPosition + offsetToClientEnd) {
-				gridPosition.primaryPosition -= offsetToClientEnd;
-			} else if (gridPosition.primaryPosition > scrollPosition) {
-				gridPosition.primaryPosition = scrollPosition;
+		if (index < 0 || index > dataSize - 1) {
+			index = null;
+		}
+
+		return index;
+	}
+
+	adjustPositionOnKeyDown = (scrollInfo, pos) => {
+		const
+			{pageScroll} = this.props,
+			{scrollPosition} = this,
+			offsetToClientEnd = scrollInfo.clientSize - scrollInfo.itemSize;
+
+		if (scrollInfo.clientSize >= scrollInfo.itemSize) {
+			if (pos > scrollPosition + offsetToClientEnd) { //forward over
+				pos -= pageScroll ? 0 : offsetToClientEnd;
+			} else if (pos >= scrollPosition) { // inside of client
+				pos = scrollPosition;
+			} else { //backward over
+				pos -= pageScroll ? offsetToClientEnd : 0;
 			}
 		}
 
-		// Since the result is used as a target position to be scrolled,
-		// scrondaryPosition should be 0 here.
-		gridPosition.secondaryPosition = 0;
-		return this.gridPositionToItemPosition(gridPosition);
+		return pos;
+	}
+
+	calculatePositionOnKeyDown = (keyCode, currentIndex) => {
+		const
+			{primary} = this,
+			{numOfItems} = this.state,
+			willFocusIndex = this.getWillFocusIndex(keyCode, currentIndex);
+		let gridPosition = null;
+
+		if (willFocusIndex != null) {
+			console.log(willFocusIndex);
+			gridPosition = this.getGridPosition(willFocusIndex);
+			gridPosition.primaryPosition = this.adjustPositionOnKeyDown(primary, gridPosition.primaryPosition);
+			// Since the result is used as a target position to be scrolled,
+			// scrondaryPosition should be 0 here.
+			gridPosition.secondaryPosition = 0;
+		}
+
+		// call setSpotlightContainerRestrict here
+		this.setSpotlightContainerRestrict(keyCode, currentIndex);
+
+		this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
+		this.lastFocusedIndex = currentIndex;
+
+		return (gridPosition != null) ? this.gridPositionToItemPosition(gridPosition) : null;
 	}
 
 	setRestrict = (bool) => {
@@ -595,7 +635,10 @@ class VirtualListCore extends Component {
 			isSelfOnly = true;
 		}
 
-		this.setRestrict(isSelfOnly);
+		if (isSelfOnly !== this.isRestrictSelfOnly) {
+			this.isRestrictSelfOnly = isSelfOnly;
+			this.setRestrict(isSelfOnly);
+		}
 	}
 
 	setContainerDisabled = (bool) => {
@@ -718,6 +761,7 @@ class VirtualListCore extends Component {
 		delete props.onScrollStart;
 		delete props.onScrollStop;
 		delete props.overhang;
+		delete props.pageScroll;
 		delete props.positioningOption;
 		delete props.spacing;
 

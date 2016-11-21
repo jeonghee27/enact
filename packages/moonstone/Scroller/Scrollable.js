@@ -44,7 +44,7 @@ const dataIndexAttribute = 'data-index';
  * {@link moonstone/Scroller/Scrollable.Scrollable} is a Higher-order Component
  * that applies a Scrollable behavior to its wrapped component.
  *
- * Scrollable catches `onFocus` and `onKeyDown` events from its wrapped component for spotlight features,
+ * Scrollable catches `onKeyDown` events from its wrapped component for spotlight features,
  * and also catches `onMouseDown`, `onMouseLeave`, `onMouseMove`, `onMouseUp`, and `onWheel` events
  * from its wrapped component for scrolling behaviors.
  *
@@ -116,6 +116,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			onScrollStop: PropTypes.func,
 
 			/**
+			 * It scrolls by page when 'true'
+			 *
+			 * @type {Boolean}
+			 * @default true
+			 * @public
+			 */
+			pageScroll: PropTypes.bool,
+
+			/**
 			 * Options for positioning the items; valid values are `'byItem'`, `'byContainer'`,
 			 * and `'byBrowser'`.
 			 * If `'byItem'`, the list moves each item.
@@ -137,6 +146,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			onScroll: nop,
 			onScrollStart: nop,
 			onScrollStop: nop,
+			pageScroll: true,
 			positioningOption: 'byItem'
 		}
 
@@ -196,23 +206,28 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.initChildRef = this.initRef('childRef');
 
 			if (this.props.positioningOption === 'byBrowser') {
-				const {onFocus, onKeyDown, onScroll} = this;
+				const {onKeyDown, onScroll} = this;
 				this.eventHandlers = {
-					onFocus,
 					onKeyDown,
 					onScroll
 				};
 			} else {
-				const {onFocus, onKeyDown, onMouseDown, onMouseLeave, onMouseMove, onMouseUp, onWheel} = this;
-				this.eventHandlers = {
-					onFocus,
-					onKeyDown,
-					onMouseDown,
-					onMouseLeave,
-					onMouseMove,
-					onMouseUp,
-					onWheel
-				};
+				const {onKeyDown, onMouseDown, onMouseLeave, onMouseMove, onMouseUp, onWheel} = this;
+				if (props.pageScroll) {
+					this.eventHandlers = {
+						onKeyDown,
+						onWheel
+					};
+				} else {
+					this.eventHandlers = {
+						onKeyDown,
+						onMouseDown,
+						onMouseLeave,
+						onMouseMove,
+						onMouseUp,
+						onWheel
+					};
+				}
 			}
 
 			this.verticalScrollbarProps = {
@@ -360,29 +375,41 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.scroll(e.target.scrollLeft, e.target.scrollTop, true);
 		}
 
-		onFocus = (e) => {
+		onKeyDown = (e) => {
 			// for virtuallist
 			const
 				item = e.target,
-				index = Number.parseInt(item.getAttribute(dataIndexAttribute));
+				index = Number.parseInt(item.dataset.index);
 
-			if (!this.isDragging && !isNaN(index) && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnFocus) {
-				const pos = this.childRef.calculatePositionOnFocus(index);
+			if (item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnKeyDown) {
+				//console.log(item);
+				const pos = this.childRef.calculatePositionOnKeyDown(e.keyCode, index);
 				if (pos) {
+					console.log(pos.top);
 					if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 						this.start(pos.left, pos.top, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
 					}
 					this.lastFocusedItem = item;
 				}
 			}
+
+			/*if (!this.isDragging && !isNaN(index) && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnKeyDown) {
+				const pos = this.childRef.calculatePositionOnKeyDown(e.keyCode, index);
+				if (pos) {
+					if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
+						this.start(pos.left, pos.top, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
+					}
+					this.lastFocusedItem = item;
+				}
+			}*/
 		}
 
-		onKeyDown = (e) => {
+		/*onKeyDown = (e) => {
 			if (this.childRef.setSpotlightContainerRestrict) {
 				const index = Number.parseInt(e.target.getAttribute(dataIndexAttribute));
 				this.childRef.setSpotlightContainerRestrict(e.keyCode, index);
 			}
-		}
+		}*/
 
 		onWheel = (e) => {
 			e.preventDefault();
