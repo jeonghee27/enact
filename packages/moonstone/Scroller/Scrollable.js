@@ -335,6 +335,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					this.stop();
 				} else {
 					const
+						startTimeStamp = perf.now(),
 						d = this.dragInfo,
 						target = this.animator.simulate(
 							this.scrollLeft,
@@ -346,7 +347,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					doc.activeElement.blur();
 					this.childRef.setContainerDisabled(true);
 					this.isScrollAnimationTargetAccumulated = false;
-					this.start(target.targetX, target.targetY, true, true, target.duration);
+					this.start(target.targetX, target.targetY, startTimeStamp, true, true, target.duration);
 				}
 			}
 		}
@@ -363,6 +364,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		onFocus = (e) => {
 			// for virtuallist
 			const
+				startTimeStamp = perf.now(),
 				item = e.target,
 				index = Number.parseInt(item.getAttribute(dataIndexAttribute));
 
@@ -370,7 +372,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				const pos = this.childRef.calculatePositionOnFocus(index);
 				if (pos) {
 					if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
-						this.start(pos.left, pos.top, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
+						this.start(pos.left, pos.top, startTimeStamp, (spotlightAnimationDuration > 0), false, spotlightAnimationDuration);
 					}
 					this.lastFocusedItem = item;
 				}
@@ -387,41 +389,43 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		onWheel = (e) => {
 			if (!this.isDragging) {
 				const
+					startTimeStamp = perf.now(),
 					isHorizontal = this.canScrollHorizontally(),
 					isVertical = this.canScrollVertically(),
 					delta = this.wheel(e, isHorizontal, isVertical);
 
 				// doc.activeElement.blur();
 				// this.childRef.setContainerDisabled(true);
-				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical);
+				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical, startTimeStamp);
 			}
 			e.preventDefault();
 		}
 
 		onScrollbarBtnHandler = (orientation, direction) => {
 			const
+				startTimeStamp = perf.now(),
 				isHorizontal = this.canScrollHorizontally() && orientation === 'horizontal',
 				isVertical = this.canScrollVertically() && orientation === 'vertical';
 
-			this.scrollToAccumulatedTarget(pixelPerScrollbarBtn * direction, isHorizontal, isVertical);
+			this.scrollToAccumulatedTarget(pixelPerScrollbarBtn * direction, isHorizontal, isVertical, startTimeStamp);
 		}
 
-		scrollToAccumulatedTarget = (delta, isHorizontal, isVertical) => {
+		scrollToAccumulatedTarget = (delta, isHorizontal, isVertical, startTimeStamp) => {
 			const silent = this.isScrollAnimationTargetAccumulated;
 
-			if (!this.isScrollAnimationTargetAccumulated) {
+			if (!silent) {
 				this.accumulatedTargetX = this.scrollLeft;
 				this.accumulatedTargetY = this.scrollTop;
 				this.isScrollAnimationTargetAccumulated = true;
 			}
 
 			if (isVertical) {
-				this.accumulatedTargetY = R.clamp(0, this.bounds.maxTop, this.accumulatedTargetY + delta);
+				this.accumulatedTargetY += delta;
 			} else if (isHorizontal) {
-				this.accumulatedTargetX = R.clamp(0, this.bounds.maxLeft, this.accumulatedTargetX + delta);
+				this.accumulatedTargetX += delta;
 			}
 
-			this.start(this.accumulatedTargetX, this.accumulatedTargetY, true, silent);
+			this.start(this.accumulatedTargetX, this.accumulatedTargetY, startTimeStamp, true, silent);
 		}
 
 		// call scroll callbacks
@@ -454,7 +458,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// scroll start/stop
 
-		start (targetX, targetY, animate = true, silent = false, duration = 10000) {
+		start (targetX, targetY, startTimeStamp, animate = true, silent = false, duration = 10000) {
 			const
 				{animator, scrollLeft, scrollTop, bounds} = this;
 
@@ -474,18 +478,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (animate) {
-				const curTime = perf.now();
-
 				// animate
 				animator.start({
 					rAFCBFn: this.cbScrollAnimationRaf,
 					sourceX: scrollLeft,
 					sourceY: scrollTop,
-					targetX: targetX,
-					targetY: targetY,
-					startTimeStamp: curTime,
-					endTimeStamp: curTime + duration,
-					duration: duration,
+					targetX,
+					targetY,
+					startTimeStamp,
+					endTimeStamp: startTimeStamp + duration,
+					duration,
 					horizontalScrollability: this.horizontalScrollability,
 					verticalScrollability: this.verticalScrollability,
 					silent
@@ -588,10 +590,12 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		scrollTo = (opt) => {
-			let {left, top} = this.getPositionForScrollTo(opt);
+			const
+				startTimeStamp = perf.now(),
+				{left, top} = this.getPositionForScrollTo(opt);
 
 			if (left !== null || top !== null) {
-				this.start((left !== null) ? left : this.scrollLet, (top !== null) ? top : this.scrollTop, opt.animate);
+				this.start((left !== null) ? left : this.scrollLet, (top !== null) ? top : this.scrollTop, startTimeStamp, opt.animate);
 			}
 		}
 

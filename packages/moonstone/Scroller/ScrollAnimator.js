@@ -87,15 +87,7 @@ class ScrollAnimator {
 	useRAF = true
 	rAFId = null
 	timingFunction = '1px'
-
-	animationInfo = {
-		sourceX: 0,
-		sourceY: 0,
-		startTimeStamp: 0,
-		endTimeStamp: 0,
-		curTimeStamp: 0,
-		duration: 0
-	}
+	animationInfo = null
 
 	/**
 	 * @param {String|null} timingFunction - Timing function to use for animation.  Must be one of
@@ -130,22 +122,26 @@ class ScrollAnimator {
 		};
 	}
 
-	start ({rAFCBFn, silent, ...info}) {
+	animate = () => {
+		const animationInfo = this.animationInfo;
+		if (this.useRAF) {
+			this.rAFId = rAF(this.animate);
+		}
+		animationInfo.curTimeStamp = perf.now();
+		animationInfo.rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
+	}
+
+	start ({silent, ...info}) {
 		this.animationInfo = info;
 		this.animationInfo.curTimeStamp = info.startTimeStamp;
 
 		if (!silent) {
-			const
-				fn = () => {
-					const animationInfo = this.animationInfo;
-					if (this.useRAF) {
-						this.rAFId = rAF(fn);
-					}
-					animationInfo.curTimeStamp = perf.now();
-					rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
-				};
-
-			this.rAFId = (this.useRAF) ? rAF(fn) : setInterval(fn, 16);
+			if (this.useRAF) {
+				this.animate();
+			} else {
+				setInterval(this.animate, 16);
+				this.animate();
+			}
 		}
 	}
 
