@@ -7,9 +7,7 @@
 
 import R from 'ramda';
 
-let additionalValue = 0;
 const
-	// Use eases library
 	timingFunctions = {
 		'linear': function (distance, duration, curTime) {
 			curTime /= duration;
@@ -25,18 +23,12 @@ const
 			return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 		},
 		'flexible-ease-out': function (distance, duration, curTime) {
-			// console.log(distance, duration, curTime);
-			if (distance > 10) {
+			if (distance < -10 || distance > 10) {
 				if (curTime < 80) {
-					additionalValue = (additionalValue + 1) % 2;
-					if (distance >= 0) {
-						return Math.ceil(curTime / 8) + additionalValue;
-					} else {
-						return Math.ceil(curTime / 8) - additionalValue;
-					}
+					curTime /= 8;
+					return (distance >= 0) ? curTime : -curTime;
 				} else {
-					curTime = (curTime - 80) / (duration - 80);
-					curTime--;
+					curTime = (curTime - 80) / (duration - 80) - 1;
 					return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 				}
 			} else {
@@ -56,11 +48,11 @@ const
 		}
 	},
 
+	// simuate constants
 	frameTime = 16.0,         // time for one frame
 	maxVelocity = 100,        // speed cap
 	stopVelocity = 0.04,      // velocity to stop
 	velocityFriction = 0.95,  // velocity decreasing factor
-
 	clampVelocity = R.clamp(-maxVelocity, maxVelocity),
 
 	// These guards probably aren't necessary because there shouldn't be any scrolling occurring
@@ -85,7 +77,7 @@ class ScrollAnimator {
 
 	/**
 	 * @param {String|null} timingFunction - Timing function to use for animation.  Must be one of
-	 *	`'linear'`, `'ease-in'`, `'ease-out'`, or `'ease-in-out'`, or null. If `null`, defaults to
+	 *	`'linear'`, `'ease-in'`, `'ease-out'`, `'ease-in-out'`, 'flexible-ease-out', or null. If `null`, defaults to
 	 *	`'ease-out'`.
 	 * @constructor
 	 */
@@ -125,13 +117,19 @@ class ScrollAnimator {
 		animationInfo.rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
 	}
 
-	start ({silent, ...info}) {
-		this.animationInfo = info;
-		this.animationInfo.curTimeStamp = info.startTimeStamp;
-		this.animationInfo.sourceX = Math.floor(info.sourceX);
-		this.animationInfo.sourceY = Math.floor(info.sourceY);
-		this.animationInfo.distanceX = Math.floor(info.targetX - info.sourceX);
-		this.animationInfo.distanceY = Math.floor(info.targetY - info.sourceY);
+	start ({sourceX, sourceY, targetX, targetY, startTimeStamp, silent, ...rest}) {
+		this.animationInfo = {
+			sourceX: Math.floor(sourceX),
+			sourceY: Math.floor(sourceY),
+			targetX,
+			targetY,
+			distanceX: Math.floor(targetX - sourceX),
+			distanceY: Math.floor(targetY - sourceY),
+			startTimeStamp: Math.floor(startTimeStamp),
+			curTimeStamp: startTimeStamp,
+			silent,
+			...rest
+		};
 
 		if (!silent) {
 			if (this.useRAF) {
