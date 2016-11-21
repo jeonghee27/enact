@@ -130,18 +130,23 @@ class ScrollAnimator {
 		};
 	}
 
-	start (rAFCBFn) {
-		const
-			fn = () => {
-				const animationInfo = this.animationInfo;
-				if (this.useRAF) {
-					this.rAFId = rAF(fn);
-				}
-				animationInfo.curTimeStamp = perf.now();
-				rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
-			};
+	start ({rAFCBFn, silent, ...info}) {
+		this.animationInfo = info;
+		this.animationInfo.curTimeStamp = info.startTimeStamp;
 
-		this.rAFId = (this.useRAF) ? rAF(fn) : setInterval(fn, 16);
+		if (!silent) {
+			const
+				fn = () => {
+					const animationInfo = this.animationInfo;
+					if (this.useRAF) {
+						this.rAFId = rAF(fn);
+					}
+					animationInfo.curTimeStamp = perf.now();
+					rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
+				};
+
+			this.rAFId = (this.useRAF) ? rAF(fn) : setInterval(fn, 16);
+		}
 	}
 
 	stop () {
@@ -157,9 +162,9 @@ class ScrollAnimator {
 
 	getRAFId = () => this.rAFId
 
-	getAnimationPos = () => {
+	getAnimationCurrentPos = () => {
 		const
-			{sourceX, sourceY, targetX, targetY, startTimeStamp, endTimeStamp, curTimeStamp, duration,
+			{sourceX, sourceY, targetX, targetY, startTimeStamp, curTimeStamp, duration,
 			horizontalScrollability, verticalScrollability} = this.animationInfo,
 			curTime = curTimeStamp - startTimeStamp;
 
@@ -167,6 +172,10 @@ class ScrollAnimator {
 			x: horizontalScrollability ? timingFunctions[this.timingFunction](sourceX, targetX, duration, curTime) : sourceX,
 			y: verticalScrollability ? timingFunctions[this.timingFunction](sourceY, targetY, duration, curTime) : sourceY
 		};
+	}
+
+	getAnimationTargetPos = () => {
+		return {targetX: x, targetY: y} = this.animationInfo;
 	}
 }
 

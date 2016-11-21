@@ -476,23 +476,20 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (animate) {
 				const curTime = perf.now();
 
-				animator.animationInfo = {
+				// animate
+				animator.start({
+					rAFCBFn: this.cbScrollAnimationRaf,
 					sourceX: scrollLeft,
 					sourceY: scrollTop,
 					targetX: targetX,
 					targetY: targetY,
 					startTimeStamp: curTime,
 					endTimeStamp: curTime + duration,
-					curTimeStamp: curTime,
 					duration: duration,
 					horizontalScrollability: this.horizontalScrollability,
-					verticalScrollability: this.verticalScrollability
-				};
-
-				// animate
-				if (!silent) {
-					animator.start(this.cbScrollAnimationRaf);
-				}
+					verticalScrollability: this.verticalScrollability,
+					silent
+				});
 			} else {
 				this.scroll(targetX, targetY);
 				this.stop();
@@ -502,12 +499,12 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		cbScrollAnimationRaf = (isAnimating) => {
 			if (isAnimating) {
 				// scrolling
-				const pos = this.animator.getAnimationPos();
+				const pos = this.animator.getAnimationCurrentPos();
 				this.scroll(pos.x, pos.y);
 			} else {
 				// scrolling to the target position before stopping
-				const animationInfo = this.animator.animationInfo;
-				this.scroll(animationInfo.targetX, animationInfo.targetY);
+				const pos = this.animator.getAnimationTargetPos();
+				this.scroll(pos.x, pos.y);
 				this.stop();
 			}
 		}
