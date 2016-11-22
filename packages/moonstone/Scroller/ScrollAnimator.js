@@ -7,38 +7,50 @@
 
 import R from 'ramda';
 
+let easingFactorCache = {};
 const
-	// Use eases library
+	defaultAnimationDuration = 500,
 	timingFunctions = {
-		'linear': function (source, target, duration, curTime) {
+		'linear': function (duration, curTime) {
 			curTime /= duration;
-			return (target - source) * curTime + source;
+			return curTime;
 		},
-		'ease-in': function (source, target, duration, curTime) {
+		'ease-in': function (duration, curTime) {
 			curTime /= duration;
-			return (target - source) * curTime * curTime * curTime * curTime + source;
+			return curTime * curTime * curTime * curTime;
 		},
-		'ease-out': function (source, target, duration, curTime) {
+		'ease-out': function (duration, curTime) {
 			curTime /= duration;
 			curTime--;
-			return (target - source) * (curTime * curTime * curTime * curTime * curTime + 1) + source;
+			return (curTime * curTime * curTime * curTime * curTime + 1);
 		},
-		'ease-in-out': function (source, target, duration, curTime) {
+		'cache-ease-out': function (duration, curTime) {
+			const index = parseInt(curTime * 1000, 10);
+			if (duration === defaultAnimationDuration && easingFactorCache[index]) {
+				console.log(curTime, easingFactorCache[index]);
+				return easingFactorCache[index];
+			} else {
+				curTime /= duration;
+				curTime--;
+				return easingFactorCache[index] = (curTime * curTime * curTime * curTime * curTime + 1);
+			}
+		},
+		'ease-in-out': function (duration, curTime) {
 			curTime /= duration / 2;
 			if (curTime < 1) {
-				return (target - source) / 2 * curTime * curTime * curTime * curTime + source;
+				return (curTime * curTime * curTime * curTime) / 2;
 			} else {
 				curTime -= 2;
 			}
-			return (source - target) / 2 * (curTime * curTime * curTime * curTime - 2) + source;
+			return -(curTime * curTime * curTime * curTime - 2) / 2;
 		}
 	},
 
+	// simuate constants
 	frameTime = 16.0,         // time for one frame
 	maxVelocity = 100,        // speed cap
 	stopVelocity = 0.04,      // velocity to stop
 	velocityFriction = 0.95,  // velocity decreasing factor
-
 	clampVelocity = R.clamp(-maxVelocity, maxVelocity),
 
 	// These guards probably aren't necessary because there shouldn't be any scrolling occurring
@@ -58,6 +70,7 @@ const
 class ScrollAnimator {
 	rAFId = null
 	timingFunction = 'ease-out'
+	animationInfo = null
 
 	/**
 	 * @param {String|null} timingFunction - Timing function to use for animation.  Must be one of
@@ -92,89 +105,67 @@ class ScrollAnimator {
 		};
 	}
 
-	animate (cbScrollAnimationRaf) {
+	animate = () => {
+		const info = this.animationInfo;
+		info.curTimeStamp = Math.ceil(perf.now());
+		this.rAFId = rAF(this.animate);
+
+		if (info.curTimeStamp < info.endTimeStamp) {
+			// animating
+			info.rAFCBFn(true, this.getAnimationCurrentPos());
+		} else {
+			// stopping animation
+			info.rAFCBFn(false, {x: info.targetX, y: info.targetY});
+		}
+	}
+
+	start ({sourceX, sourceY, targetX, targetY, duration, silent, ...rest}) {
 		const
-			// start timestamp
-			startTimeStamp = perf.now(),
-			fn = () => {
-				const
-					// schedule next frame
-					rAFId = rAF(fn),
-					// current timestamp
-					curTimeStamp = perf.now(),
-					// current time if 0 at starting position
-					curTime = curTimeStamp - startTimeStamp;
+			curTimeStamp = Math.floor(perf.now()),
+			startTimeStamp = curTimeStamp - frameTime;
 
-				this.rAFId = rAFId;
-				cbScrollAnimationRaf(curTime);
-			};
+		this.animationInfo = {
+			...rest,
+			sourceX: Math.floor(sourceX),
+			sourceY: Math.floor(sourceY),
+			targetX,
+			targetY,
+			distanceX: Math.floor(targetX - sourceX),
+			distanceY: Math.floor(targetY - sourceY),
+			startTimeStamp: startTimeStamp,
+			endTimeStamp: startTimeStamp + duration,
+			curTimeStamp: curTimeStamp,
+			duration
+		};
 
-		this.rAFId = rAF(fn);
+		if (silent) {
+			// Without cancelling rAF callback funtion, we'd like to start scrolling
+			this.animationInfo.rAFCBFn(true, {x: targetX, y: targetY});
+		} else {
+			this.animate();
+		}
 	}
 
-	/**
-	 * Start an animation
-	 *
-	 * ```
-	 * let animator = new ScrollAnimator();
-	 *
-	 * animator.start({
-	 * 	sourceX: this.scrollLeft,
-	 * 	sourceY: this.scrollTop,
-	 * 	targetX: this.scrollLeft + 100,
-	 * 	targetY: this.scrollTop + 100,
-	 * 	duration: 500
-	 * });
-	 * ```
-	 *
-	 * @param {Object} options - Animation options
-	 * @param {Number} options.sourceX - source absolute position x
-	 * @param {Number} options.sourceY - source absolute position y
-	 * @param {Number} options.targetX - target absolute position x
-	 * @param {Number} options.targetY - target absolute position y
-	 * @param {Number} options.duration - the duration to move to the target
-	 * @param {Function} options.cbScrollAnimationHandler - A method to call for each animation
-	 * @returns {undefined}
-	 * @public
-	 */
-	start ({
-		sourceX, sourceY,
-		targetX, targetY,
-		duration = 500,
-		cbScrollAnimationHandler
-	}) {
-		// Rather than calling back to cbScrollAnimationHandler so it can call this.animate, start
-		// should probably make the first animate call. Also, seems odd to take an object,
-		// deconstruct it only to create new objects to pass to the callback which it immediately
-		// deconstructs again. In general, I'm not sure it's necessary for the animator to know
-		// start/end values. It is simpler to let it only be concerned with managing the rAF and
-		// the easing functions over a duration. The Scrollable can then calculate its scroll
-		// position based on its internal start/end data.
-		cbScrollAnimationHandler(
-			{sourceX, sourceY},
-			{targetX, targetY, duration},
-			{
-				// Curry these at create time. Alternatively, since you have a known usage, you can
-				// create your own pseudo-curried versions and skip the ramda dependency.
-				// (sourceX, targetX, duration) => (currentTime) => { /* function body */ }
-				calcPosX: R.curry(timingFunctions[this.timingFunction])(sourceX, targetX, duration),
-				calcPosY: R.curry(timingFunctions[this.timingFunction])(sourceY, targetY, duration)
-			}
-		);
-	}
-
-	/**
-	 * Stop an animation
-	 * @returns {undefined}
-	 * @public
-	 */
 	stop () {
-		if (this.rAFId !== null ) {
+		if (this.rAFId !== null) {
 			cAF(this.rAFId);
 			this.rAFId = null;
 		}
 	}
+
+	getAnimationCurrentPos = () => {
+		const
+			{sourceX, sourceY, distanceX, distanceY, startTimeStamp, curTimeStamp, duration, horizontalScrollability, verticalScrollability} = this.animationInfo,
+			curTime = curTimeStamp - startTimeStamp,
+			deltaX = horizontalScrollability ? (Math.ceil(timingFunctions[this.timingFunction](duration, curTime) * distanceX)) : 0,
+			deltaY = verticalScrollability ? (Math.ceil(timingFunctions[this.timingFunction](duration, curTime) * distanceY)) : 0;
+
+		return {
+			x: sourceX + deltaX,
+			y: sourceY + deltaY
+		};
+	}
 }
 
 export default ScrollAnimator;
-export {ScrollAnimator};
+export {ScrollAnimator, defaultAnimationDuration};

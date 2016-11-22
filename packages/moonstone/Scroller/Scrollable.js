@@ -12,7 +12,7 @@ import R from 'ramda';
 import React, {Component, PropTypes} from 'react';
 import ri from '@enact/ui/resolution';
 
-import ScrollAnimator from './ScrollAnimator';
+import {ScrollAnimator, defaultAnimationDuration} from './ScrollAnimator';
 import Scrollbar from './Scrollbar';
 import css from './Scrollable.less';
 
@@ -409,7 +409,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		scrollToAccumulatedTarget = (delta, isHorizontal, isVertical) => {
 			const silent = this.isScrollAnimationTargetAccumulated;
 
-			if (!this.isScrollAnimationTargetAccumulated) {
+			if (!silent) {
 				this.accumulatedTargetX = this.scrollLeft;
 				this.accumulatedTargetY = this.scrollTop;
 				this.isScrollAnimationTargetAccumulated = true;
@@ -454,16 +454,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// scroll start/stop
 
-		start (targetX, targetY, animate = true, silent = false, duration) {
-			const {scrollLeft, scrollTop, bounds} = this;
+		start (targetX, targetY, animate = true, silent = false, duration = defaultAnimationDuration) {
+			const {animator, scrollLeft, scrollTop, bounds} = this;
 
-			this.animator.stop();
 			if (!silent) {
+				animator.stop();
 				this.doScrollStart();
 			}
 
-			targetX = R.clamp(0, this.bounds.maxLeft, targetX);
-			targetY = R.clamp(0, this.bounds.maxTop, targetY);
+			targetX = R.clamp(0, bounds.maxLeft, targetX);
+			targetY = R.clamp(0, bounds.maxTop, targetY);
 
 			if ((bounds.maxLeft - targetX) < epsilon) {
 				targetX = bounds.maxLeft;
@@ -473,13 +473,17 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (animate) {
-				this.animator.start({
+				// animate
+				animator.start({
+					rAFCBFn: this.scrollAnimation,
 					sourceX: scrollLeft,
 					sourceY: scrollTop,
 					targetX,
 					targetY,
 					duration,
-					cbScrollAnimationHandler: this.scrollAnimation
+					horizontalScrollability: this.horizontalScrollability,
+					verticalScrollability: this.verticalScrollability,
+					silent
 				});
 			} else {
 				this.scroll(targetX, targetY);
@@ -487,25 +491,11 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 		}
 
-		scrollAnimation = ({sourceX, sourceY}, {targetX, targetY, duration}, {calcPosX, calcPosY}) => {
-			const
-				curTimeAtTarget = duration,
-				cbScrollAnimationRaf = (curTime) => {
-					if (curTime < curTimeAtTarget) {
-						// scrolling
-						this.scroll(
-							this.horizontalScrollability ? calcPosX(curTime) : sourceX,
-							this.verticalScrollability ? calcPosY(curTime) : sourceY
-						);
-					} else {
-						// scrolling to the target position before stopping
-						this.scroll(targetX, targetY);
-						this.stop();
-					}
-				};
-
-			// animate
-			this.animator.animate(cbScrollAnimationRaf);
+		scrollAnimation = (isAnimating, pos) => {
+			this.scroll(pos.x, pos.y);
+			if (!isAnimating) {
+				this.stop();
+			}
 		}
 
 		scroll = (left, top, skipPositionContainer = false) => {
@@ -587,7 +577,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		scrollTo = (opt) => {
-			let {left, top} = this.getPositionForScrollTo(opt);
+			const {left, top} = this.getPositionForScrollTo(opt);
 
 			if (left !== null || top !== null) {
 				this.start((left !== null) ? left : this.scrollLet, (top !== null) ? top : this.scrollTop, opt.animate);
