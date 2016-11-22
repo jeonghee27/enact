@@ -23,13 +23,22 @@ const
 			return distance * (curTime * curTime * curTime * curTime * curTime + 1);
 		},
 		'flexible-ease-out': function (distance, duration, curTime) {
-			if (distance < -10 || distance > 10) {
-				if (curTime < 80) {
-					return (distance >= 0) ? Math.ceil(curTime / 8) : -Math.ceil(curTime / 8);
-				} else {
-					curTime = (curTime - 80) / (duration - 80) - 1;
-					return distance * (curTime * curTime * curTime * curTime * curTime + 1);
-				}
+			// if (distance < -10 || distance > 10) {
+			// 	if (curTime < 80) {
+			// 		return (distance >= 0) ? Math.ceil(curTime / 8) : -Math.ceil(curTime / 8);
+			// 	} else {
+			// 		curTime = (curTime - 80) / (duration - 80) - 1;
+			// 		return distance * (curTime * curTime * curTime * curTime * curTime + 1);
+			// 	}
+			// } else {
+			// 	curTime /= duration;
+			// 	curTime--;
+			// 	return distance * (curTime * curTime * curTime * curTime * curTime + 1);
+			// }
+			if (curTime <= 16) {
+				const ret = (distance >= 0) ? 1 : -1;
+				console.log('easing : ' + ret);
+				return ret;
 			} else {
 				curTime /= duration;
 				curTime--;
@@ -107,16 +116,20 @@ class ScrollAnimator {
 		};
 	}
 
-	animate = () => {
+	animate = (curTimeStamp) => {
 		const animationInfo = this.animationInfo;
-		if (this.useRAF) {
-			this.rAFId = rAF(this.animate);
-		}
-		animationInfo.curTimeStamp = Math.ceil(perf.now());
+		// if (this.useRAF) {
+		// 	this.rAFId = rAF(this.animate);
+		// }
+		animationInfo.curTimeStamp = curTimeStamp || Math.ceil(perf.now());
 		animationInfo.rAFCBFn(animationInfo.curTimeStamp < animationInfo.endTimeStamp);
 	}
 
 	start ({sourceX, sourceY, targetX, targetY, startTimeStamp, silent, ...rest}) {
+		const
+			startTimeInt = Math.floor(startTimeStamp),
+			curTimeStamp = startTimeInt + 16;
+
 		this.animationInfo = {
 			sourceX: Math.floor(sourceX),
 			sourceY: Math.floor(sourceY),
@@ -124,20 +137,21 @@ class ScrollAnimator {
 			targetY,
 			distanceX: Math.floor(targetX - sourceX),
 			distanceY: Math.floor(targetY - sourceY),
-			startTimeStamp: Math.floor(startTimeStamp),
-			curTimeStamp: startTimeStamp,
+			startTimeStamp: startTimeInt,
+			curTimeStamp: startTimeInt + 16,
 			silent,
 			...rest
 		};
 
-		if (!silent) {
+		// if (!silent) {
 			if (this.useRAF) {
-				this.animate();
+				this.stop();
+				this.animate(curTimeStamp);
 			} else {
 				setInterval(this.animate, 16);
 				this.animate();
 			}
-		}
+		// }
 	}
 
 	stop () {
@@ -156,10 +170,14 @@ class ScrollAnimator {
 			{sourceX, sourceY, distanceX, distanceY, startTimeStamp, curTimeStamp, duration, horizontalScrollability, verticalScrollability} = this.animationInfo,
 			curTime = curTimeStamp - startTimeStamp;
 
-		return {
+		const ret = {
 			x: horizontalScrollability ? (sourceX + Math.ceil(timingFunctions[this.timingFunction](distanceX, duration, curTime))) : sourceX,
 			y: verticalScrollability ? (sourceY + Math.ceil(timingFunctions[this.timingFunction](distanceY, duration, curTime))) : sourceY
 		};
+
+		console.log('curPos : ' + ret.y);
+
+		return ret;
 	}
 
 	getAnimationTargetPos = () => {
