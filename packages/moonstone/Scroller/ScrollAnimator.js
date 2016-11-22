@@ -25,8 +25,7 @@ const
 		'flexible-ease-out': function (distance, duration, curTime) {
 			if (distance < -10 || distance > 10) {
 				if (curTime < 80) {
-					curTime /= 8;
-					return (distance >= 0) ? curTime : -curTime;
+					return (distance >= 0) ? Math.ceil(curTime / 8) : -Math.ceil(curTime / 8);
 				} else {
 					curTime = (curTime - 80) / (duration - 80) - 1;
 					return distance * (curTime * curTime * curTime * curTime * curTime + 1);
