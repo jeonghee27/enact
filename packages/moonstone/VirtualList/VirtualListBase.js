@@ -11,6 +11,7 @@ import {Spotlight, SpotlightContainerDecorator} from '@enact/spotlight';
 import {contextTypes} from '@enact/i18n/I18nDecorator';
 
 import {dataIndexAttribute, Scrollable} from '../Scroller/Scrollable';
+import Model from './Model';
 
 const
 	dataContainerDisabledAttribute = 'data-container-disabled',
@@ -44,6 +45,14 @@ class VirtualListCore extends Component {
 			PropTypes.number,
 			PropTypes.object
 		]).isRequired,
+
+		/**
+		 * Callback method of getModel.
+		 *
+		 * @type {Function}
+		 * @public
+		 */
+		cbGetModel: PropTypes.func,
 
 		/**
 		 * Callback method of scrollTo.
@@ -139,6 +148,7 @@ class VirtualListCore extends Component {
 	static contextTypes = contextTypes
 
 	static defaultProps = {
+		cbGetModel: nop,
 		cbScrollTo: nop,
 		component: ({index, key}) => (<div key={key}>{index}</div>),
 		data: [],
@@ -183,6 +193,9 @@ class VirtualListCore extends Component {
 	nodeIndexToBeBlurred = null
 	lastFocusedIndex = null
 
+	// model
+	model = new Model()
+
 	constructor (props) {
 		const {positioningOption} = props;
 
@@ -206,6 +219,8 @@ class VirtualListCore extends Component {
 				this.positionContainer = this.applyScrollLeftTopToWrapperNode;
 				break;
 		}
+
+		props.cbGetModel(this.model);
 	}
 
 	isVertical = () => this.isPrimaryDirectionVertical
@@ -706,6 +721,7 @@ class VirtualListCore extends Component {
 			{positioningOption, onScroll} = this.props,
 			{primary, cc} = this;
 
+		delete props.cbGetModel;
 		delete props.cbScrollTo;
 		delete props.component;
 		delete props.data;
