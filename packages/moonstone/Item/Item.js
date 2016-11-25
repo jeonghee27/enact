@@ -55,7 +55,7 @@ const ItemBase = kind({
 	},
 
 	defaultProps: {
-		component: MarqueeText,
+		component: 'div',
 		disabled: false
 	},
 
