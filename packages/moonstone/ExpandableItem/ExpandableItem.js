@@ -1,10 +1,10 @@
 /**
- * Exports the {@link moonstone/ExpandableItem.ExpandableItem} and
- * {@link moonstone/ExpandableItem.ExpandableItemBase} components and
- * {@link moonstone/ExpandableItem/Expandable.Expandable} Higher-Order Component (HOC). The default
- * export is {@link moonstone/ExpandableItem.ExpandableItem}.
+ * Exports the {@link module:@enact/ui/ExpandableItem~ExpandableItem} and
+ * {@link module:@enact/ui/ExpandableItem~ExpandableItemBase} components and
+ * {@link module:@enact/ui/ExpandableItem~Expandable} higher-order component. The default export is
+ * {@link module:@enact/ui/ExpandableItem~ExpandableItem}.
  *
- * @module moonstone/ExpandableItem
+ * @module @enact/ui/ExpandableItem
  */
 
 import kind from '@enact/core/kind';
@@ -13,26 +13,28 @@ import {SpotlightContainerDecorator} from '@enact/spotlight';
 import Transition from '@enact/ui/Transition';
 
 import LabeledItem from '../LabeledItem';
+import Icon from '../Icon';
 
 import Expandable from './Expandable';
 import ExpandableContainer from './ExpandableContainer';
 
+import css from './Expandable.less';
+
 const TransitionContainer = SpotlightContainerDecorator(Transition);
 
 /**
- * {@link moonstone/ExpandableItem.ExpandableItem} is a stateless component that
- * renders a {@link moonstone/LabeledItem.LabeledItem} that can be expanded to show
+ * {@link module:@enact/moonstone/ExpandableItem~ExpandableItem} is a stateless component that
+ * renders a {@link module:@enact/moonstone/LabeledItem~LabeledItem} that can be expanded to show
  * additional contents.
  *
  * @class ExpandableItemBase
- * @memberof moonstone/ExpandableItem
  * @ui
- * @public
+ * @private
  */
 const ExpandableItemBase = kind({
 	name: 'ExpandableItem',
 
-	propTypes: /** @lends moonstone/ExpandableItem.ExpandableItemBase.prototype */ {
+	propTypes: {
 		/**
 		 * The primary text of the item.
 		 *
@@ -122,6 +124,10 @@ const ExpandableItemBase = kind({
 		showLabel: 'auto'
 	},
 
+	styles: {
+		css
+	},
+
 	computed: {
 		label: ({disabled, label, noneText, open, showLabel}) => {
 			const isOpen = open && !disabled;
@@ -131,29 +137,49 @@ const ExpandableItemBase = kind({
 				return null;
 			}
 		},
-		handleOpen: ({disabled, onClose, onOpen, open}) => {
+		handleOpen: ({disabled, onClose, onOpen, onToggle, open}) => {
 			// When disabled, don't attach an event
 			if (!disabled) {
-				return open ? onClose : onOpen;
+				const handler = open ? onClose : onOpen;
+				if (onToggle && handler) {
+					// if we have both, we need to wrap them in a function so they can both be
+					// called.
+					return () => {
+						onToggle({open: !open});
+						handler();
+					};
+				} else if (onToggle) {
+					return () => onToggle({open: !open});
+				} else {
+					return handler;
+				}
+			}
+		},
+		icon: ({open}) => {
+			if (open) {
+				return 'arrowsmallup';
+			} else {
+				return 'arrowsmalldown';
 			}
 		},
 		open: ({disabled, open}) => open && !disabled
 	},
 
-	render: ({children, disabled, handleOpen, label, open, title, ...rest}) => {
+	render: ({children, disabled, handleOpen, label, open, style, title, icon, ...rest}) => {
 		delete rest.noneText;
 		delete rest.label;
 		delete rest.showLabel;
-		delete rest.onOpen;
-		delete rest.onClose;
 
 		return (
-			<ExpandableContainer {...rest} disabled={disabled} open={open}>
+			<ExpandableContainer style={style} disabled={disabled} open={open}>
 				<LabeledItem
 					disabled={disabled}
 					label={label}
 					onClick={handleOpen}
-				>{title}</LabeledItem>
+				>
+					{title}
+					<Icon className={css.expandableIcon}>{icon}</Icon>
+				</LabeledItem>
 				<TransitionContainer data-container-disabled={!open} visible={open} duration="short" type="clip">
 					{children}
 				</TransitionContainer>
@@ -164,14 +190,12 @@ const ExpandableItemBase = kind({
 
 
 /**
- * {@link moonstone/ExpandableItem.ExpandableItem} renders a
- * {@link moonstone/LabeledItem.LabeledItem} that can be expanded to show additional
+ * {@link module:@enact/moonstone/ExpandableItem~ExpandableItem} renders a
+ * {@link module:@enact/moonstone/LabeledItem~LabeledItem} that can be expanded to show additional
  * contents.
  *
  * @class ExpandableItem
- * @memberof moonstone/ExpandableItem
  * @ui
- * @mixes moonstone/ExpandableItem.Expandable
  * @public
  */
 const ExpandableItem = Expandable(ExpandableItemBase);
