@@ -140,7 +140,7 @@ class ScrollAnimator {
 	start ({
 		sourceX, sourceY,
 		targetX, targetY,
-		duration = 500,
+		duration = 1000,
 		cbScrollAnimationHandler
 	}) {
 		// Rather than calling back to cbScrollAnimationHandler so it can call this.animate, start
