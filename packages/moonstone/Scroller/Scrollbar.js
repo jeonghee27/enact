@@ -16,7 +16,7 @@ import IconButton from '../IconButton';
 import css from './Scrollbar.less';
 
 const
-	upDownInfo = {
+	verticalProperties = {
 		prevIcon: 'arrowsmallup',
 		nextIcon: 'arrowsmalldown',
 		prevButtonClass: css.scrollbarUpButton,
@@ -28,7 +28,7 @@ const
 			'matrix3d(1, 0, 0, 0, 0,' + (scaledSize / natualSize) + ', 0, 0, 0, 0, 1, 0, 0, ' + position + ', 1, 1)'
 		)
 	},
-	leftRightInfo = {
+	horizontalProperties = {
 		prevIcon: 'arrowsmallleft',
 		nextIcon: 'arrowsmallright',
 		prevButtonClass: css.scrollbarLeftButton,
@@ -43,7 +43,8 @@ const
 	autoHideDelay = 200,
 	minThumbSize = ri.scale(4),
 	// spotlight
-	doc = (typeof window === 'object') ? window.document : {};
+	doc = (typeof window === 'object') ? window.document : {},
+	perf = (typeof window === 'object') ? window.performance : {};
 
 /**
  * {@link moonstone/Scroller/Scrollbar.Scrollbar} is a Scrollbar with Moonstone styling.
@@ -110,8 +111,8 @@ class Scrollbar extends Component {
 			nextButtonDisabled: false
 		};
 
-		this.scrollInfo = {
-			...((props.isVertical) ? upDownInfo : leftRightInfo),
+		this.scrollbarInfo = {
+			...((props.isVertical) ? verticalProperties : horizontalProperties),
 			clickPrevHandler: props.onPrevScroll,
 			clickNextHandler: props.onNextScroll
 		};
@@ -143,12 +144,13 @@ class Scrollbar extends Component {
 	}
 
 	update (bounds) {
-		let
+		const
 			{trackSize, minThumbSizeRatio} = this,
 			{clientWidth, clientHeight, scrollWidth, scrollHeight, scrollLeft, scrollTop} = bounds,
 			thumbSizeRatioBase = this.props.isVertical ?
 				Math.min(1, clientHeight / scrollHeight) :
-				Math.min(1, clientWidth / scrollWidth),
+				Math.min(1, clientWidth / scrollWidth);
+		let
 			thumbSizeRatio = Math.max(minThumbSizeRatio, thumbSizeRatioBase),
 			thumbPositionRatio = this.props.isVertical ?
 				scrollTop / (scrollHeight - clientHeight) :
@@ -168,15 +170,24 @@ class Scrollbar extends Component {
 		thumbPositionRatio = thumbPositionRatio * (1 - thumbSizeRatio);
 		thumbPosition = Math.round(thumbPositionRatio * trackSize);
 
-		this.thumbRef.style.transform = this.scrollInfo.matrix(thumbPosition, thumbSize, this.thumbSize);
+		this.thumbRef.style.transform = this.scrollbarInfo.matrix(thumbPosition, thumbSize, this.thumbSize);
 		this.updateButtons(bounds);
 	}
 
 	showThumb () {
+		stopJob(this.jobName);
 		this.thumbRef.classList.add(css.thumbShown);
 		this.thumbRef.classList.remove(css.thumbHidden);
+	}
 
-		this.jobName = this.props.isVertical ? 'vThumbHide' : 'hThumbHide';
+	startHidingThumb () {
+		const
+			{isVertical} = this.props,
+			now = perf.now();
+
+		stopJob(this.jobName);
+
+		this.jobName = now + (isVertical ? 'vThumbHide' : 'hThumbHide');
 		if (this.autoHide) {
 			stopJob(this.jobName);
 			startJob(this.jobName, () => {
@@ -188,13 +199,11 @@ class Scrollbar extends Component {
 	hideThumb () {
 		this.thumbRef.classList.add(css.thumbHidden);
 		this.thumbRef.classList.remove(css.thumbShown);
-
-		this.jobName = this.props.isVertical ? 'vThumbHide' : 'hThumbHide';
 	}
 
 	calculateMetrics () {
-		this.thumbSize = this.thumbRef[this.scrollInfo.sizeProperty];
-		this.trackSize = this.containerRef[this.scrollInfo.sizeProperty];
+		this.thumbSize = this.thumbRef[this.scrollbarInfo.sizeProperty];
+		this.trackSize = this.containerRef[this.scrollbarInfo.sizeProperty];
 		this.minThumbSizeRatio = minThumbSize / this.trackSize;
 	}
 
@@ -225,7 +234,7 @@ class Scrollbar extends Component {
 			{className} = this.props,
 			{prevButtonDisabled, nextButtonDisabled} = this.state,
 			{prevIcon, nextIcon, scrollbarClass, thumbClass,
-			prevButtonClass, nextButtonClass, clickPrevHandler, clickNextHandler} = this.scrollInfo,
+			prevButtonClass, nextButtonClass, clickPrevHandler, clickNextHandler} = this.scrollbarInfo,
 			scrollbarClassNames = classNames(className, scrollbarClass);
 
 		return (
