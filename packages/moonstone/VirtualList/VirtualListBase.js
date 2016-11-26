@@ -169,15 +169,14 @@ class VirtualListCore extends Component {
 	curDataSize = 0
 	cc = []
 	scrollPosition = 0
+	updateFrom = 0
+	updateTo = 0
 
 	containerRef = null
 	wrapperRef = null
 	composeItemPosition = null
 	positionContainer = null
 	job = null
-
-	updateFrom = 0
-	updateTo = 0
 
 	// spotlight
 	nodeIndexToBeBlurred = null
@@ -317,6 +316,8 @@ class VirtualListCore extends Component {
 
 		this.maxFirstIndex = dataSize - numOfItems;
 		this.curDataSize = dataSize;
+		this.updateFrom = 0;
+		this.updateTo = 0;
 
 		this.setState({firstIndex: Math.min(this.state.firstIndex, this.maxFirstIndex), numOfItems});
 		this.calculateScrollBounds(props);
