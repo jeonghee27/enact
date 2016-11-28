@@ -449,23 +449,34 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	createNewNode = (props) => (<ListItem {...props} />)
+	renderListItem = (props) => (<ListItem {...props} />)
 
 	applyStyleToNewNode = (i, ...rest) => {
 		const
 			{component, data} = this.props,
 			{numOfItems} = this.state,
-			style = {};
+			style = {},
+			listItem = this.cc[i % numOfItems];
 
 		this.composeStyle(style, ...rest);
 
-		this.cc[i % numOfItems] = this.createNewNode({
-			data,
-			index: i,
-			numOfItems,
-			style,
-			child: component({data, index: i})
-		});
+		if (listItem) {
+			this.cc[i % numOfItems] = React.cloneElement(listItem, {
+				data,
+				index: i,
+				numOfItems,
+				style,
+				child: component({data, index: i})
+			});
+		} else {
+			this.cc[i % numOfItems] = this.renderListItem({
+				data,
+				index: i,
+				numOfItems,
+				style,
+				child: component({data, index: i})
+			});
+		}
 	}
 
 	positionItems ({updateFrom, updateTo}) {
