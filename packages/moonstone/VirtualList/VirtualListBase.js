@@ -320,6 +320,7 @@ class VirtualListCore extends Component {
 		this.curDataSize = dataSize;
 		this.updateFrom = 0;
 		this.updateTo = 0;
+		this.cc.length = 0;
 
 		this.setState({firstIndex: Math.min(this.state.firstIndex, this.maxFirstIndex), numOfItems});
 		this.calculateScrollBounds(props);
@@ -456,27 +457,19 @@ class VirtualListCore extends Component {
 			{component, data} = this.props,
 			{numOfItems} = this.state,
 			style = {},
-			listItem = this.cc[i % numOfItems];
+			key = i % numOfItems,
+			listItem = this.cc[key],
+			props = {
+				data,
+				index: i,
+				key,
+				style,
+				child: component({data, index: i})
+			};
 
 		this.composeStyle(style, ...rest);
 
-		if (listItem) {
-			this.cc[i % numOfItems] = React.cloneElement(listItem, {
-				data,
-				index: i,
-				numOfItems,
-				style,
-				child: component({data, index: i})
-			});
-		} else {
-			this.cc[i % numOfItems] = this.renderListItem({
-				data,
-				index: i,
-				numOfItems,
-				style,
-				child: component({data, index: i})
-			});
-		}
+		this.cc[key] = listItem ? React.cloneElement(listItem, props) : this.renderListItem(props);
 	}
 
 	positionItems ({updateFrom, updateTo}) {

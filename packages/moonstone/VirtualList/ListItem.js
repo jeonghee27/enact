@@ -2,12 +2,10 @@ import React, {Component, PropTypes} from 'react';
 
 import Item from '@enact/moonstone/Item';
 
-import css from './ListItem.less';
-
-const ListItem = ({style, index, numOfItems, child}) => {
+const ListItem = ({index, key, style, child}) => {
 	return (
-		<div key={index % numOfItems} className={css.listItem} style={style}>
-			<Item data-index={index} className={css.listItemInner} component='div'>
+		<div key={key} style={style}>
+			<Item data-index={index} component='div'>
 				{child}
 			</Item>
 		</div>

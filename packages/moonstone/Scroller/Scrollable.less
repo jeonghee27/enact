@@ -12,6 +12,14 @@
 		.scrollableFill;
 		background: inherit;
 		overflow: hidden;
+
+		& > div {
+			background: inherit;
+			position: absolute;
+			width: 100%;
+			overflow: hidden;
+			will-change: transform;
+		}
 	}
 	background: black;
 	padding-right:  @moon-icon-button-small-size + @moon-spotlight-outset;
