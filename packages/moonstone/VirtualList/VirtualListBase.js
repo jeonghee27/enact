@@ -460,9 +460,10 @@ class VirtualListCore extends Component {
 		this.composeStyle(style, ...rest);
 
 		this.cc[i % numOfItems] = this.createNewNode({
-			style,
+			data,
 			index: i,
 			numOfItems,
+			style,
 			child: component({data, index: i})
 		});
 	}
