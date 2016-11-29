@@ -392,7 +392,10 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					isVertical = this.canScrollVertically(),
 					delta = this.wheel(e, isHorizontal, isVertical);
 
-				doc.activeElement.blur();
+				if (!this.childRef.getContainerDisabled()) {
+					doc.activeElement.blur();
+					this.childRef.setContainerDisabled(true);
+				}
 				this.childRef.setContainerDisabled(true);
 				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical);
 			}
