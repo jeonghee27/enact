@@ -111,8 +111,8 @@ const GridListImageItemBase = kind({
 						</div>
 					) : null
 				}
-				{caption ? (<ItemBase className={css.caption}>{caption}</ItemBase>) : null}
-				{subCaption ? (<ItemBase className={css.subCaption}>{subCaption}</ItemBase>) : null}
+				{caption ? (<div className={css.caption}>{caption}</div>) : null}
+				{subCaption ? (<div className={css.subCaption}>{subCaption}</div>) : null}
 			</div>
 		);
 	}
