@@ -133,7 +133,6 @@ class VirtualVariableList extends Component {
 				doPosition: this.doPosition,
 				gesture: true,
 				itemSize: itemSize.row,
-				overhang: 0,
 				pageScroll: true,
 				posY : this.state.posY,
 				style: {background: background.rowHeader, width: offsetX + 'px', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px'},
@@ -144,7 +143,6 @@ class VirtualVariableList extends Component {
 				dataSize: dataSize.colHeader,
 				direction: 'horizontal',
 				itemSize: itemSize.colHeader,
-				overhang: 0,
 				posX : this.state.posX,
 				style: {background: background.colHeader, width: 'calc(100% - ' + offsetX + 'px)', height: offsetY + 'px', left: offsetX + 'px'},
 				component: component.colHeader
