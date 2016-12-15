@@ -6,6 +6,18 @@
 
 import React, {Component, PropTypes} from 'react';
 
+import {Spotlight, SpotlightContainerDecorator} from '@enact/spotlight';
+import {dataIndexAttribute} from '../Scroller/Scrollable';
+
+const
+	dataContainerDisabledAttribute = 'data-container-disabled',
+	dataContainerIdAttribute = 'data-container-id',
+	keyLeft	 = 37,
+	keyUp	 = 38,
+	keyRight = 39,
+	keyDown	 = 40,
+	nop = () => {};
+
 const
 	rowNumberColFuncShape = PropTypes.shape({row: PropTypes.number.isRequired, col: PropTypes.func.isRequired}),
 	rowFuncColNumberShape = PropTypes.shape({row: PropTypes.func.isRequired, col: PropTypes.number.isRequired});
@@ -98,12 +110,17 @@ class VirtualVariableListCore extends Component {
 
 	primary = null
 	secondary = null
+	dimensionToExtent = 0
 
 	fixedAxis = 'col'
 
 	cc = []
 
 	containerRef = null
+
+	// spotlight
+	nodeIndexToBeBlurred = null
+	lastFocusedIndex = null
 
 	constructor (props) {
 		super(props);
@@ -115,6 +132,17 @@ class VirtualVariableListCore extends Component {
 	}
 
 	getScrollBounds = () => this.scrollBounds
+
+	getVariableGridPosition (i, j) {
+		const
+			{dimensionToExtent, primary, secondary} = this,
+			primaryPosition = Math.floor(i / dimensionToExtent) * primary.itemSize,
+			secondaryPosition = secondary.positionOffsets[i][j];
+
+		return {primaryPosition, secondaryPosition};
+	}
+
+	gridPositionToItemPosition = ({primaryPosition, secondaryPosition}) => ( (this.props.variableAxis === 'row') ? {left: secondaryPosition, top: primaryPosition} : {left: primaryPosition, top: secondaryPosition})
 
 	getContainerNode = () => this.containerRef
 
@@ -148,7 +176,7 @@ class VirtualVariableListCore extends Component {
 				minItemSize: itemSize.minWidth || null,
 				scrollPosition: 0
 			};
-		let primary, secondary, primaryThresholdBase;
+		let primary, secondary, dimensionToExtent, primaryThresholdBase;
 
 		if (variableAxis === 'row') {
 			primary = heightInfo;
@@ -158,12 +186,15 @@ class VirtualVariableListCore extends Component {
 			secondary = heightInfo;
 		}
 
+		dimensionToExtent = 1;
 		primary.itemSize = itemSize[variableAxis];
 		secondary.itemSize = itemSize[this.fixedAxis];
 
 		primary.maxFirstIndex = 0;
 		primaryThresholdBase = primary.itemSize * 2;
 		primary.threshold = {min: -Infinity, max: primaryThresholdBase, base: primaryThresholdBase};
+
+		this.dimensionToExtent = dimensionToExtent;
 
 		this.primary = primary;
 		this.secondary = secondary;
@@ -378,9 +409,16 @@ class VirtualVariableListCore extends Component {
 	}
 
 	applyStyleToExistingNode = (i, j, key, ...rest) => {
-		const node = this.containerRef.children[key];
+		const
+			node = this.containerRef.children[key],
+			id = (i + '-' + j);
 
 		if (node) {
+			node.setAttribute(dataIndexAttribute, id);
+			if (key === this.nodeIndexToBeBlurred && id !== this.lastFocusedIndex) {
+				node.blur();
+				this.nodeIndexToBeBlurred = null;
+			}
 			this.composeStyle(node.style, ...rest);
 		}
 	}
@@ -389,10 +427,11 @@ class VirtualVariableListCore extends Component {
 		const
 			{component, data, variableAxis} = this.props,
 			{fixedAxis} = this,
+			id = (i + '-' + j),
 			itemElement = component({
 				data,
 				index: {[variableAxis]: i, [fixedAxis]: j},
-				key
+				key: id
 			}),
 			style = {};
 
@@ -400,7 +439,8 @@ class VirtualVariableListCore extends Component {
 
 		this.cc[key] = React.cloneElement(
 			itemElement, {
-				style: {...itemElement.props.style, ...style}
+				style: {...itemElement.props.style, ...style},
+				[dataIndexAttribute]: id
 			}
 		);
 	}
@@ -457,6 +497,42 @@ class VirtualVariableListCore extends Component {
 		}
 	}
 
+	adjustPositionOnFocus = (info, pos, itemSize) => {
+		const offsetToClientEnd = info.clientSize - itemSize;
+
+		if (info.clientSize >= itemSize) {
+			if (pos > info.scrollPosition + offsetToClientEnd) {
+				pos -= 0;
+			} else if (pos >= info.scrollPosition) {
+				pos = info.scrollPosition;
+			} else {
+				pos -= offsetToClientEnd;
+			}
+		}
+		return pos;
+	}
+
+	calculatePositionOnFocus = (focusedIndex, key) => {
+		const
+			{data, variableAxis} = this.props,
+			{primary, secondary, fixedAxis} = this;
+		let gridPosition;
+
+		const
+			indices = focusedIndex.split('-'),
+			i = Number.parseInt(indices[0]),
+			j = Number.parseInt(indices[1]);
+
+		gridPosition = this.getVariableGridPosition(i, j);
+		gridPosition.primaryPosition = this.adjustPositionOnFocus(primary, gridPosition.primaryPosition, primary.itemSize);
+		gridPosition.secondaryPosition = this.adjustPositionOnFocus(secondary, gridPosition.secondaryPosition, secondary.itemSize({data, index: {[fixedAxis]: i, [variableAxis]: j}}));
+
+		this.nodeIndexToBeBlurred = key;
+		this.lastFocusedIndex = focusedIndex;
+
+		return this.gridPositionToItemPosition(gridPosition);
+	}
+
 	composeStyle (style, width, height, ...rest) {
 		style.width = width;
 		style.height = height;
@@ -479,11 +555,63 @@ class VirtualVariableListCore extends Component {
 
 	getVirtualScrollDimension = () => (this.primary.dataSize * this.primary.itemSize)
 
+	setSpotlightContainerRestrict = (keyCode, index) => {
+		const
+			{dimensionToExtent, primary} = this;
+		let
+			isSelfOnly = false,
+			i = 0,
+			canMoveBackward,
+			canMoveForward;
+
+
+		const indices = index.split('-');
+		i = Number.parseInt(indices[0]);
+		canMoveBackward = i > dimensionToExtent;
+
+		canMoveForward = i < (primary.dataSize - (((primary.dataSize - 1) % dimensionToExtent) + 1));
+
+		if (this.props.variableAxis === 'row') {
+			if (keyCode === keyUp && canMoveBackward || keyCode === keyDown && canMoveForward) {
+				isSelfOnly = true;
+			}
+		} else if (keyCode === keyLeft && canMoveBackward || keyCode === keyRight && canMoveForward) {
+			isSelfOnly = true;
+		}
+
+		this.setRestrict(isSelfOnly);
+	}
+
+	setRestrict = (bool) => {
+		Spotlight.set(this.props[dataContainerIdAttribute], {restrict: (bool) ? 'self-only' : 'self-first'});
+	}
+
+	setContainerDisabled = (bool) => {
+		const containerNode = this.getContainerNode();
+
+		if (containerNode) {
+			containerNode.setAttribute(dataContainerDisabledAttribute, bool);
+		}
+	}
+
 	// Calculate metrics for VirtualVariableList after the 1st render to know client W/H.
 	// We separate code related with data due to re use it when data changed.
 	componentDidMount () {
 		this.calculateMetrics(this.props);
 		this.updateStatesAndBounds(this.props);
+
+		const containerNode = this.getContainerNode();
+
+			// prevent native scrolling by Spotlight
+		this.preventScroll = () => {
+			containerNode.scrollTop = 0;
+			containerNode.scrollLeft = this.context.rtl ? containerNode.scrollWidth : 0;
+		};
+
+		if (containerNode && containerNode.addEventListener) {
+			containerNode.addEventListener('scroll', this.preventScroll);
+		}
+
 	}
 
 	// Call updateStatesAndBounds here when dataSize has been changed to update nomOfItems state.

@@ -19,7 +19,7 @@ import css from './VirtualVariableList.less';
 const
 	PositionableVirtualList = Positionable(VirtualListCore),
 	SpotlightPositionableVirtualList = SpotlightContainerDecorator(Positionable(VirtualListCore)),
-	PositionableVirtualVariableList = Positionable(VirtualVariableListCore);
+	PositionableVirtualVariableList = SpotlightContainerDecorator(Positionable(VirtualVariableListCore));
 
 // PropTypes shape
 const sizeShape = PropTypes.oneOfType(

@@ -90,10 +90,13 @@ const PositionableHoc = hoc((config, Wrapped) => {
 			if (this.props.gesture && this.isKeyDown) {
 				const
 					item = e.target,
-					index = Number.parseInt(item.getAttribute(dataIndexAttribute));
+					//index = Number.parseInt(item.getAttribute(dataIndexAttribute));
+					index = item.getAttribute(dataIndexAttribute);
 
-				if (!isNaN(index) && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnFocus) {
-					const pos = this.childRef.calculatePositionOnFocus(index);
+				if (index && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnFocus) {
+					const
+						key = item.getAttribute('key'),
+						pos = this.childRef.calculatePositionOnFocus(index, key);
 					if (pos) {
 						if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 							this.scroll(pos.left, pos.top);
@@ -107,7 +110,8 @@ const PositionableHoc = hoc((config, Wrapped) => {
 		onKeyDown = (e) => {
 			if (this.props.gesture && this.childRef.setSpotlightContainerRestrict) {
 				this.isKeyDown = true;
-				const index = Number.parseInt(e.target.getAttribute(dataIndexAttribute));
+				//const index = Number.parseInt(e.target.getAttribute(dataIndexAttribute));
+				const index = e.target.getAttribute(dataIndexAttribute);
 				this.childRef.setSpotlightContainerRestrict(e.keyCode, index);
 			}
 		}
