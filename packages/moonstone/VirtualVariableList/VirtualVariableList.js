@@ -106,12 +106,11 @@ class VirtualVariableList extends Component {
 		};
 	}
 
-	getPositionTo = (positionTo) => {
-		this.positionTo = positionTo;
-	}
-
 	doPosition = ({posX, posY}) => {
-		this.setState({posX, posY});
+		this.setState({
+			posX: posX === null ? this.state.posX : posX,
+			posY: posY === null ? this.state.posY : posY
+		});
 	}
 
 	componentWillReceiveProps (nextProps) {
@@ -124,17 +123,20 @@ class VirtualVariableList extends Component {
 
 	render () {
 		const
-			{component, data, dataSize, headers, itemSize, maxVariableScrollSize, posX, posY, variableAxis, ...rest} = this.props,
+			{background, component, data, dataSize, headers, itemSize, maxVariableScrollSize, posX, posY, variableAxis, ...rest} = this.props,
 			offsetX = itemSize.rowHeader,
 			offsetY = itemSize.row,
 			rowProps = (headers === 'none') ? null : {
 				data: data.rowHeader,
 				dataSize: dataSize.rowHeader,
 				direction: 'vertical',
+				doPosition: this.doPosition,
+				gesture: true,
 				itemSize: itemSize.row,
+				overhang: 0,
 				pageScroll: true,
 				posY : this.state.posY,
-				style: {width: offsetX + 'px', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px'},
+				style: {background: background.rowHeader, width: offsetX + 'px', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px'},
 				component: component.rowHeader
 			},
 			colProps = (headers === 'none') ? null : {
@@ -142,8 +144,9 @@ class VirtualVariableList extends Component {
 				dataSize: dataSize.colHeader,
 				direction: 'horizontal',
 				itemSize: itemSize.colHeader,
+				overhang: 0,
 				posX : this.state.posX,
-				style: {width: 'calc(100% - ' + offsetX + 'px)', height: offsetY + 'px', left: offsetX + 'px'},
+				style: {background: background.colHeader, width: 'calc(100% - ' + offsetX + 'px)', height: offsetY + 'px', left: offsetX + 'px'},
 				component: component.colHeader
 			},
 			itemProps = {
@@ -152,6 +155,8 @@ class VirtualVariableList extends Component {
 					row: dataSize.row,
 					col: dataSize.col
 				},
+				doPosition: this.doPosition,
+				gesture: true,
 				itemSize: {
 					row: itemSize.row,
 					col: itemSize.col
@@ -160,17 +165,20 @@ class VirtualVariableList extends Component {
 				posX : this.state.posX,
 				posY : this.state.posY,
 				variableAxis,
-				style: {width: 'calc(100% - ' + offsetX + 'px)', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px', left: offsetX + 'px'},
+				style: {background: background.item, width: 'calc(100% - ' + offsetX + 'px)', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px', left: offsetX + 'px'},
 				component: component.item
+			},
+			cornerProps = {
+				style: {background: background.corner, width: offsetX + 'px', height: offsetY + 'px', overflow: 'hidden'}
 			};
 
 		if (headers === 'both') {
 			return (
 				<div {...rest} className={classNames(css.virtualVariableList, css.headers)}>
-					<SpotlightPositionableVirtualList {...rowProps} doPosition={this.doPosition} />
+					<SpotlightPositionableVirtualList {...rowProps} />
 					<PositionableVirtualList {...colProps} />
 					<PositionableVirtualVariableList {...itemProps} />
-					{component.corner()}
+					<div {...cornerProps}>{component.corner()}</div>
 				</div>
 			);
 		} else {

@@ -11,7 +11,8 @@ import hoc from '@enact/core/hoc';
 
 const
 	dataIndexAttribute = 'data-index',
-	doc = (typeof window === 'object') ? window.document : {};
+	doc = (typeof window === 'object') ? window.document : {},
+	nop = () => {};
 
 const PositionableHoc = hoc((config, Wrapped) => {
 	return class Positionable extends Component {
@@ -23,7 +24,7 @@ const PositionableHoc = hoc((config, Wrapped) => {
 			 * @default 0
 			 * @public
 			 */
-			posX: PropTypes.number,
+			posX: PropTypes.number.isRequired,
 
 			/**
 			 * Position y.
@@ -32,10 +33,29 @@ const PositionableHoc = hoc((config, Wrapped) => {
 			 * @default 0
 			 * @public
 			 */
-			posY: PropTypes.number
+			posY: PropTypes.number.isRequired,
+
+			/**
+			 * Support 5 way navigation and wheel event handling with spotlight
+			 *
+			 * @type {Boolean}
+			 * @default false
+			 * @public
+			 */
+			gesture: PropTypes.bool,
+
+			/**
+			 * Called whtn position updates internally
+			 *
+			 * @type {Function}
+			 * @public
+			 */
+			doPosition: PropTypes.func
 		}
 
 		static defaultProps = {
+			gesture: false,
+			doPosition: nop,
 			posX: 0,
 			posY: 0
 		}
@@ -63,9 +83,11 @@ const PositionableHoc = hoc((config, Wrapped) => {
 			this.initChildRef = this.initRef('childRef');
 		}
 
+		// event handling
+
 		onFocus = (e) => {
 			// for virtuallist
-			if (this.isKeyDown) {
+			if (this.props.gesture && this.isKeyDown) {
 				const
 					item = e.target,
 					index = Number.parseInt(item.getAttribute(dataIndexAttribute));
@@ -83,7 +105,7 @@ const PositionableHoc = hoc((config, Wrapped) => {
 		}
 
 		onKeyDown = (e) => {
-			if (this.childRef.setSpotlightContainerRestrict) {
+			if (this.props.gesture && this.childRef.setSpotlightContainerRestrict) {
 				this.isKeyDown = true;
 				const index = Number.parseInt(e.target.getAttribute(dataIndexAttribute));
 				this.childRef.setSpotlightContainerRestrict(e.keyCode, index);
@@ -91,8 +113,29 @@ const PositionableHoc = hoc((config, Wrapped) => {
 		}
 
 		onKeyUp = () => {
-			this.isKeyDown = false;
+			if (this.props.gesture) {
+				this.isKeyDown = false;
+			}
 		}
+
+		onWheel = (ev) => {
+			if (this.props.gesture) {
+				let posY;
+
+				ev.preventDefault();
+
+				if (ev.deltaY > 0) {
+					posY = clamp(0, this.bounds.maxTop, this.props.posY + this.bounds.clientHeight);
+				} else if (ev.deltaY < 0) {
+					posY = clamp(0, this.bounds.maxTop, this.props.posY - this.bounds.clientHeight);
+				} else {
+					posY = this.props.posY;
+				}
+				this.props.doPosition({posX: null, posY});
+			}
+		}
+
+		// positioning
 
 		setScrollLeft (v) {
 			this.dirHorizontal = Math.sign(v - this.scrollLeft);
@@ -159,15 +202,17 @@ const PositionableHoc = hoc((config, Wrapped) => {
 		render () {
 			const
 				{onFocus, onKeyDown, onKeyUp, onWheel} = this,
-				props = Object.assign({}, this.props, {
+				props = Object.assign({}, this.props, (this.props.gesture) ? {
 					onFocus,
 					onKeyDown,
-					onKeyUp
-				});
+					onKeyUp,
+					onWheel
+				} : {});
 
+			delete props.doPosition;
 			delete props.posX;
 			delete props.posY;
-			delete props.doPosition;
+			delete props.gesture;
 
 			return (<Wrapped {...props} ref={this.initChildRef} />);
 		}
