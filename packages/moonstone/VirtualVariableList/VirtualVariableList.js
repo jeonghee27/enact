@@ -4,10 +4,11 @@
  * @module moonstone/VirtualVariableList/VirtualVariableList
  */
 
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 import classNames from 'classnames';
 
 import kind from '@enact/core/kind';
+import {SpotlightContainerDecorator} from '@enact/spotlight';
 
 import {VirtualListCore} from '../VirtualList/VirtualListBase';
 
@@ -17,6 +18,7 @@ import css from './VirtualVariableList.less';
 
 const
 	PositionableVirtualList = Positionable(VirtualListCore),
+	SpotlightPositionableVirtualList = SpotlightContainerDecorator(Positionable(VirtualListCore)),
 	PositionableVirtualVariableList = Positionable(VirtualVariableListCore);
 
 // PropTypes shape
@@ -43,10 +45,9 @@ const sizeShape = PropTypes.oneOfType(
  * @ui
  * @public
  */
-const VirtualVariableList = kind({
-	name: 'VirtualVariableList',
+class VirtualVariableList extends Component {
 
-	propTypes: /** @lends moonstone/VirtualVariableList.VirtualVariableList.prototype */ {
+	static propTypes = /** @lends moonstone/VirtualVariableList.VirtualVariableList.prototype */ {
 		/**
 		 * The render function for an item of the list.
 		 * `index` is for accessing the index of the item.
@@ -90,81 +91,93 @@ const VirtualVariableList = kind({
 		 * @public
 		 */
 		headers: PropTypes.oneOf(['both', 'none'])
-	},
+	}
 
-	defaultProps: {
+	static defaultProps = {
 		headers: 'none'
-	},
+	}
 
-	styles: {
-		css,
-		className: 'virtualVariableList'
-	},
+	constructor (props) {
+		super(props);
 
-	computed: {
-		rowProps: ({component, data, dataSize, headers, itemSize, posY}) => (headers === 'none') ? null : {
-			data: data.rowHeader,
-			dataSize: dataSize.rowHeader,
-			direction: 'vertical',
-			itemSize: itemSize.row,
-			posY,
-			style: {width: itemSize.rowHeader + 'px', height: 'calc(100% - ' + itemSize.row + 'px)', top: itemSize.row + 'px'},
-			component: component.rowHeader
-		},
-		colProps: ({component, data, dataSize, headers, itemSize, posX}) => (headers === 'none') ? null : {
-			data: data.colHeader,
-			dataSize: dataSize.colHeader,
-			direction: 'horizontal',
-			itemSize: itemSize.colHeader,
-			posX,
-			style: {width: 'calc(100% - ' + itemSize.rowHeader + 'px)', height: itemSize.row + 'px', left: itemSize.rowHeader + 'px'},
-			component: component.colHeader
-		},
-		itemProps: ({component, data, dataSize, headers, itemSize, maxVariableScrollSize, posX, posY, variableAxis}) => ({
-			data: data.item,
-			dataSize: {
-				row: dataSize.row,
-				col: dataSize.col
+		this.state = {
+			posX: props.posX,
+			posY: props.posY
+		};
+	}
+
+	getPositionTo = (positionTo) => {
+		this.positionTo = positionTo;
+	}
+
+	doPosition = ({posX, posY}) => {
+		this.setState({posX, posY});
+	}
+
+	componentWillReceiveProps (nextProps) {
+		const {posX, posY} = this.props;
+
+		if (posX !== nextProps.posX || posY !== nextProps.posY) {
+			this.setState({posX, posY});
+		}
+	}
+
+	render () {
+		const
+			{component, data, dataSize, headers, itemSize, maxVariableScrollSize, posX, posY, variableAxis, ...rest} = this.props,
+			offsetX = itemSize.rowHeader,
+			offsetY = itemSize.row,
+			rowProps = (headers === 'none') ? null : {
+				data: data.rowHeader,
+				dataSize: dataSize.rowHeader,
+				direction: 'vertical',
+				itemSize: itemSize.row,
+				pageScroll: true,
+				posY : this.state.posY,
+				style: {width: offsetX + 'px', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px'},
+				component: component.rowHeader
 			},
-			itemSize: {
-				row: itemSize.row,
-				col: itemSize.col
+			colProps = (headers === 'none') ? null : {
+				data: data.colHeader,
+				dataSize: dataSize.colHeader,
+				direction: 'horizontal',
+				itemSize: itemSize.colHeader,
+				posX : this.state.posX,
+				style: {width: 'calc(100% - ' + offsetX + 'px)', height: offsetY + 'px', left: offsetX + 'px'},
+				component: component.colHeader
 			},
-			maxVariableScrollSize,
-			posX,
-			posY,
-			variableAxis,
-			style: {width: 'calc(100% - ' + itemSize.rowHeader + 'px)', height: 'calc(100% - ' + itemSize.row + 'px)', top: itemSize.row + 'px', left: itemSize.rowHeader + 'px'},
-			component: component.item
-		})
-	},
-
-	render: ({headers, rowProps, colProps, itemProps, className, ...rest}) => {
-		const props = Object.assign({}, rest);
-
-		delete props.component;
-		delete props.data;
-		delete props.dataSize;
-		delete props.itemSize;
-		delete props.maxVariableScrollSize;
-		delete props.posX;
-		delete props.posY;
-		delete props.variableAxis;
+			itemProps = {
+				data: data.item,
+				dataSize: {
+					row: dataSize.row,
+					col: dataSize.col
+				},
+				itemSize: {
+					row: itemSize.row,
+					col: itemSize.col
+				},
+				maxVariableScrollSize,
+				posX : this.state.posX,
+				posY : this.state.posY,
+				variableAxis,
+				style: {width: 'calc(100% - ' + offsetX + 'px)', height: 'calc(100% - ' + offsetY + 'px)', top: offsetY + 'px', left: offsetX + 'px'},
+				component: component.item
+			};
 
 		if (headers === 'both') {
 			return (
-				<div {...props} className={classNames(className, css.headers)}>
-					<PositionableVirtualList {...rowProps} />
+				<div {...rest} className={classNames(css.virtualVariableList, css.headers)}>
+					<SpotlightPositionableVirtualList {...rowProps} doPosition={this.doPosition} />
 					<PositionableVirtualList {...colProps} />
 					<PositionableVirtualVariableList {...itemProps} />
-					{rest.component.corner()}
+					{component.corner()}
 				</div>
 			);
 		} else {
-			return (<PositionableVirtualVariableList {...props} {...itemProps} className={className} />);
+			return (<PositionableVirtualVariableList {...rest} {...itemProps} className={css.virtualVariableList} />);
 		}
 	}
-});
+};
 
 export default VirtualVariableList;
 export {VirtualVariableList, PositionableVirtualVariableList, VirtualVariableListCore};
