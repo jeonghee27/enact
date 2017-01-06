@@ -3,7 +3,7 @@
  */
 
 import clamp from 'ramda/src/clamp';
-import React, {Component, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 
 import hoc from '@enact/core/hoc';
 
@@ -22,7 +22,7 @@ const
  * @private
  */
 const Positionable = hoc((config, Wrapped) => {
-	return class extends Component {
+	return class extends PureComponent {
 		static propTypes = /** @lends moonstone/VirtualFlexList.Positionable.prototype */ {
 			/**
 			 * Position x.
