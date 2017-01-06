@@ -14,6 +14,11 @@ const
 	dataContainerDisabledAttribute = 'data-container-disabled',
 	dataContainerIdAttribute = 'data-container-id',
 	dataIndexAttribute = 'data-index',
+	dataKeyAttribute = 'data-key',
+	indexForPrimaryIndex = 0,
+	indexForSecondaryIndex = 1,
+	indexForPartitionIndex = 2,
+	IndexForDirection = 3,
 	keyLeft	 = 37,
 	keyUp	 = 38,
 	keyRight = 39,
@@ -143,6 +148,8 @@ class VirtualFlexListCore extends Component {
 	secondary = null
 
 	cc = []
+	cacheCurrentCC = []
+	cachePreviousCC = []
 
 	childRef = null
 
@@ -438,7 +445,7 @@ class VirtualFlexListCore extends Component {
 		if ((primaryFirstIndex !== newPrimaryFirstIndex) || shouldUpdateState === true) {
 			this.setState({primaryFirstIndex: newPrimaryFirstIndex});
 		} else {
-			this.positionItems(this.applyStyleToExistingNode, {
+			this.positionItems({
 				updateFrom: primaryFirstIndex,
 				updateTo: primaryFirstIndex + numOfItems
 			});
@@ -449,47 +456,50 @@ class VirtualFlexListCore extends Component {
 	 * Render items
 	 */
 
-	applyStyleToExistingNode = (primaryIndex, secondaryIndex, count, partitionIndex, scrollDirection, ...rest) => {
-		const
-			node = this.childRef.children[count],
-			id = primaryIndex + '-' + secondaryIndex + (scrollDirection ? '-' + scrollDirection : '');
-
-		if (node) {
-			node.setAttribute(dataIndexAttribute, id);
-			if (count === this.nodeIndexToBeBlurred && id !== this.lastFocusedIndex) {
-				node.blur();
-				this.nodeIndexToBeBlurred = null;
-			}
-			this.composeStyle(node.style, ...rest);
-		}
-	}
-
-	applyStyleToNewNode = (primaryIndex, secondaryIndex, count, partitionIndex, scrollDirection, ...rest) => {
+	renderItemElement = (primaryIndex, secondaryIndex, count, partitionIndex, scrollDirection, ...rest) => {
 		const
 			{component, data, flexAxis} = this.props,
 			{fixedAxis} = this,
-			id = primaryIndex + '-' + secondaryIndex + (scrollDirection ? '-' + scrollDirection : ''),
-			key = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex,
-			itemElement = component({
-				data,
-				index: {[flexAxis]: primaryIndex, [fixedAxis]: secondaryIndex},
-				key
-			}),
-			style = {};
+			dataIndex = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex + (scrollDirection ? '-' + scrollDirection : ''),
+			key = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex;
 
-		this.composeStyle(style, ...rest);
+		if (this.cachePreviousCC[key]) {
+			const node = document.querySelectorAll('[' + dataKeyAttribute + '="' + key + '"]')[0];
 
-		this.cc[count] = React.cloneElement(
-			itemElement, {
-				style: {...itemElement.props.style, ...style},
-				[dataIndexAttribute]: id
+			if (node) {
+				node.setAttribute(dataIndexAttribute, dataIndex);
+				if (count === this.nodeIndexToBeBlurred && dataIndex !== this.lastFocusedIndex) {
+					node.blur();
+					this.nodeIndexToBeBlurred = null;
+				}
+				this.composeStyle(node.style, ...rest);
 			}
-		);
+			this.cc[count] = this.cacheCurrentCC[key] = this.cachePreviousCC[key];
+		} else {
+			const
+				itemElement = component({
+					data,
+					index: {[flexAxis]: primaryIndex, [fixedAxis]: secondaryIndex},
+					key
+				}),
+				style = {};
+
+			this.composeStyle(style, ...rest);
+
+			this.cc[count] = this.cacheCurrentCC[key] = React.cloneElement(
+				itemElement, {
+					style: {...itemElement.props.style, ...style},
+					[dataIndexAttribute]: dataIndex,
+					[dataKeyAttribute]: key
+				}
+			);
+		}
 	}
 
-	applyStyleToSplitNode = (applyStyle, primaryIndex, secondaryIndex, primaryPosition, width, height) => (secondaryPosition, size, count, partitionIndex, scrollDirection) => {
+	applyStyleToSplitNode = (primaryIndex, secondaryIndex, primaryPosition, width, height) => (secondaryPosition, size, count, partitionIndex, scrollDirection) => {
 		const {flexAxis} = this.props;
-		return applyStyle(primaryIndex, secondaryIndex, count, partitionIndex, scrollDirection, (flexAxis === 'row') ? size : width, (flexAxis === 'row') ? height : size, primaryPosition, secondaryPosition);
+
+		this.renderItemElement(primaryIndex, secondaryIndex, count, partitionIndex, scrollDirection, (flexAxis === 'row') ? size : width, (flexAxis === 'row') ? height : size, primaryPosition, secondaryPosition);
 	}
 
 	getPartitionIndex (position) {
@@ -500,7 +510,7 @@ class VirtualFlexListCore extends Component {
 		}
 	}
 
-	positionItems (applyStyle, {updateFrom, updateTo}) {
+	positionItems ({updateFrom, updateTo}) {
 		const
 			{data, flexAxis, maxFlexScrollSize} = this.props,
 			{fixedAxis, primary, secondary} = this,
@@ -528,6 +538,10 @@ class VirtualFlexListCore extends Component {
 			width = primary.itemSize;
 		}
 
+		this.cachePreviousCC = this.cacheCurrentCC;
+		this.cacheCurrentCC = [];
+		this.cc = [];
+
 		// positioning items
 		for (let primaryIndex = updateFrom; primaryIndex < updateTo; primaryIndex++) {
 			position = secondaryPosition + secondaryPositionOffsets[primaryIndex][secondaryFirstIndices[primaryIndex]];
@@ -548,7 +562,7 @@ class VirtualFlexListCore extends Component {
 					isOnlyOnLeftSide = position + size <= 0,
 					isFromLeftSideToList = 0 < position + size && !isOnRightSide,
 					isFromListToRightSide = 0 <= position && position < secondaryClientSize,
-					applyStyleToSplitNode = this.applyStyleToSplitNode(applyStyle, primaryIndex, secondaryIndex, primaryPosition, width, height);
+					applyStyleToSplitNode = this.applyStyleToSplitNode(primaryIndex, secondaryIndex, primaryPosition, width, height);
 
 				// 1) Positioned from the left side to the right side
 				if (isOnLeftSide && isOnRightSide) {
@@ -592,6 +606,8 @@ class VirtualFlexListCore extends Component {
 
 			primaryPosition += primary.itemSize;
 		}
+
+		this.cachePreviousCC = [];
 	}
 
 	composeStyle (style, width, height, ...rest) {
@@ -644,9 +660,9 @@ class VirtualFlexListCore extends Component {
 		const
 			{primary, secondary} = this,
 			indices = focusedIndex.split('-'),
-			primaryIndex = Number.parseInt(indices[0]),
-			secondaryIndex = Number.parseInt(indices[1]),
-			direction = indices[2];
+			primaryIndex = Number.parseInt(indices[indexForPrimaryIndex]),
+			secondaryIndex = Number.parseInt(indices[indexForSecondaryIndex]),
+			direction = indices[IndexForDirection];
 		let gridPosition;
 
 		// To move along the secondary axis
@@ -682,7 +698,7 @@ class VirtualFlexListCore extends Component {
 		const
 			{primary} = this,
 			indices = dataIndex.split('-'),
-			primaryIndex = Number.parseInt(indices[0]),
+			primaryIndex = Number.parseInt(indices[indexForPrimaryIndex]),
 			canMoveBackward = primaryIndex > 1,
 			canMoveForward = primaryIndex < (primary.dataSize - 1);
 		let isSelfOnly = false;
@@ -771,12 +787,12 @@ class VirtualFlexListCore extends Component {
 
 		this.cc.length = 0;
 
-		this.positionItems(this.applyStyleToNewNode, {updateFrom: primaryFirstIndex, updateTo: max});
+		this.positionItems({updateFrom: primaryFirstIndex, updateTo: max});
 	}
 
 	render () {
 		const
-			{primary, cc} = this,
+			{primary} = this,
 			props = Object.assign({}, this.props);
 
 		delete props.component;
@@ -793,7 +809,7 @@ class VirtualFlexListCore extends Component {
 
 		return (
 			<div {...props} ref={this.initChildRef}>
-				{cc}
+				{this.cc}
 			</div>
 		);
 	}
