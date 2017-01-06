@@ -461,36 +461,29 @@ class VirtualFlexListCore extends Component {
 			{component, data, flexAxis} = this.props,
 			{fixedAxis} = this,
 			dataIndex = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex + (scrollDirection ? '-' + scrollDirection : ''),
-			key = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex;
+			key = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex,
+			style = {};
+
+		this.composeStyle(style, ...rest);
 
 		if (this.cachePreviousCC[key]) {
-			const node = document.querySelectorAll('[' + dataKeyAttribute + '="' + key + '"]')[0];
-
-			if (node) {
-				node.setAttribute(dataIndexAttribute, dataIndex);
-				if (count === this.nodeIndexToBeBlurred && dataIndex !== this.lastFocusedIndex) {
-					node.blur();
-					this.nodeIndexToBeBlurred = null;
+			this.cc[count] = this.cacheCurrentCC[key] = React.cloneElement(
+				this.cachePreviousCC[key], {
+					style: {...this.cachePreviousCC[key].props.style, ...style},
+					[dataIndexAttribute]: dataIndex
 				}
-				this.composeStyle(node.style, ...rest);
-			}
-			this.cc[count] = this.cacheCurrentCC[key] = this.cachePreviousCC[key];
+			);
 		} else {
-			const
-				itemElement = component({
+			const itemElement = component({
 					data,
 					index: {[flexAxis]: primaryIndex, [fixedAxis]: secondaryIndex},
 					key
-				}),
-				style = {};
-
-			this.composeStyle(style, ...rest);
+				});
 
 			this.cc[count] = this.cacheCurrentCC[key] = React.cloneElement(
 				itemElement, {
 					style: {...itemElement.props.style, ...style},
-					[dataIndexAttribute]: dataIndex,
-					[dataKeyAttribute]: key
+					[dataIndexAttribute]: dataIndex
 				}
 			);
 		}
