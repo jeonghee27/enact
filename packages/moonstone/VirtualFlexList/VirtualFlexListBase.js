@@ -15,10 +15,7 @@ const
 	dataContainerIdAttribute = 'data-container-id',
 	dataIndexAttribute = 'data-index',
 	dataKeyAttribute = 'data-key',
-	indexForPrimaryIndex = 0,
-	indexForSecondaryIndex = 1,
-	indexForPartitionIndex = 2,
-	IndexForDirection = 3,
+	doc = (typeof window === 'object') ? window.document : {},
 	keyLeft	 = 37,
 	keyUp	 = 38,
 	keyRight = 39,
@@ -148,8 +145,8 @@ class VirtualFlexListCore extends Component {
 	secondary = null
 
 	cc = []
-	cacheCurrentCC = []
-	cachePreviousCC = []
+	cachedCurrentCC = []
+	cachedPreviousCC = []
 
 	childRef = null
 
@@ -463,8 +460,8 @@ class VirtualFlexListCore extends Component {
 			dataIndex = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex + (scrollDirection ? '-' + scrollDirection : ''),
 			key = primaryIndex + '-' + secondaryIndex + '-' + partitionIndex;
 
-		if (this.cachePreviousCC[key]) {
-			const node = document.querySelectorAll('[' + dataKeyAttribute + '="' + key + '"]')[0];
+		if (this.cachedPreviousCC[key]) {
+			const node = doc.querySelector('[' + dataKeyAttribute + '="' + key + '"]');
 
 			if (node) {
 				node.setAttribute(dataIndexAttribute, dataIndex);
@@ -474,7 +471,7 @@ class VirtualFlexListCore extends Component {
 				}
 				this.composeStyle(node.style, ...rest);
 			}
-			this.cc[count] = this.cacheCurrentCC[key] = this.cachePreviousCC[key];
+			this.cc[count] = this.cachedCurrentCC[key] = this.cachedPreviousCC[key];
 		} else {
 			const
 				itemElement = component({
@@ -486,7 +483,7 @@ class VirtualFlexListCore extends Component {
 
 			this.composeStyle(style, ...rest);
 
-			this.cc[count] = this.cacheCurrentCC[key] = React.cloneElement(
+			this.cc[count] = this.cachedCurrentCC[key] = React.cloneElement(
 				itemElement, {
 					style: {...itemElement.props.style, ...style},
 					[dataIndexAttribute]: dataIndex,
@@ -538,8 +535,8 @@ class VirtualFlexListCore extends Component {
 			width = primary.itemSize;
 		}
 
-		this.cachePreviousCC = this.cacheCurrentCC;
-		this.cacheCurrentCC = [];
+		this.cachedPreviousCC = this.cachedCurrentCC;
+		this.cachedCurrentCC = [];
 		this.cc = [];
 
 		// positioning items
@@ -607,7 +604,7 @@ class VirtualFlexListCore extends Component {
 			primaryPosition += primary.itemSize;
 		}
 
-		this.cachePreviousCC = [];
+		this.cachedPreviousCC = [];
 	}
 
 	composeStyle (style, width, height, ...rest) {
@@ -660,9 +657,9 @@ class VirtualFlexListCore extends Component {
 		const
 			{primary, secondary} = this,
 			indices = focusedIndex.split('-'),
-			primaryIndex = Number.parseInt(indices[indexForPrimaryIndex]),
-			secondaryIndex = Number.parseInt(indices[indexForSecondaryIndex]),
-			direction = indices[IndexForDirection];
+			primaryIndex = Number.parseInt(indices[0]),
+			secondaryIndex = Number.parseInt(indices[1]),
+			direction = indices[3];
 		let gridPosition;
 
 		// To move along the secondary axis
@@ -698,7 +695,7 @@ class VirtualFlexListCore extends Component {
 		const
 			{primary} = this,
 			indices = dataIndex.split('-'),
-			primaryIndex = Number.parseInt(indices[indexForPrimaryIndex]),
+			primaryIndex = Number.parseInt(indices[0]),
 			canMoveBackward = primaryIndex > 1,
 			canMoveForward = primaryIndex < (primary.dataSize - 1);
 		let isSelfOnly = false;
