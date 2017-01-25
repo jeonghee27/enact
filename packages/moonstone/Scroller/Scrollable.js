@@ -9,6 +9,7 @@ import classNames from 'classnames';
 import hoc from '@enact/core/hoc';
 import React, {Component, PropTypes} from 'react';
 import ri from '@enact/ui/resolution';
+import Spotlight  from '@enact/spotlight';
 
 import ScrollAnimator from './ScrollAnimator';
 import Scrollbar from './Scrollbar';
@@ -231,7 +232,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 			props.cbScrollTo(this.scrollTo);
 
-			props.cbGetFocusedItemPosition(this.getFocusedItemPosition);
+			props.cbGetFocusStatus(this.getFocusStatus);
+			props.cbSetFocusStatus(this.setFocusStatus);
 		}
 
 		// handle an input event
@@ -363,13 +365,22 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.scroll(e.target.scrollLeft, e.target.scrollTop, true);
 		}
 
-		getFocusedItemPosition = () => {
-			if (this.lastFocusedItem) {
-				const
-					index = Number.parseInt(this.lastFocusedItem.getAttribute(dataIndexAttribute)),
-					pos = this.childRef.calculatePositionOnFocus(index);
+		getFocusStatus = () => {
+			const {scrollLeft, scrollTop, lastFocusedItem: spottable} = this;
 
-				return pos; // {left, top}
+			return {
+				scrollLeft,
+				scrollTop,
+				spottable
+			}
+		}
+
+		setFocusStatus = (focusStatus) => {
+			const {scrollLeft, scrollTop, spottable} = focusStatus;
+
+			this.scrollTo({position: {x: scrollLeft, y: scrollTop}, animate: false});
+			if (spottable) {
+				Spotlight.focus(spottable);
 			}
 		}
 
@@ -749,7 +760,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				verticalScrollbarClassnames = isVerticalScrollbarVisible ? (!isBothScrollable && css.onlyVerticalScrollbarNeeded) : css.verticalScrollbarDisabled,
 				horizontalScrollbarClassnames = isHorizontalScrollbarVisible ? (!isBothScrollable && css.onlyHorizontalScrollbarNeeded) : css.horizontalScrollbarDisabled;
 
-			delete props.cbGetFocusedItemPosition;
+			delete props.cbGetFocusStatus;
+			delete props.cbSetFocusStatus;
 			delete props.className;
 			delete props.cbScrollTo;
 			delete props.style;
