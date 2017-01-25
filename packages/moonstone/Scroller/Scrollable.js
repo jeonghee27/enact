@@ -178,6 +178,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// spotlight
 		lastFocusedItem = null
+		focusedItemWhileScrolling = null
 
 		// component info
 		childRef = null
@@ -229,6 +230,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			};
 
 			props.cbScrollTo(this.scrollTo);
+
+			props.cbGetFocusedItemPosition(this.getFocusedItemPosition);
 		}
 
 		// handle an input event
@@ -360,6 +363,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.scroll(e.target.scrollLeft, e.target.scrollTop, true);
 		}
 
+		getFocusedItemPosition = () => {
+			if (this.lastFocusedItem) {
+				const
+					index = Number.parseInt(this.lastFocusedItem.getAttribute(dataIndexAttribute)),
+					pos = this.childRef.calculatePositionOnFocus(index);
+
+				return pos; // {left, top}
+			}
+		}
+
 		onFocus = (e) => {
 			// for virtuallist
 			if (this.isKeyDown && !this.isDragging) {
@@ -367,13 +380,13 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					item = e.target,
 					index = Number.parseInt(item.getAttribute(dataIndexAttribute));
 
-				if (!isNaN(index) && item !== this.lastFocusedItem && item === doc.activeElement && this.childRef.calculatePositionOnFocus) {
+				if (!isNaN(index) && item !== this.focusedItemWhileScrolling && item === doc.activeElement && this.childRef.calculatePositionOnFocus) {
 					const pos = this.childRef.calculatePositionOnFocus(index);
 					if (pos) {
 						if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 							this.start(pos.left, pos.top, (animationDuration > 0), false, animationDuration);
 						}
-						this.lastFocusedItem = item;
+						this.focusedItemWhileScrolling = this.lastFocusedItem = item;
 					}
 				}
 			}
@@ -530,7 +543,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.animator.stop();
 			this.isScrollAnimationTargetAccumulated = false;
 			this.childRef.setContainerDisabled(false);
-			this.lastFocusedItem = null;
+			this.focusedItemWhileScrolling = null;
 			this.hideThumb();
 			this.doScrollStop();
 		}
@@ -736,6 +749,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				verticalScrollbarClassnames = isVerticalScrollbarVisible ? (!isBothScrollable && css.onlyVerticalScrollbarNeeded) : css.verticalScrollbarDisabled,
 				horizontalScrollbarClassnames = isHorizontalScrollbarVisible ? (!isBothScrollable && css.onlyHorizontalScrollbarNeeded) : css.horizontalScrollbarDisabled;
 
+			delete props.cbGetFocusedItemPosition;
 			delete props.className;
 			delete props.cbScrollTo;
 			delete props.style;
