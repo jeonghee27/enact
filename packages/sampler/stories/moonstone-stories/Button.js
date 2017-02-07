@@ -3,6 +3,8 @@ import React from 'react';
 import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, boolean, select, text} from '@kadira/storybook-addon-knobs';
 
+import StoryLinkable from './StoryLinkable';
+
 Button.propTypes = Object.assign({}, ButtonBase.propTypes, Button.propTypes);
 Button.defaultProps = Object.assign({}, ButtonBase.defaultProps, Button.defaultProps);
 Button.displayName = 'Button';
@@ -17,7 +19,7 @@ storiesOf('Button')
 	.addWithInfo(
 		' ',
 		'The basic Button',
-		() => (
+		() => StoryLinkable(
 			<Button
 				onClick={action('onClick')}
 				backgroundOpacity={select('backgroundOpacity', prop.backgroundOpacity)}
