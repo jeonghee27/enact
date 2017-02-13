@@ -69,6 +69,15 @@ const DatePickerBase = kind({
 		order: React.PropTypes.arrayOf(React.PropTypes.oneOf(['m', 'd', 'y'])).isRequired,
 
 		/**
+		 * The primary text of the item.
+		 *
+		 * @type {String}
+		 * @required
+		 * @public
+		 */
+		title: React.PropTypes.string.isRequired,
+
+		/**
 		 * The `year` component of the Date
 		 *
 		 * @type {Number}
@@ -125,12 +134,31 @@ const DatePickerBase = kind({
 		 * @type {Function}
 		 * @public
 		 */
-		onChangeYear: React.PropTypes.func
+		onChangeYear: React.PropTypes.func,
+
+		/**
+		 * The handler to run when the component is removed while retaining focus.
+		 *
+		 * @type {Function}
+		 * @param {Object} event
+		 * @public
+		 */
+		onSpotlightDisappear: React.PropTypes.func,
+
+		/**
+		 * When `true`, the component cannot be navigated using spotlight.
+		 *
+		 * @type {Boolean}
+		 * @default false
+		 * @public
+		 */
+		spotlightDisabled: React.PropTypes.bool
 	},
 
 	defaultProps: {
 		maxYear: 2099,
-		minYear: 1900
+		minYear: 1900,
+		spotlightDisabled: false
 	},
 
 	styles: {
@@ -138,10 +166,10 @@ const DatePickerBase = kind({
 		className: 'datePicker'
 	},
 
-	render: ({day, maxDays, maxMonths, maxYear, minYear, month, noLabels, onChangeDate, onChangeMonth, onChangeYear, order, year, ...rest}) => {
+	render: ({day, maxDays, maxMonths, maxYear, minYear, month, noLabels, onChangeDate, onChangeMonth, onChangeYear, onSpotlightDisappear, order, spotlightDisabled, year, ...rest}) => {
 
 		return (
-			<ExpandableItemBase {...rest} showLabel="always" autoClose={false} lockBottom={false}>
+			<ExpandableItemBase {...rest} showLabel="always" autoClose={false} lockBottom={false} onSpotlightDisappear={onSpotlightDisappear} spotlightDisabled={spotlightDisabled}>
 				<div className={dateComponentPickers}>
 					{order.map(picker => {
 						switch (picker) {
@@ -153,6 +181,8 @@ const DatePickerBase = kind({
 										max={maxDays}
 										min={1}
 										onChange={onChangeDate}
+										onSpotlightDisappear={onSpotlightDisappear}
+										spotlightDisabled={spotlightDisabled}
 										value={day}
 										width={2}
 										wrap
@@ -166,6 +196,8 @@ const DatePickerBase = kind({
 										max={maxMonths}
 										min={1}
 										onChange={onChangeMonth}
+										onSpotlightDisappear={onSpotlightDisappear}
+										spotlightDisabled={spotlightDisabled}
 										value={month}
 										width={2}
 										wrap
@@ -180,6 +212,8 @@ const DatePickerBase = kind({
 										max={maxYear}
 										min={minYear}
 										onChange={onChangeYear}
+										onSpotlightDisappear={onSpotlightDisappear}
+										spotlightDisabled={spotlightDisabled}
 										value={year}
 										width={4}
 									/>

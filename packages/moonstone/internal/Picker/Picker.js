@@ -169,6 +169,15 @@ const Picker = class extends React.Component {
 		onMouseUp: React.PropTypes.func,
 
 		/**
+		 * The handler to run when the component is removed while retaining focus.
+		 *
+		 * @type {Function}
+		 * @param {Object} event
+		 * @public
+		 */
+		onSpotlightDisappear: React.PropTypes.func,
+
+		/**
 		 * Sets the orientation of the picker, whether the buttons are above and below or on the
 		 * sides of the value. Must be either `'horizontal'` or `'vertical'`.
 		 *
@@ -199,6 +208,15 @@ const Picker = class extends React.Component {
 		 * @public
 		 */
 		reverse: React.PropTypes.bool,
+
+		/**
+		 * When `true`, the component cannot be navigated using spotlight.
+		 *
+		 * @type {Boolean}
+		 * @default false
+		 * @public
+		 */
+		spotlightDisabled: React.PropTypes.bool,
 
 		/**
 		 * Allow the picker to only increment or decrement by a given value. A step of `2` would
@@ -248,6 +266,7 @@ const Picker = class extends React.Component {
 
 	static defaultProps = {
 		orientation: 'horizontal',
+		spotlightDisabled: false,
 		step: 1,
 		value: 0
 	}
@@ -272,16 +291,6 @@ const Picker = class extends React.Component {
 			validateStepped(nextValue, first, nextProps.step, Picker.displayName);
 			validateStepped(last, first, nextProps.step, Picker.displayName, '"max"');
 		}
-		const wrapToStart = nextProps.wrap && nextProps.value === first && this.props.value === last;
-		const wrapToEnd = nextProps.wrap && nextProps.value === last && this.props.value === first;
-
-		if (wrapToStart) {
-			this.reverseTransition = false;
-		} else if (wrapToEnd) {
-			this.reverseTransition = true;
-		} else {
-			this.reverseTransition = nextProps.value < this.props.value;
-		}
 	}
 
 	componentWillUnmount () {
@@ -304,10 +313,17 @@ const Picker = class extends React.Component {
 
 	updateValue = (dir) => {
 		const {disabled, onChange, step} = this.props;
+		dir = this.adjustDirection(dir);
+		this.setTransitionDirection(dir);
 		if (!disabled && onChange) {
-			const value = this.computeNextValue(this.adjustDirection(dir) * step);
+			const value = this.computeNextValue(dir * step);
 			onChange({value});
 		}
+	}
+
+	setTransitionDirection = (dir) => {
+		// change the transition direction based on the button press
+		this.reverseTransition = !(dir > 0);
 	}
 
 	handleDecClick = () => {
@@ -408,7 +424,9 @@ const Picker = class extends React.Component {
 			index,
 			joined,
 			onMouseUp,
+			onSpotlightDisappear,
 			orientation,
+			spotlightDisabled,
 			step,
 			width,
 			...rest
@@ -451,8 +469,10 @@ const Picker = class extends React.Component {
 					onMouseDown={this.handleIncDown}
 					onMouseUp={onMouseUp}
 					onHoldPulse={this.handleIncPulse}
+					onSpotlightDisappear={onSpotlightDisappear}
 					joined={joined}
 					icon={incrementIcon}
+					spotlightDisabled={spotlightDisabled}
 				/>
 				<div className={css.valueWrapper}>
 					{sizingPlaceholder}
@@ -473,8 +493,10 @@ const Picker = class extends React.Component {
 					onMouseDown={this.handleDecDown}
 					onMouseUp={onMouseUp}
 					onHoldPulse={this.handleDecPulse}
+					onSpotlightDisappear={onSpotlightDisappear}
 					joined={joined}
 					icon={decrementIcon}
+					spotlightDisabled={spotlightDisabled}
 				/>
 			</div>
 		);
