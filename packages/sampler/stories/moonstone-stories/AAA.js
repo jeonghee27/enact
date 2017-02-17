@@ -1,6 +1,7 @@
 import Changeable from '@enact/ui/Changeable';
 import {DatePicker, DatePickerBase} from '@enact/moonstone/DatePicker';
 import {decrementIcons, incrementIcons} from './icons';
+import Divider from '@enact/moonstone/Divider';
 import ExpandablePicker from '@enact/moonstone/ExpandablePicker';
 import Picker, {PickerBase} from '@enact/moonstone/Picker';
 import RangePicker, {RangePickerBase} from '@enact/moonstone/RangePicker';
@@ -26,7 +27,6 @@ ChangeableExpandablePicker.displayName = 'ExpandablePicker';
 
 const ChangeableDatePicker = Changeable(DatePicker);
 ChangeableDatePicker.propTypes = Object.assign({}, DatePicker.propTypes, DatePickerBase.propTypes, {
-	onChange: React.PropTypes.func,
 	onOpen: React.PropTypes.func,
 	onClose: React.PropTypes.func,
 	open: React.PropTypes.bool,
@@ -43,7 +43,6 @@ ChangeableDatePicker.displayName = 'DatePicker';
 
 const ChangeableTimePicker = Changeable(TimePicker);
 ChangeableTimePicker.propTypes = Object.assign({}, TimePicker.propTypes, TimePickerBase.propTypes, {
-	onChange: React.PropTypes.func,
 	onOpen: React.PropTypes.func,
 	onClose: React.PropTypes.func,
 	open: React.PropTypes.bool,
@@ -57,13 +56,6 @@ ChangeableTimePicker.displayName = 'TimePicker';
 		delete ChangeableTimePicker.propTypes[prop];
 		delete ChangeableTimePicker.defaultProps[prop];
 	});
-
-// Set up some defaults for info and knobs
-const prop = {
-	orientation: ['horizontal', 'vertical'],
-	width: ['<null>', 'small', 'medium', 'large']
-};
-const nullify = (v) => v === '<null>' ? null : v;
 
 const airports = [
 	'San Francisco Airport Terminal Gate 1',
@@ -89,174 +81,157 @@ storiesOf('Pickers')
 				<tbody>
 					<tr>
 						<td>
-							<div>Picker</div>
+							<div><Divider>Picker</Divider></div>
 							<div>
 								<StatefulPicker
-									onChange={action('onChange')}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, prop.orientation[0])}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', false)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									decrementIcon=""
+									disabled={false}
+									incrementIcon=""
+									joined={false}
+									noAnimation={false}
+									orientation="horizontal"
+									width="small"
+									wrap={false}
 								>
 									{airports}
 								</StatefulPicker>
 							</div>
 
-							<div>Picker + joined</div>
+							<div><Divider>Joined Picker</Divider></div>
 							<div>
 								<StatefulPicker
-									onChange={action('onChange')}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, prop.orientation[0])}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', true)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									decrementIcon=""
+									disabled={false}
+									incrementIcon=""
+									joined={true}
+									noAnimation={false}
+									orientation="horizontal"
+									width="small"
+									wrap={false}
 								>
 									{airports}
 								</StatefulPicker>
 							</div>
 
-							<div>Picker + vertical</div>
+							<div><Divider>Vertical Picker</Divider></div>
 							<StatefulPicker
-								onChange={action('onChange')}
-								width={nullify(select('width', prop.width, 'small'))}
-								orientation={'vertical'}
-								wrap={boolean('wrap', false)}
-								joined={boolean('joined', false)}
-								noAnimation={boolean('noAnimation', false)}
-								disabled={boolean('disabled', false)}
-								incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-								decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+								decrementIcon=""
+								disabled={false}
+								incrementIcon=""
+								joined={false}
+								noAnimation={false}
+								orientation="vertical"
+								width="small"
+								wrap={false}
 							>
 								{airports}
 							</StatefulPicker>
 							<StatefulPicker
-								onChange={action('onChange')}
-								width={nullify(select('width', prop.width, 'small'))}
-								orientation={'vertical'}
-								wrap={boolean('wrap', false)}
-								joined={boolean('joined', true)}
-								noAnimation={boolean('noAnimation', false)}
-								disabled={boolean('disabled', false)}
-								incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-								decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+								decrementIcon=""
+								disabled={false}
+								incrementIcon=""
+								joined={true}
+								noAnimation={false}
+								orientation="vertical"
+								width="small"
+								wrap={false}
 							>
 								{airports}
 							</StatefulPicker>
 						</td>
 
 						<td>
-							<div>RangePicker</div>
+							<div><Divider>RangePicker</Divider></div>
 							<div>
 								<StatefulRangePicker
-									onChange={action('onChange')}
-									min={number('min', 0)}
-									max={number('max', 100)}
-									step={number('step', 5)}
+									decrementIcon=""
 									defaultValue={0}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, 'horizontal')}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', false)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									disabled={false}
+									incrementIcon=""
+									joined={false}
+									max={100}
+									min={0}
+									noAnimation={false}
+									orientation="horizontal"
+									step={5}
+									width="small"
+									wrap={false}
 								/>
 							</div>
 
-							<div>RangePicker + joined</div>
+							<div><Divider>Joined RangePicker</Divider></div>
 							<div>
 								<StatefulRangePicker
-									onChange={action('onChange')}
-									min={number('min', 0)}
-									max={number('max', 100)}
-									step={number('step', 5)}
+									decrementIcon=""
 									defaultValue={0}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, 'horizontal')}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', true)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									disabled={false}
+									incrementIcon=""
+									joined={true}
+									max={100}
+									min={0}
+									noAnimation={false}
+									orientation="horizontal"
+									step={5}
+									width="small"
+									wrap={false}
 								/>
 							</div>
 
-							<div>RangePicker + vertical</div>
+							<div><Divider>Vertical RangePicker</Divider></div>
 							<div>
 								<StatefulRangePicker
-									onChange={action('onChange')}
-									min={number('min', 0)}
-									max={number('max', 100)}
-									step={number('step', 5)}
+									decrementIcon=""
 									defaultValue={0}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, 'vertical')}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', false)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									disabled={false}
+									incrementIcon=""
+									joined={false}
+									max={100}
+									min={0}
+									noAnimation={false}
+									orientation="vertical"
+									step={5}
+									width="small"
+									wrap={false}
 								/>
 								<StatefulRangePicker
-									onChange={action('onChange')}
-									min={number('min', 0)}
-									max={number('max', 100)}
-									step={number('step', 5)}
+									decrementIcon=""
 									defaultValue={0}
-									width={nullify(select('width', prop.width, 'small'))}
-									orientation={select('orientation', prop.orientation, 'vertical')}
-									wrap={boolean('wrap', false)}
-									joined={boolean('joined', true)}
-									noAnimation={boolean('noAnimation', false)}
-									disabled={boolean('disabled', false)}
-									incrementIcon={select('incrementIcon', ['', ...incrementIcons])}
-									decrementIcon={select('decrementIcon', ['', ...decrementIcons])}
+									disabled={false}
+									incrementIcon=""
+									joined={true}
+									max={100}
+									min={0}
+									noAnimation={false}
+									orientation="vertical"
+									step={5}
+									width="small"
+									wrap={false}
 								/>
 							</div>
 						</td>
 
 						<td>
-							<div>ExpandablePicker</div>
+							<div><Divider>ExpandablePicker</Divider></div>
 							<ChangeableExpandablePicker
-								title={text('title', 'Favorite Emoji')}
-								onChange={action('onChange')}
-								onClose={action('onClose')}
-								onOpen={action('onOpen')}
-								open={boolean('open', false)}
-								width={select('width', ['small', 'medium', 'large'], 'large')}
+								open={false}
+								title="Favorite Emoji"
+								width="large"
 							>
 								{emoticons}
 							</ChangeableExpandablePicker>
 
-							<div>DatePicker</div>
+							<div><Divider>DatePicker</Divider></div>
 							<ChangeableDatePicker
-								title={text('title', 'Date')}
-								noLabels={boolean('noLabels', false)}
-								noneText={text('noneText', 'Nothing Selected')}
-								onChange={action('onChange')}
-								onOpen={action('onOpen')}
-								onClose={action('onClose')}
+								noLabels={false}
+								noneText="Nothing Selected"
+								title="Date"
 							/>
 
-							<div>TimePicker</div>
+							<div><Divider>TimePicker</Divider></div>
 							<ChangeableTimePicker
-								title={text('title', 'Time')}
-								noLabels={boolean('noLabels', false)}
-								noneText={text('noneText', 'Nothing Selected')}
-								onChange={action('onChange')}
-								onOpen={action('onOpen')}
-								onClose={action('onClose')}
+								noLabels={false}
+								noneText="Nothing Selected"
+								title="Time"
 							/>
 						</td>
 					</tr>
