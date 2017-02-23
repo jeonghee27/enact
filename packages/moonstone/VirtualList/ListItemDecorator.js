@@ -25,7 +25,16 @@ const defaultConfig = {
 	 * @default false
 	 * @memberof ui/ListItemDecorator.ListItemDecorator.defaultConfig
 	 */
-	border: false
+	border: false,
+
+	/**
+	 * Determines whether wrapping a wrapped component with a div element or not
+	 *
+	 * @type {Boolean}
+	 * @default true
+	 * @memberof ui/ListItemDecorator.ListItemDecorator.defaultConfig
+	 */
+	wrap: true
 };
 
 /**
@@ -36,7 +45,7 @@ const defaultConfig = {
  * @ui
  * @public
  */
-const ListItemDecorator = hoc(defaultConfig, ({border}, Wrapped) => {
+const ListItemDecorator = hoc(defaultConfig, ({border, wrap}, Wrapped) => {
 	return kind({
 		name: 'ListItemDecorator',
 
@@ -49,12 +58,18 @@ const ListItemDecorator = hoc(defaultConfig, ({border}, Wrapped) => {
 			className: ({styler}) => styler.append({border})
 		},
 
-		render: ({className, [dataIndexAttribute]: dataIndex, style, ...rest}) => {
-			return (
-				<div className={className} data-index={dataIndex} style={style}>
-					<Wrapped {...rest} data-index={dataIndex} />
-				</div>
-			);
+		render: (props) => {
+			if (wrap) {
+				const {className, [dataIndexAttribute]: dataIndex, style, ...rest} = props;
+
+				return (
+					<div className={className} data-index={dataIndex} style={style}>
+						<Wrapped {...rest} data-index={dataIndex} />
+					</div>
+				);
+			} else {
+				return (<Wrapped {...props} />);
+			}
 		}
 	});
 });
