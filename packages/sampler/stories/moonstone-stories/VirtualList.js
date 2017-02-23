@@ -16,9 +16,9 @@ const
 	VirtualListItemBase = kind({
 		name: 'VirtualListItemBase',
 		propTypes: {
-			data: PropTypes.any,
-			index: PropTypes.number,
-			itemStyle: PropTypes.string
+			data: PropTypes.any.isRequired,
+			index: PropTypes.number.isRequired,
+			itemStyle: PropTypes.object.isRequired
 		},
 		render: ({data, index, itemStyle, ...rest}) => {
 			return (<Item {...rest} style={itemStyle}>{data[index]}</Item>);
