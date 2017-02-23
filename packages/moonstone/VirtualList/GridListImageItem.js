@@ -15,7 +15,7 @@ import {Image} from '../Image';
 import {MarqueeController, MarqueeText} from '../Marquee';
 
 import css from './GridListImageItem.less';
-import ListItemDecorator from './ListItemDecorator';
+import {ListItemDecoratorFactory} from './ListItemDecorator';
 
 const defaultPlaceholder =
 	'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC' +
@@ -123,6 +123,8 @@ const GridListImageItemBase = kind({
 	}
 });
 
+const ListItemDecorator = ListItemDecoratorFactory({css: {border: css.border}});
+
 /**
  * {@link moonstone/VirtualList.GridListImageItem} is a GridListImageItem with
  * Moonstone styling, Spottable applied.
@@ -140,7 +142,7 @@ const GridListImageItemBase = kind({
  * @public
  */
 const GridListImageItem = ListItemDecorator(
-	{wrap: false},
+	{border: true, wrap: false},
 	MarqueeController(
 		{startOnFocus: true},
 		Spottable(
