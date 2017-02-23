@@ -13,7 +13,7 @@ VirtualList.defaultProps = Object.assign({}, VirtualListCore.defaultProps);
 const
 	listStyle = {height: ri.scale(550) + 'px'},
 	items = [],
-	VirtualListItemBase = kind({
+	ListItemBase = kind({
 		name: 'VirtualListItemBase',
 		propTypes: {
 			data: PropTypes.any.isRequired,
@@ -24,12 +24,12 @@ const
 			return (<Item {...rest} style={itemStyle}>{data[index]}</Item>);
 		}
 	}),
-	VirtualListItem = ListItemDecorator({border: true}, VirtualListItemBase),
+	ListItem = ListItemDecorator({border: true}, ListItemBase),
 	// eslint-disable-next-line enact/prop-types, enact/display-name
 	renderItem = (size) => (props) => {
 		const itemStyle = {height: size + 'px'};
 		return (
-			<VirtualListItem {...props} itemStyle={itemStyle} />
+			<ListItem {...props} itemStyle={itemStyle} />
 		);
 	};
 

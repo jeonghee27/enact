@@ -168,8 +168,7 @@ class VirtualListCore extends Component {
 		overhang: 3,
 		pageScroll: false,
 		positioningOption: 'byItem',
-		spacing: 0,
-		style: {}
+		spacing: 0
 	}
 
 	constructor (props) {
