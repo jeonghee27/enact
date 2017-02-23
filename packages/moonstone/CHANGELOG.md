@@ -4,6 +4,10 @@ The following is a curated list of changes in the Enact moonstone module, newest
 
 ## [unreleased]
 
+### Added
+
+- `moonstone/ListItemDecorator` to reduce redundant style code app side for VirtualList items and to enhance list scroll performance by wrapping an item with a div component
+
 ### Changed
 
 - `moonstone/VirtualList` and `moonstone/VirtualGridList` not to add `data-index` to their item DOM elements directly, but to pass `data-index` as the parameter of their `component` prop like the `key` parameter of their `component` prop
