@@ -15,13 +15,6 @@ const
 	},
 	style = {
 		item: {
-			position: 'absolute',
-			width: '100%',
-			height: '100%',
-			margin: '0',
-			border: ri.scale(6) + 'px solid transparent',
-			boxSizing: 'border-box',
-
 			color: '#fff'
 		},
 		list: {
