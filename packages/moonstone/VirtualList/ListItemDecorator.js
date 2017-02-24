@@ -4,7 +4,6 @@
  * @module moonstone/ListItemDecorator
  */
 
-import {dataIndexAttribute} from '../Scroller/Scrollable';
 import hoc from '@enact/core/hoc';
 import kind from '@enact/core/kind';
 import React from 'react';
@@ -49,12 +48,8 @@ const ListItemDecorator = hoc(defaultConfig, ({border}, Wrapped) => {
 			className: ({styler}) => styler.append({border})
 		},
 
-		render: ({className, [dataIndexAttribute]: dataIndex, style, ...rest}) => {
-			return (
-				<div className={className} data-index={dataIndex} style={style}>
-					<Wrapped {...rest} data-index={dataIndex} />
-				</div>
-			);
+		render: ({className, ...rest}) => {
+			return (<Wrapped {...rest} className={className} />);
 		}
 	});
 });
