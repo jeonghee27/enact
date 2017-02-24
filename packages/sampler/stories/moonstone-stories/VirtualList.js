@@ -17,11 +17,10 @@ const
 		name: 'ListItemBase',
 		propTypes: {
 			data: PropTypes.any,
-			index: PropTypes.number,
-			itemStyle: PropTypes.object
+			index: PropTypes.number
 		},
-		render: ({data, index, itemStyle, ...rest}) => {
-			return (<Item {...rest} style={itemStyle}>{data[index]}</Item>);
+		render: ({data, index, ...rest}) => {
+			return (<Item {...rest}>{data[index]}</Item>);
 		}
 	}),
 	ListItem = ListItemDecorator({border: true}, ListItemBase),
@@ -29,7 +28,7 @@ const
 	renderItem = (size) => (props) => {
 		const itemStyle = {height: size + 'px'};
 		return (
-			<ListItem {...props} itemStyle={itemStyle} />
+			<ListItem {...props} style={itemStyle} />
 		);
 	};
 
