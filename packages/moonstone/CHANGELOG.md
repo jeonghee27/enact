@@ -6,12 +6,14 @@ The following is a curated list of changes in the Enact moonstone module, newest
 
 ### Added
 
+- `moonstone/ListItemDecorator` to reduce redundant style code app side for VirtualList items and to enhance list scroll performance by wrapping an item with a div component
 - `moonstone/IconButton` and `moonstone/Button` `color` property to add a remote control key color to the button
 - `moonstone/Scrollbar` property `disabled` to disable both paging controls when it is true
 - `moonstone/VirtualList` parameter `moreInfo` to pass `firstVisibleIndex` and `lastVisibleIndex` when scroll events are firing
 
 ### Changed
 
+- `moonstone/GridListImageItem` to match CSS style with `moonstone/ListItemDecorator` ( position: absolute, box-sizing: border-box, border: 6px solid transparent, will-change: transform, color : white added ; display: inline-block removed in it )
 - `moonstone/VirtualList` and `moonstone/VirtualGridList` not to add `data-index` to their item DOM elements directly, but to pass `data-index` as the parameter of their `component` prop like the `key` parameter of their `component` prop
 
 ### Fixed
