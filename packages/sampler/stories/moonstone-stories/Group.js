@@ -6,6 +6,7 @@ import Selectable from '@enact/ui/Selectable';
 import ToggleButton from '@enact/moonstone/ToggleButton';
 import Group from '@enact/ui/Group';
 import React from 'react';
+import createFragment from 'react-addons-create-fragment';
 import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, boolean, select} from '@kadira/storybook-addon-knobs';
 
@@ -44,7 +45,7 @@ storiesOf('Group')
 				defaultSelected={0}
 				onSelect={action('onSelect')}
 			>
-				{['Item 1', 'Item 2', 'Item 3']}
+				{['Item 1', createFragment({value: 'Item 2', disabled: true}), 'Item 3']}
 			</SelectableGroup>
 		)
 	);
