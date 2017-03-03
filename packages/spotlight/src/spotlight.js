@@ -1137,7 +1137,7 @@ const Spotlight = (function () {
 
 			if (containerId) {
 				// remove "undefined" items
-				_containers.set(containerId, extend({}, config));
+				_containers.set(containerId, extend({}, _containers.get(containerId), config));
 			}
 		},
 
