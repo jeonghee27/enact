@@ -47,9 +47,8 @@ const dataIndexAttribute = 'data-index';
  * {@link moonstone/Scroller.Scrollable} is a Higher-order Component
  * that applies a Scrollable behavior to its wrapped component.
  *
- * Scrollable catches `onFocus` and `onKeyDown` events from its wrapped component for spotlight features,
- * and also catches `onMouseDown`, `onMouseLeave`, `onMouseMove`, `onMouseUp`, and `onWheel` events
- * from its wrapped component for scrolling behaviors.
+ * Scrollable catches `onFocus`, `onKeyUp`, and `onKeyDown` events from its wrapped component for spotlight features,
+ * and also catches `onWheel` and `onScroll` events from its wrapped component for scrolling behaviors.
  *
  * Scrollable calls `onScrollStart`, `onScroll`, and `onScrollStop` callback functions during scroll.
  *
@@ -135,22 +134,10 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		horizontalScrollability = false
 		verticalScrollability = false
 		isScrollAnimationTargetAccumulated = false
-		isFirstDragging = false
-		isDragging = false
 		isKeyDown = false
 
 		// event handlers
 		eventHandlers = {}
-
-		// drag info
-		dragInfo = {
-			t: 0,
-			clientX: 0,
-			clientY: 0,
-			dx: 0,
-			dy: 0,
-			dt: 0
-		}
 
 		// bounds info
 		bounds = {
@@ -231,59 +218,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		// handle an input event
 
-		dragStart (e) {
-			const d = this.dragInfo;
-
-			this.isDragging = true;
-			this.isFirstDragging = true;
-			d.t = perf.now();
-			d.clientX = e.clientX;
-			d.clientY = e.clientY;
-			d.dx = d.dy = 0;
-		}
-
-		drag (e) {
-			let t = perf.now();
-			const d = this.dragInfo;
-
-			if (this.horizontalScrollability) {
-				d.dx = (e.clientX - d.clientX) * this.rtlDirection;
-				d.clientX = e.clientX;
-			} else {
-				d.dx = 0;
-			}
-
-			if (this.verticalScrollability) {
-				d.dy = e.clientY - d.clientY;
-				d.clientY = e.clientY;
-			} else {
-				d.dy = 0;
-			}
-
-			d.t = t;
-
-			return {dx: d.dx, dy: d.dy};
-		}
-
-		dragStop () {
-			const
-				d = this.dragInfo,
-				t = perf.now();
-
-			d.dt = t - d.t;
-			this.isDragging = false;
-		}
-
-		isFlicking () {
-			const d = this.dragInfo;
-
-			if (d.dt > holdTime) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-
 		wheel (e, isHorizontal, isVertical) {
 			const
 				bounds = this.getScrollBounds(),
@@ -308,80 +242,22 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			return delta;
 		}
 
-		// event handlers for JavaScript-based scroll
-
-		onMouseDown = (e) => {
-			this.animator.stop();
-			this.dragStart(e);
-		}
-
-		onMouseMove = (e) => {
-			if (this.isDragging) {
-				const {dx, dy} = this.drag(e);
-
-				if (this.isFirstDragging) {
-					this.doScrollStart();
-					this.isFirstDragging = false;
-				}
-				this.showThumb();
-				this.scroll(this.scrollLeft - dx, this.scrollTop - dy);
-			}
-		}
-
-		onMouseUp = (e) => {
-			if (this.isDragging) {
-				this.dragStop(e);
-
-				if (!this.isFlicking()) {
-					this.stop();
-				} else {
-					const
-						d = this.dragInfo,
-						target = this.animator.simulate(
-							this.scrollLeft,
-							this.scrollTop,
-							calcVelocity(-d.dx, d.dt),
-							calcVelocity(-d.dy, d.dt)
-						);
-
-					if (typeof window !== 'undefined') {
-						doc.activeElement.blur();
-					}
-					this.childRef.setContainerDisabled(true);
-					this.isScrollAnimationTargetAccumulated = false;
-					this.start(target.targetX, target.targetY, true, true, target.duration);
-				}
-			}
-		}
-
-		onMouseLeave = (e) => {
-			this.onMouseMove(e);
-			this.onMouseUp();
-		}
-
-		onWheel = (e) => {
-			e.preventDefault();
-			if (!this.isDragging) {
-				const
-					bounds = this.getScrollBounds(),
-					isHorizontal = this.canScrollHorizontally(bounds),
-					isVertical = this.canScrollVertically(bounds),
-					delta = this.wheel(e, isHorizontal, isVertical);
-
-				doc.activeElement.blur();
-				this.childRef.setContainerDisabled(true);
-				this.scrollToAccumulatedTarget(delta, isHorizontal, isVertical);
-			}
-		}
-
-		onWheelByBrowser = () => {
-			if (!this.isDragging) {
-				doc.activeElement.blur();
-				this.childRef.setContainerDisabled(true);
-			}
-		}
-
 		// event handler for browser native scroll
+
+		onMouseDown = () => {
+			this.animator.stop();
+			this.isScrollAnimationTargetAccumulated = false;
+			this.childRef.setContainerDisabled(false);
+			this.lastFocusedItem = null;
+		}
+
+		onWheel = () => {
+			this.animator.stop();
+			this.isScrollAnimationTargetAccumulated = false;
+			this.lastFocusedItem = null;
+			this.childRef.setContainerDisabled(true);
+			doc.activeElement.blur();
+		}
 
 		onScroll = (e) => {
 			let {scrollLeft, scrollTop} = e.target;
@@ -412,7 +288,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onFocus = (e) => {
-			if (this.isKeyDown && !this.isDragging) {
+			if (this.isKeyDown) {
 				const
 					item = e.target,
 					positionFn = this.childRef.calculatePositionOnFocus,
@@ -755,7 +631,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.verticalScrollability = this.childRef.isVertical();
 
 			// FIXME `onWheel` doesn't work on the v8 snapshot.
-			this.containerRef.addEventListener('wheel', this.onWheelByBrowser);
+			this.containerRef.addEventListener('wheel', this.onWheel);
 
 			// FIXME `onScroll` doesn't work on the v8 snapshot.
 			this.childRef.wrapperRef.addEventListener('scroll', this.onScroll, true);
