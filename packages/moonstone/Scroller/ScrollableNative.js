@@ -645,7 +645,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 			this.updateScrollbars();
 			// FIXME `onScroll` doesn't work on the v8 snapshot.
-			containerNode.addEventListener('scroll', this.onScroll, true);
+			this.childRef.wrapperRef.addEventListener('scroll', this.onScroll, true);
 			// FIXME `onFocus` doesn't work on the v8 snapshot.
 			this.childRef.wrapperRef.addEventListener('focus', this.onFocus, true);
 			this.isFirstRendered = true;
