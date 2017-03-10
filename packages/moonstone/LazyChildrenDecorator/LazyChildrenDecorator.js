@@ -9,13 +9,22 @@ import React, {Component} from 'react';
  */
 const defaultConfig = {
 	/**
-	 * Configures the number of the children rendered when mounting
+	 * Configures the number of the children
 	 *
 	 * @type {Number}
 	 * @default 5
 	 * @memberof moonstone/LazyChildrenDecorator.LazyChildrenDecorator.defaultConfig
 	 */
-	initialNumOfChildren: 5
+	numOfChildrenPerRender: 5,
+
+	/**
+	 * Configures the interval time
+	 *
+	 * @type {Number}
+	 * @default 5
+	 * @memberof moonstone/LazyChildrenDecorator.LazyChildrenDecorator.defaultConfig
+	 */
+	intervalPerRender: 20
 };
 
 /**
@@ -43,7 +52,8 @@ const contextTypes = {
  * @public
  */
 const LazyChildrenDecorator = hoc(defaultConfig, (config, Wrapped) => {
-	const initialNumOfChildren = config.initialNumOfChildren;
+	const numOfChildrenPerRender = config.numOfChildrenPerRender;
+	const intervalPerRender = config.intervalPerRender;
 
 	return class Lazy extends Component {
 		static contextTypes = contextTypes
@@ -52,36 +62,31 @@ const LazyChildrenDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			super(props);
 
 			this.state = {
-				didRender: false
+				numOfChildren: numOfChildrenPerRender
 			};
+
+			this.didRender = false;
 		}
 
 		invalidateBounds = () => this.context.invalidateBounds()
 
-		componentDidMount () {
-			if (this.props.children.length > initialNumOfChildren) {
-				window.setTimeout(() => {
-					// eslint-disable-next-line react/no-did-mount-set-state
-					this.setState({didRender: true});
-					if (this.invalidateBounds) {
-						this.invalidateBounds();
-					}
-				}, 1);
-			}
-		}
-
 		render () {
 			let props = this.props;
 
-			if (!this.state.didRender) {
-				if (props.children.length <= initialNumOfChildren) {
-					window.setTimeout(() => {
-						// eslint-disable-next-line react/no-direct-mutation-state
-						this.state.didRender = true;
-					}, 1);
+			if (!this.didRender) {
+				if (props.children.length <= this.state.numOfChildren) {
+					this.didRender = true;
+					if (this.invalidateBounds) {
+						this.invalidateBounds();
+					}
 				} else {
 					props = Object.assign({}, this.props);
-					props.children = props.children.slice(0, initialNumOfChildren);
+					props.children = props.children.slice(0, this.state.numOfChildren);
+					window.setTimeout(() => {
+						if (!this.didRender) {
+							this.setState({numOfChildren: Math.min(this.state.numOfChildren + numOfChildrenPerRender, this.props.children.length)});
+						}
+					}, intervalPerRender);
 				}
 			}
 
