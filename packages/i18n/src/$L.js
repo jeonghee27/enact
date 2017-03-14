@@ -75,5 +75,15 @@ function setLocale (spec) {
 	}
 }
 
+/**
+ * Deletes the current bundle object of strings and clears the cache.
+ * @returns {undefined}
+ */
+function clearLocale () {
+	delete ResBundle.strings;
+	delete ResBundle.sysres;
+	resBundle = null;
+}
+
 export default $L;
-export {$L, toIString, setLocale};
+export {$L, toIString, setLocale, clearLocale};

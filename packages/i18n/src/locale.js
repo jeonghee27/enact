@@ -3,7 +3,7 @@ import LocaleInfo from '../ilib/lib/LocaleInfo';
 import ScriptInfo from '../ilib/lib/ScriptInfo';
 
 import {initCaseMappers} from './case';
-import {setLocale} from './$L';
+import {setLocale, clearLocale} from './$L';
 
 /*
  * Tell whether or not the given locale is considered a non-Latin locale for webOS purposes. This
@@ -108,12 +108,18 @@ function getI18nClasses () {
  * @param {String} locale Locale identifier
  * @returns {undefined}
  */
-const updateLocale = function (locale) {
-	// blow away the cache to force it to reload the manifest files for the new app
-	// eslint-disable-next-line no-undefined
-	if (ilib._load) ilib._load.manifest = undefined;
-	// remove the cache of the platform name to allow transition between snapshot and browser
-	delete ilib._platform;
+const updateLocale = function (locale, force) {
+	// force the update locale by removing any old manifests or cached data
+	if (force) {
+		// remove any strings.json or sysres.json cache and relete the current ResBundle
+		clearLocale();
+		// blow away the cache to force it to reload the manifest files for the new app
+		// eslint-disable-next-line no-undefined
+		if (ilib._load) ilib._load.manifest = undefined;
+		// remove the cache of the platform name to allow transition between snapshot and browser
+		delete ilib._platform;
+	}
+
 	// ilib handles falsy values and automatically uses local locale when encountered which
 	// is expected and desired
 	ilib.setLocale(locale);
