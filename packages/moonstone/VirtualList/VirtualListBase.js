@@ -38,6 +38,19 @@ const gridListItemSizeShape = PropTypes.shape({
 });
 
 /**
+ * The shape for the list data size for {@link moonstone/VirtualList.dataSizeShape}.
+ *
+ * @typedef {Object} dataSizeShape
+ * @memberof moonstone/VirtualList
+ * @property {Number} receivedSize - Current received size.
+ * @property {Number} totalSize - The total size.
+ */
+const dataSizeShape = PropTypes.shape({
+	receivedSize:  PropTypes.number.isRequired,
+	totalSize: PropTypes.number.isRequired
+});
+
+/**
  * {@link moonstone/VirtualList.VirtualListBase} is a base component for
  * {@link moonstone/VirtualList.VirtualList} and
  * {@link moonstone/VirtualList.VirtualGridList} with Scrollable and SpotlightContainerDecorator applied.
@@ -92,13 +105,16 @@ class VirtualListCore extends Component {
 		data: PropTypes.any,
 
 		/**
-		 * Size of the data.
+		 * Size of the data; valid values are either a number for
 		 *
-		 * @type {Number}
+		 * @type {Number|moonstone/VirtualList.dataSizeShape}
 		 * @default 0
 		 * @public
 		 */
-		dataSize: PropTypes.number,
+		dataSize: PropTypes.oneOfType([
+			PropTypes.number,
+			dataSizeShape
+		]),
 
 		/**
 		 * Direction of the list; valid values are `'horizontal'` and `'vertical'`.
@@ -234,7 +250,8 @@ class VirtualListCore extends Component {
 				overhang !== nextProps.overhang ||
 				spacing !== nextProps.spacing
 			),
-			hasDataChanged = (dataSize !== nextProps.dataSize);
+			hasDataChanged = ((dataSize instanceof Object) ? (dataSize.totalSize !== nextProps.dataSize.totalSize)
+							: (dataSize !== nextProps.dataSize));
 
 		if (hasMetricsChanged) {
 			this.calculateMetrics(nextProps);
@@ -242,6 +259,16 @@ class VirtualListCore extends Component {
 		} else if (hasDataChanged) {
 			this.updateStatesAndBounds(nextProps);
 		}
+	}
+
+	shouldComponentUpdate (nextProps) {
+		if ((nextProps.dataSize instanceof Object)
+			&& nextProps.dataSize.totalSize > 0
+			&& this.props.dataSize.receivedSize !== nextProps.dataSize.receivedSize
+			&& nextProps.dataSize.receivedSize < nextProps.dataSize.totalSize) {
+			return false;
+		}
+		return true;
 	}
 
 	componentWillUnmount () {
@@ -397,11 +424,12 @@ class VirtualListCore extends Component {
 		const
 			{dataSize, overhang} = props,
 			{dimensionToExtent, primary} = this,
-			numOfItems = Math.min(dataSize, dimensionToExtent * (Math.ceil(primary.clientSize / primary.gridSize) + overhang)),
+			totalDataSize = (dataSize instanceof Object) ? dataSize.totalSize : dataSize,
+			numOfItems = Math.min(totalDataSize, dimensionToExtent * (Math.ceil(primary.clientSize / primary.gridSize) + overhang)),
 			wasFirstIndexMax = (this.maxFirstIndex && (this.state.firstIndex === this.maxFirstIndex));
 
-		this.maxFirstIndex = dataSize - numOfItems;
-		this.curDataSize = dataSize;
+		this.maxFirstIndex = totalDataSize - numOfItems;
+		this.curDataSize = totalDataSize;
 		this.updateFrom = null;
 		this.updateTo = null;
 
@@ -705,10 +733,9 @@ class VirtualListCore extends Component {
 
 	setSpotlightContainerRestrict = (keyCode, index) => {
 		const
-			{dataSize} = this.props,
-			{isPrimaryDirectionVertical, dimensionToExtent} = this,
+			{isPrimaryDirectionVertical, dimensionToExtent, curDataSize} = this,
 			canMoveBackward = index >= dimensionToExtent,
-			canMoveForward = index < (dataSize - (((dataSize - 1) % dimensionToExtent) + 1));
+			canMoveForward = index < (curDataSize - (((curDataSize - 1) % dimensionToExtent) + 1));
 		let isSelfOnly = false;
 
 		if (isPrimaryDirectionVertical) {
@@ -759,9 +786,9 @@ class VirtualListCore extends Component {
 
 	renderCalculate () {
 		const
-			{dataSize} = this.props,
 			{firstIndex, numOfItems} = this.state,
-			max = Math.min(dataSize, firstIndex + numOfItems);
+			{curDataSize} = this,
+			max = Math.min(curDataSize, firstIndex + numOfItems);
 
 		this.positionItems({updateFrom: firstIndex, updateTo: max});
 		this.positionContainer();
@@ -772,6 +799,8 @@ class VirtualListCore extends Component {
 			props = Object.assign({}, this.props),
 			{positioningOption, onScroll} = this.props,
 			{primary, cc} = this;
+
+		console.log('VL render');
 
 		delete props.cbScrollTo;
 		delete props.component;
