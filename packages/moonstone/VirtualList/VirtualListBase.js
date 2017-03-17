@@ -105,7 +105,8 @@ class VirtualListCore extends Component {
 		data: PropTypes.any,
 
 		/**
-		 * Size of the data; valid values are either a number for
+		 * Size of the data; valid values are either a number
+		 * or an obejct that has `receivedSize` and `totalSize`.
 		 *
 		 * @type {Number|moonstone/VirtualList.dataSizeShape}
 		 * @default 0
@@ -250,8 +251,8 @@ class VirtualListCore extends Component {
 				overhang !== nextProps.overhang ||
 				spacing !== nextProps.spacing
 			),
-			hasDataChanged = ((dataSize instanceof Object) ? (dataSize.totalSize !== nextProps.dataSize.totalSize)
-							: (dataSize !== nextProps.dataSize));
+			hasDataChanged = ((dataSize instanceof Object) ? (dataSize.totalSize !== nextProps.dataSize.totalSize) :
+							(dataSize !== nextProps.dataSize));
 
 		if (hasMetricsChanged) {
 			this.calculateMetrics(nextProps);
@@ -261,11 +262,11 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	shouldComponentUpdate (nextProps) {
-		if ((nextProps.dataSize instanceof Object)
-			&& nextProps.dataSize.totalSize > 0
-			&& this.props.dataSize.receivedSize !== nextProps.dataSize.receivedSize
-			&& nextProps.dataSize.receivedSize < nextProps.dataSize.totalSize) {
+	shouldComponentUpdate ({dataSize}) {
+		if ((dataSize instanceof Object) &&
+			dataSize.totalSize > 0 &&
+			this.props.dataSize.receivedSize !== dataSize.receivedSize &&
+			dataSize.receivedSize < dataSize.totalSize) {
 			return false;
 		}
 		return true;
@@ -799,8 +800,6 @@ class VirtualListCore extends Component {
 			props = Object.assign({}, this.props),
 			{positioningOption, onScroll} = this.props,
 			{primary, cc} = this;
-
-		console.log('VL render');
 
 		delete props.cbScrollTo;
 		delete props.component;
