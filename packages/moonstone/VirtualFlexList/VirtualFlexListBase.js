@@ -168,7 +168,7 @@ class VirtualFlexListCore extends Component {
 	// Calling setState within componentWillReceivePropswill not trigger an additional render.
 	componentWillReceiveProps (nextProps) {
 		const
-			{dataSize, flexAxis, itemSize, overhang} = this.props,
+			{data, dataSize, flexAxis, itemSize, overhang} = this.props,
 			hasMetricsChanged = (
 				((itemSize instanceof Object) ? (itemSize.minWidth !== nextProps.itemSize.minWidth || itemSize.minHeight !== nextProps.itemSize.minHeight || itemSize.row !== nextProps.itemSize.row || itemSize.col !== nextProps.itemSize.col) : itemSize !== nextProps.itemSize) ||
 				overhang !== nextProps.overhang ||
@@ -176,8 +176,8 @@ class VirtualFlexListCore extends Component {
 			),
 			hasDataChanged = (
 				(dataSize instanceof Object) ?
-				(dataSize.row !== nextProps.dataSize.row || dataSize.col !== nextProps.dataSize.col) :
-				(dataSize !== nextProps.dataSize)
+				(dataSize.row !== nextProps.dataSize.row || dataSize.col !== nextProps.dataSize.col || data !== nextProps.data) :
+				(dataSize !== nextProps.dataSize || data !== nextProps.data)
 			);
 
 		this.fixedAxis = (nextProps.flexAxis === 'row') ? 'col' : 'row';
