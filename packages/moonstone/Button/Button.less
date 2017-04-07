@@ -162,8 +162,7 @@
 
 	// Button-non-disabled rules
 	&:not([disabled]) {
-		&.pressed,
-		&:global(.spottable):active {
+		&.pressed {
 			.bg {
 				-webkit-animation-name: expand;
 				animation-name: expand;
@@ -171,6 +170,12 @@
 		}
 
 		&:global(.spottable):focus {
+			&:global(.spottable):active {
+				.bg {
+					-webkit-animation-name: expand;
+					animation-name: expand;
+				}
+			}
 			color: @moon-spotlight-text-color;
 			background-color: transparent;
 

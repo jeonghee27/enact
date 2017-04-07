@@ -603,20 +603,28 @@ const Spotlight = (function () {
 		return true;
 	}
 
-	// returns an array of ids for containers that wrap the element, in order of outer-to-inner, with
+	// returns an object of container data for the supplied element, consisting of 2 properties:
+	// `containerIds` - array of ids for containers that wrap the element, in order of outer-to-inner, with
 	// the last array item being the immediate container id of the element.
+	// `activeContainerId` - id of the container that serves as the active container of the element. Usually
+	// this will be the immediate container id of the element, except in nested container cases where this value
+	// will be the nearest parent container that uses a `restrict` config value of `'self-only'`, if available.
 	function getContainerIds (elem) {
 		const containerIds = [..._containers.keys()];
 		const matches = [];
+		let activeContainerId;
 
 		for (let i = 0, containers = containerIds.length; i < containers; ++i) {
 			const id = containerIds[i];
 			const config = _containers.get(id);
 			if (!config.selectorDisabled && matchSelector(elem, config.selector)) {
 				matches.push(id);
+				if (config.restrict === 'self-only') {
+					activeContainerId = id;
+				}
 			}
 		}
-		return matches;
+		return {containerIds: matches, activeContainerId: activeContainerId || last(matches)};
 	}
 
 	function getContainerNavigableElements (containerId) {
@@ -657,7 +665,7 @@ const Spotlight = (function () {
 		}
 	}
 
-	function focusElement (elem, containerIds, fromPointer) {
+	function focusElement (elem, containerIds, activeContainerId, fromPointer) {
 		if (!elem) {
 			return false;
 		}
@@ -674,7 +682,7 @@ const Spotlight = (function () {
 				currentFocusedElement.blur();
 			}
 			elem.focus();
-			focusChanged(elem, containerIds);
+			focusChanged(elem, containerIds, activeContainerId);
 		};
 
 		if (_duringFocusChange) {
@@ -698,18 +706,18 @@ const Spotlight = (function () {
 
 		_duringFocusChange = false;
 
-		focusChanged(elem, containerIds);
+		focusChanged(elem, containerIds, activeContainerId);
 		return true;
 	}
 
-	function focusChanged (elem, containerIds) {
+	function focusChanged (elem, containerIds, activeContainerId) {
 		if (!containerIds || !containerIds.length) {
-			containerIds = getContainerIds(elem);
+			[containerIds, activeContainerId] = getContainerIds(elem);
 		}
 		const containerId = last(containerIds);
 		if (containerId) {
 			setContainerLastFocusedElement(elem, containerIds);
-			_lastContainerId = containerId;
+			_lastContainerId = activeContainerId;
 		}
 	}
 
@@ -724,9 +732,9 @@ const Spotlight = (function () {
 		} else {
 			let next = parseSelector(selector)[0];
 			if (next) {
-				const nextContainerIds = getContainerIds(next);
-				if (isNavigable(next, last(nextContainerIds))) {
-					return focusElement(next, nextContainerIds);
+				const {containerIds, activeContainerId} = getContainerIds(next);
+				if (isNavigable(next, last(containerIds))) {
+					return focusElement(next, containerIds, activeContainerId);
 				}
 			}
 		}
@@ -766,7 +774,8 @@ const Spotlight = (function () {
 			}
 
 			if (next) {
-				return focusElement(next, range);
+				const {containerIds, activeContainerId} = getContainerIds(next);
+				return focusElement(next, containerIds, activeContainerId);
 			}
 		}
 
@@ -787,9 +796,9 @@ const Spotlight = (function () {
 					return focusExtendedSelector(next);
 				}
 
-				const nextContainerIds = getContainerIds(next);
+				const {containerIds: nextContainerIds, activeContainerId: nextActiveContainerId} = getContainerIds(next);
 				if (isNavigable(next, last(nextContainerIds))) {
-					return focusElement(next, nextContainerIds);
+					return focusElement(next, nextContainerIds, nextActiveContainerId);
 				}
 			}
 		}
@@ -808,7 +817,7 @@ const Spotlight = (function () {
 	}
 
 	function focusNext (next, direction, currentContainerIds, currentFocusedElement) {
-		const nextContainerIds = getContainerIds(next);
+		const {containerIds: nextContainerIds, activeContainerId: nextActiveContainerId} = getContainerIds(next);
 		const nextContainerId = last(nextContainerIds);
 		const currentContainerId = last(currentContainerIds);
 
@@ -843,7 +852,7 @@ const Spotlight = (function () {
 			}
 		}
 
-		return focusElement(next, nextContainerIds);
+		return focusElement(next, nextContainerIds, nextActiveContainerId);
 	}
 
 	function spotNextFromPoint (direction, position, containerId) {
@@ -879,7 +888,7 @@ const Spotlight = (function () {
 		return false;
 	}
 
-	function spotNext (direction, currentFocusedElement, currentContainerIds) {
+	function spotNext (direction, currentFocusedElement, currentContainerIds, currentActiveContainerId) {
 		const extSelector = currentFocusedElement.getAttribute('data-spot-' + direction);
 		if (typeof extSelector === 'string') {
 			if (extSelector === '' || !focusExtendedSelector(extSelector)) {
@@ -891,10 +900,11 @@ const Spotlight = (function () {
 		const {allNavigableElements, containerNavigableElements} = getNavigableElements();
 		const currentContainerId = last(currentContainerIds);
 		const config = extend({}, GlobalConfig, _containers.get(currentContainerId));
+		const useActiveContainer = currentContainerId !== currentActiveContainerId;
 		let next;
 
-		if (config.restrict === 'self-only' || config.restrict === 'self-first') {
-			let currentContainerNavigableElements = containerNavigableElements[currentContainerId];
+		if (useActiveContainer || config.restrict === 'self-only' || config.restrict === 'self-first') {
+			const currentContainerNavigableElements = containerNavigableElements[currentContainerId];
 
 			next = navigate(
 				currentFocusedElement,
@@ -903,13 +913,22 @@ const Spotlight = (function () {
 				config
 			);
 
-			if (!next && config.restrict === 'self-first') {
-				next = navigate(
-					currentFocusedElement,
-					direction,
-					exclude(allNavigableElements, currentContainerNavigableElements),
-					config
-				);
+			if (!next) {
+				if (useActiveContainer) {
+					next = navigate(
+						currentFocusedElement,
+						direction,
+						exclude(containerNavigableElements[currentActiveContainerId], currentFocusedElement),
+						extend({}, GlobalConfig, _containers.get(currentActiveContainerId))
+					);
+				} else if (config.restrict === 'self-first') {
+					next = navigate(
+						currentFocusedElement,
+						direction,
+						exclude(allNavigableElements, currentContainerNavigableElements),
+						config
+					);
+				}
 			}
 		} else {
 			next = navigate(
@@ -965,13 +984,13 @@ const Spotlight = (function () {
 			}
 		}
 
-		const currentContainerIds = getContainerIds(currentFocusedElement);
-		if (!currentContainerIds.length) {
+		const {containerIds, activeContainerId} = getContainerIds(currentFocusedElement);
+		if (!containerIds.length) {
 			return;
 		}
 
-		if (direction && !spotNext(direction, currentFocusedElement, currentContainerIds) && currentFocusedElement !== document.activeElement) {
-			focusElement(currentFocusedElement, currentContainerIds);
+		if (direction && !spotNext(direction, currentFocusedElement, containerIds, activeContainerId) && currentFocusedElement !== document.activeElement) {
+			focusElement(currentFocusedElement, containerIds, activeContainerId);
 		}
 	}
 
@@ -1036,8 +1055,13 @@ const Spotlight = (function () {
 		const target = getNavigableTarget(evt.target); // account for child controls
 
 		if (target && target !== getCurrent()) { // moving over a focusable element
-			focusElement(target, getContainerIds(target), true);
-			preventDefault(evt);
+			const spotlightModal = _containers.get(_lastContainerId).restrict === 'self-only';
+
+			if (!spotlightModal || (spotlightModal && isNavigable(target, _lastContainerId, true))) {
+				const {containerIds, activeContainerId} = getContainerIds(target);
+				focusElement(target, containerIds, activeContainerId, true);
+				preventDefault(evt);
+			}
 		}
 	}
 
@@ -1074,8 +1098,13 @@ const Spotlight = (function () {
 				// we are moving over a non-focusable element, so we force a blur to occur
 				current.blur();
 			} else if (target && (!current || target !== current)) {
-				// we are moving over a focusable element, so we set focus to the target
-				focusElement(target, getContainerIds(target), true);
+				const spotlightModal = _containers.get(_lastContainerId).restrict === 'self-only';
+
+				if (!spotlightModal || (spotlightModal && isNavigable(target, _lastContainerId, true))) {
+					const {containerIds, activeContainerId} = getContainerIds(target);
+					// we are moving over a focusable element, so we set focus to the target
+					focusElement(target, containerIds, activeContainerId, true);
+				}
 			}
 		}
 	}
@@ -1355,10 +1384,9 @@ const Spotlight = (function () {
 					result = focusExtendedSelector(elem);
 				}
 			} else {
-				const nextContainerIds = getContainerIds(elem);
-				const nextContainerId = last(nextContainerIds);
-				if (isNavigable(elem, nextContainerId)) {
-					result = focusElement(elem, nextContainerIds);
+				const {containerIds, activeContainerId} = getContainerIds(elem);
+				if (isNavigable(elem, last(containerIds))) {
+					result = focusElement(elem, containerIds, activeContainerId);
 				}
 			}
 
@@ -1389,12 +1417,12 @@ const Spotlight = (function () {
 				return false;
 			}
 
-			const containerIds = getContainerIds(elem);
+			const {containerIds, activeContainerId} = getContainerIds(elem);
 			if (!containerIds.length) {
 				return false;
 			}
 
-			return spotNext(direction, elem, containerIds);
+			return spotNext(direction, elem, containerIds, activeContainerId);
 		},
 
 		/**
@@ -1419,12 +1447,35 @@ const Spotlight = (function () {
 		 * Sets the currently active container.
 		 *
 		 * @memberof spotlight.Spotlight.prototype
+		 * @param {String} [identifier] The id of the container requesting the change.
 		 * @param {String} [containerId] The id of the currently active container. If this is not
 		 *	provided, the root container is set as the currently active container.
 		 * @public
 		 */
-		setActiveContainer: function (containerId) {
-			_lastContainerId = containerId || spotlightRootContainerName;
+		setActiveContainer: function (identifier, containerId) {
+			if (!identifier || typeof identifier !== 'string') {
+				throw new Error('Please assign the "identifier"!');
+			}
+
+			const lastConfig = _containers.get(_lastContainerId);
+			const lastSpotlightModal = lastConfig && lastConfig.restrict === 'self-only';
+
+			// the current active container is requesting the change
+			if (identifier === _lastContainerId ||
+					// there's a request to change to a another specified `containerId`
+					(containerId &&
+						// the requested container is not active
+						containerId !== _lastContainerId &&
+						// the active container uses a `restrict: 'self-only'` config rule
+						lastSpotlightModal &&
+						// the requested container also uses a `restrict: 'self-only'` config rule
+						_containers.get(containerId).restrict === 'self-only' &&
+						// the actve container also wraps/contains the requested container
+						(document.querySelector(`[data-container-id='${_lastContainerId}']`) || document).contains(document.querySelector(`[data-container-id='${containerId}']`) || document)) ||
+					// the current active container's config rules allow focus to move anywhere
+					!lastSpotlightModal) {
+				_lastContainerId = containerId || spotlightRootContainerName;
+			}
 		},
 
 		/**
@@ -1502,6 +1553,23 @@ const Spotlight = (function () {
 		 */
 		getCurrent: function () {
 			return getCurrent();
+		},
+
+		/**
+		 * Returns a list of spottable controls wrapped by the supplied container.
+		 *
+		 * @memberof spotlight.Spotlight.prototype
+		 * @param {String} [containerId] Container ID to query
+		 * @returns {NodeList} The spottable controls that are wrapped by the supplied container
+		 * @public
+		 */
+		getSpottables: function (containerId) {
+			if (!containerId || typeof containerId !== 'string') {
+				throw new Error('Please assign the "containerId"!');
+			}
+			if (_containers.get(containerId)) {
+				return getContainerNavigableElements(containerId);
+			}
 		}
 	};
 
