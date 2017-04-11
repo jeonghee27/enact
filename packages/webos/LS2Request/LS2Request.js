@@ -24,7 +24,8 @@ export default class LS2Request {
 		onSuccess = null,
 		onFailure = null,
 		onComplete = null,
-		subscribe = false
+		subscribe = false,
+		handler = {}
 	}) {
 		if (typeof window !== 'object' || !window.PalmServiceBridge) {
 			/* eslint no-unused-expressions: ["error", { "allowShortCircuit": true }]*/
@@ -55,6 +56,8 @@ export default class LS2Request {
 		this.bridge.onservicecallback = this.callback.bind(this, onSuccess, onFailure, onComplete);
 		this.bridge.call(adjustPath(service) + method, JSON.stringify(parameters));
 
+		this.handler = handler;
+
 		return this;
 	}
 
@@ -78,7 +81,7 @@ export default class LS2Request {
 				onFailure(parsedMsg);
 			}
 		} else if (onSuccess) {
-			onSuccess(parsedMsg);
+			onSuccess(new Proxy(JSON.parse(msg), this.handler));
 		}
 
 		if (onComplete) {
