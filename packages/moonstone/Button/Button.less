@@ -162,36 +162,22 @@
 
 	// Button-non-disabled rules
 	&:not([disabled]) {
-		&.pressed {
-			.bg {
-				-webkit-animation-name: expand;
-				animation-name: expand;
-			}
-		}
-
 		&:global(.spottable):focus {
-			&:global(.spottable):active {
-				.bg {
-					-webkit-animation-name: expand;
-					animation-name: expand;
+			&:not(:global(.spottableDisabled)) {
+				&.pressed,
+				&:active {
+					.bg {
+						-webkit-animation-name: expand;
+						animation-name: expand;
+					}
 				}
 			}
+			
 			color: @moon-spotlight-text-color;
 			background-color: transparent;
 
 			.bg {
 				background-color: @moon-spotlight-border-color;
-			}
-		}
-	}
-
-	// Disable animation for Picker button spottable and disabled.
-	&:global(.spottableDisabled) {
-		&.pressed,
-		&:global(.spottable):active {
-			.bg {
-				-webkit-animation-name: none;
-				animation-name: none;
 			}
 		}
 	}

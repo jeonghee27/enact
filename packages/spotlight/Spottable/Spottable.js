@@ -228,10 +228,12 @@ const Spottable = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 
-		handleClickCapture = (ev) => {
+		handleClick = (ev) => {
 			if (!this.state.spotted) {
 				ev.preventDefault();
 				ev.stopPropagation();
+			} else {
+				forward('onClick', ev, this.props);
 			}
 		}
 
@@ -247,11 +249,13 @@ const Spottable = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 
-		handleMouseDownCapture = (ev) => {
+		handleMouseDown = (ev) => {
 			if (!this.state.spotted) {
 				// prevent component from gaining focus
 				ev.preventDefault();
 				ev.stopPropagation();
+			} else {
+				forward('onMouseDown', ev, this.props);
 			}
 		}
 
@@ -275,10 +279,10 @@ const Spottable = hoc(defaultConfig, (config, Wrapped) => {
 
 			if (spottable) {
 				rest.onBlur = this.handleBlur;
-				rest.onClickCapture = this.handleClickCapture;
+				rest.onClick = this.handleClick;
 				rest.onFocus = this.handleFocus;
 				rest.onKeyDown = this.handleKeyDown;
-				rest.onMouseDownCapture = this.handleMouseDownCapture;
+				rest.onMouseDown = this.handleMouseDown;
 
 				if (!spottableDisabled) {
 					rest.onKeyUp = this.handleKeyUp;
