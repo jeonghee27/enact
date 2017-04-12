@@ -1,19 +1,19 @@
+import Button from '@enact/moonstone/Button';
 import ri from '@enact/ui/resolution';
 import Item from '@enact/moonstone/Item';
 import VirtualFlexList from '@enact/moonstone/VirtualFlexList';
-import React from 'react';
+import React, {Component} from 'react';
 import {storiesOf, action} from '@kadira/storybook';
 import {withKnobs, number} from '@kadira/storybook-addon-knobs';
 
 const
-	channelWidth = ri.scale(420),
 	channelLength = 200,
-	timeWidth = ri.scale(210),
-	timelineLength = 18,
-	itemHeight = ri.scale(81),
-	clientWidth = timeWidth * 5,
-	clientHeight = itemHeight * 6,
-	maxFlexScrollSize = timeWidth * 18; // for 9 hr
+	timelineLength = 60,
+	timeHeight = ri.scale(30),
+	itemWidth = ri.scale(300),
+	clientHeight = timeHeight * 10,
+	clientWidth = itemWidth * 4,
+	maxFlexScrollSize = timeHeight * 30;
 
 // Inline style
 const
@@ -21,8 +21,8 @@ const
 		epg: {
 			background: 'black',
 			position: 'absolute',
-			width: (channelWidth + clientWidth) + 'px',
-			height: (itemHeight + clientHeight) + 'px',
+			height: (clientHeight) + 'px',
+			width: (clientWidth) + 'px',
 			padding: ri.scale(33) + 'px 0'
 		},
 		// Programs
@@ -64,10 +64,10 @@ const
 		'NOVA',
 		'Secrets of the Dead'
 	],
-	getRandomWidth = () => {
-		return (parseInt(Math.random() * 10) + 1) * timeWidth;
+	getRandomHeight = () => {
+		return (parseInt(Math.random() * 10) + 1) * timeHeight;
 	},
-	programData = (function () {
+	getProgramData = function () {
 		const data = [];
 
 		for (let i = 0; i < channelLength; i++) {
@@ -75,58 +75,89 @@ const
 			for (let j = 0; j < timelineLength; j++) {
 				data[i][j] = {
 					programName: ('00' + i).slice(-3) + '/' + ('00' + j).slice(-3) + ' - ' + programName[(i + j) % 20],
-					width: getRandomWidth()
+					height: getRandomHeight()
 				};
 			}
 		}
 
 		return data;
-	})();
+	},
+	updateProgramHeight = function (data) {
+		for (let i = 0; i < channelLength; i++) {
+			for (let j = 0; j < timelineLength; j++) {
+				data[i][j].height = getRandomHeight();
+			}
+		}
+
+		return data;
+	};
+
+let
+	programData = getProgramData();
 
 // Story
 const
 	// eslint-disable-next-line enact/prop-types
 	getItemLength = ({data, index}) => {
-		return data[index.row].length;
+		return data[index.col].length;
 	},
 	// eslint-disable-next-line enact/prop-types
-	getItemWidth = ({data, index}) => {
-		return data[index.row][index.col].width;
+	getItemHeight = () => ({data, index}) => {
+		return data[index.row][index.col].height;
 	},
 	// eslint-disable-next-line enact/prop-types
 	renderItem = ({data, index, key}) => {
 		// Programs
 		return (
 			<Item key={key} style={style.itemProgramWrapper}>
-				<div style={style.itemProgram}>
-					{data[index.row][index.col].programName}
-				</div>
+				{data[index.row][index.col].programName}
 			</Item>
 		);
 	};
+
+class VirtualFlexListView extends Component {
+	constructor () {
+		super();
+
+		this.state = {
+			programData,
+			getItemHeight: getItemHeight()
+		};
+	}
+
+	changeHeight = () => {
+		this.setState({
+			programData: updateProgramHeight(this.state.programData),
+			getItemHeight: getItemHeight()
+		});
+	}
+
+	render = () => (
+		<div style={style.epg}>
+			<VirtualFlexList
+				items={{
+					background: '#141416',
+					colCount: number('items.rowCount', programData.length),
+					component: renderItem,
+					data: this.state.programData,
+					height: this.state.getItemHeight,
+					rowCount: getItemLength,
+					width: ri.scale(number('items.width', 200))
+				}}
+				maxFlexScrollSize={maxFlexScrollSize}
+				onPositionChange={action('onPositionChange')}
+				x={ri.scale(number('x', 0))}
+				y={ri.scale(number('y', 0))}
+			/>
+			<Button onClick={this.changeHeight}>Update</Button>
+		</div>
+	);
+}
 
 storiesOf('VirtualFlexList')
 	.addDecorator(withKnobs)
 	.addWithInfo(
 		' ',
 		'Basic usage of VirtualFlexList',
-		() => (
-			<div style={style.epg}>
-				<VirtualFlexList
-					items={{
-						background: '#141416',
-						colCount: getItemLength,
-						component: renderItem,
-						data: programData,
-						height: ri.scale(number('items.height', 81)),
-						rowCount: number('items.rowCount', programData.length),
-						width: getItemWidth
-					}}
-					maxFlexScrollSize={maxFlexScrollSize}
-					onPositionChange={action('onPositionChange')}
-					x={ri.scale(number('x', 0))}
-					y={ri.scale(number('y', 0))}
-				/>
-			</div>
-		)
+		() => <VirtualFlexListView />
 	);
