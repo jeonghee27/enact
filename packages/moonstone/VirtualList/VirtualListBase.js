@@ -7,6 +7,7 @@
 
 import classNames from 'classnames';
 import {contextTypes} from '@enact/i18n/I18nDecorator';
+import {forward} from '@enact/core/handle';
 import {is} from '@enact/core/keymap';
 import React, {Component, PropTypes} from 'react';
 import Spotlight from '@enact/spotlight';
@@ -23,7 +24,8 @@ const
 	isLeft = is('left'),
 	isRight = is('right'),
 	isUp = is('up'),
-	nop = () => {};
+	nop = () => {},
+	forwardOnWillUnmount = forward('onWillUnmount');
 
 /**
  * The shape for the grid list item size in a list for {@link moonstone/VirtualList.listItemSizeShape}.
@@ -126,6 +128,15 @@ class VirtualListCore extends Component {
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
 		/**
+		 * Called when the component will unmount
+		 * This function will pass an object that contains `lastScrollTop` and `lastScrollLeft` as the parameter
+		 *
+		 * @type {Function}
+		 * @public
+		 */
+		onWillUnmount: PropTypes.func,
+
+		/**
 		 * Number of spare DOM node.
 		 * `3` is good for the default value experimentally and
 		 * this value is highly recommended not to be changed by developers.
@@ -223,12 +234,19 @@ class VirtualListCore extends Component {
 	}
 
 	componentWillUnmount () {
-		const containerNode = this.containerRef;
+		const
+			{isPrimaryDirectionVertical, scrollPosition} = this,
+			containerNode = this.containerRef;
 
 		// remove a function for preventing native scrolling by Spotlight
 		if (containerNode && containerNode.removeEventListener) {
 			containerNode.removeEventListener('scroll', this.preventScroll);
 		}
+
+		forwardOnWillUnmount({
+			lastScrollLeft: isPrimaryDirectionVertical ? 0 : scrollPosition,
+			lastScrollTop: isPrimaryDirectionVertical ? scrollPosition : 0
+		}, this.props);
 	}
 
 	scrollBounds = {
@@ -700,6 +718,7 @@ class VirtualListCore extends Component {
 		delete props.dataSize;
 		delete props.direction;
 		delete props.itemSize;
+		delete props.onWillUnmount;
 		delete props.overhang;
 		delete props.pageScroll;
 		delete props.spacing;
