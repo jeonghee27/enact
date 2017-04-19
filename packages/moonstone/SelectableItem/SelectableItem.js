@@ -4,6 +4,7 @@
  * @module moonstone/SelectableItem
  */
 
+import {isRtlText} from '@enact/i18n/util';
 import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -91,7 +92,8 @@ const SelectableItemBase = kind({
 		iconClasses: ({selected, styler}) => styler.join(
 			css.dot,
 			{selected}
-		)
+		),
+		forceDirection: ({children}) => isRtlText(children) ? 'rtl' : 'ltr'
 	},
 
 	render: (props) => (

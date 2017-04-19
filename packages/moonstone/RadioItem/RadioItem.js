@@ -4,6 +4,7 @@
  * @module moonstone/RadioItem
  */
 
+import {isRtlText} from '@enact/i18n/util';
 import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -100,7 +101,8 @@ const RadioItemBase = kind({
 			return (
 				<div className={className} />
 			);
-		}
+		},
+		forceDirection: ({children}) => isRtlText(children) ? 'rtl' : 'ltr'
 	},
 
 	render: (props) => (

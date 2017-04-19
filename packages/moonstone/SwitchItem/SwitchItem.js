@@ -4,6 +4,7 @@
  * @module moonstone/SwitchItem
  */
 
+import {isRtlText} from '@enact/i18n/util';
 import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -94,7 +95,8 @@ const SwitchItemBase = kind({
 	computed: {
 		icon: ({selected, disabled}) => (
 			<Switch selected={selected} disabled={disabled} className={css.switch} />
-		)
+		),
+		forceDirection: ({children}) => isRtlText(children) ? 'rtl' : 'ltr'
 	},
 
 	render: (props) => (
