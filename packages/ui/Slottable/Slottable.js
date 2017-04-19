@@ -70,12 +70,19 @@ const distribute = function (slots, props) {
 		const children = [];
 		const adjusted = {...props};
 		React.Children.forEach(props.children, (child, index) => {
-			if (!distributeChild(child, index, slots, adjusted)) {
+			if (child && !distributeChild(child, index, slots, adjusted)) {
 				children.push(child);
 			}
 		});
 
-		adjusted.children = children.length > 0 ? children : null;
+		if (children.length === 1) {
+			adjusted.children = children[0];
+		} else if (children.length > 0) {
+			adjusted.children = children;
+		} else {
+			adjusted.children = null;
+		}
+
 		return adjusted;
 	}
 
