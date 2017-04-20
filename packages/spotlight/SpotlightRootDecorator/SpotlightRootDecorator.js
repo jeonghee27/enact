@@ -28,6 +28,7 @@ const spotlightRootContainerName = 'spotlightRootDecorator';
  * @hoc
  */
 const SpotlightRootDecorator = hoc((config, Wrapped) => {
+	const default_focused = config.default_focused;
 	return class extends React.Component {
 		static displayName = 'SpotlightRootDecorator';
 
@@ -56,7 +57,9 @@ const SpotlightRootDecorator = hoc((config, Wrapped) => {
 		}
 
 		componentDidMount () {
-			Spotlight.focus();
+			if (!default_focused) {
+				Spotlight.focus();
+			}
 		}
 
 		componentWillUnmount () {

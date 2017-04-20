@@ -30,7 +30,10 @@ const defaultConfig = {
 	ri: {
 		screenTypes
 	},
-	spotlight: true,
+	spotlight: {
+		enable: true,
+		default_focused: true
+	},
 	textSize: true
 };
 
@@ -67,7 +70,7 @@ const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			)
 		);
 	}
-	if (spotlight) App = SpotlightRootDecorator(App);
+	if (spotlight.enable) App = SpotlightRootDecorator({default_focused: spotlight.default_focused}, App);
 	if (textSize) App = TextSizeDecorator(App);
 
 	// add webOS-specific key maps
