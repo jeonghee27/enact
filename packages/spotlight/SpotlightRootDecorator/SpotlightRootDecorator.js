@@ -57,7 +57,7 @@ const SpotlightRootDecorator = hoc((config, Wrapped) => {
 		}
 
 		componentDidMount () {
-			if (!default_focused) {
+			if (default_focused) {
 				Spotlight.focus();
 			}
 		}
