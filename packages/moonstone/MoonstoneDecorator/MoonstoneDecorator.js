@@ -30,10 +30,8 @@ const defaultConfig = {
 	ri: {
 		screenTypes
 	},
-	spotlight: {
-		enable: true,
-		default_focused: true
-	},
+	spotlight: true,
+	default_focused: true,
 	textSize: true
 };
 
@@ -53,7 +51,7 @@ const defaultConfig = {
  * @public
  */
 const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
-	const {ri, i18n, spotlight, float, overlay, textSize} = config;
+	const {ri, i18n, spotlight, float, overlay, textSize, default_focused} = config;
 
 	// Apply classes depending on screen type (overlay / fullscreen)
 	const bgClassName = 'enact-fit' + (overlay ? '' : ` ${css.bg}`);
@@ -70,7 +68,7 @@ const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			)
 		);
 	}
-	if (spotlight.enable) App = SpotlightRootDecorator({default_focused: spotlight.default_focused}, App);
+	if (spotlight) App = SpotlightRootDecorator({default_focused: default_focused}, App);
 	if (textSize) App = TextSizeDecorator(App);
 
 	// add webOS-specific key maps
