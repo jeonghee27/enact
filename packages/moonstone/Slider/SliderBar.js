@@ -1,3 +1,4 @@
+import classnames from 'classnames';
 import factory from '@enact/core/factory';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -32,6 +33,15 @@ const SliderBarFactory = factory(({css}) => {
 			 * @private
 			 */
 			detachedKnob: PropTypes.bool,
+
+			/**
+			 * When `true`, the slider bar doesn't show a fill and doesn't highlight when spotted
+			 *
+			 * @type {Booelan}
+			 * @default false
+			 * @public
+			 */
+			noFill: PropTypes.bool,
 
 			/**
 			 * The background progress as a proportion.
@@ -95,10 +105,15 @@ const SliderBarFactory = factory(({css}) => {
 		}
 
 		render () {
-			const {children, detachedKnob, proportionBackgroundProgress, proportionProgress, scrubbing, vertical, ...rest} = this.props;
+			const {children, detachedKnob, noFill, proportionBackgroundProgress, proportionProgress, scrubbing, vertical, ...rest} = this.props;
+
+			const className = classnames(
+				css.sliderBar,
+				noFill ? css.noFill : null
+			);
 
 			return (
-				<div {...rest} className={css.sliderBar} ref={this.getNode}>
+				<div {...rest} className={className} ref={this.getNode}>
 					<div className={css.load} ref={this.getLoaderNode} style={{transform: computeBarTransform(proportionBackgroundProgress, vertical)}} />
 					<div className={css.fill} ref={this.getBarNode} style={{transform: computeBarTransform(proportionProgress, vertical)}} />
 					<div className={css.knob} ref={this.getKnobNode} style={(detachedKnob && !scrubbing) ? {transform: computeKnobTransform(proportionProgress, vertical, this.node)} : null}>

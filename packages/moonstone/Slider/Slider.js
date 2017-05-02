@@ -360,20 +360,18 @@ const SliderBaseFactory = factory({css: componentCss}, ({css}) => {
 				if (!tooltip || children) return children;
 				return tooltipAsPercent ? Math.floor(computeProportionProgress({value, max, min}) * 100) + '%' : value;
 			},
-			className: ({active, pressed, vertical, styler, noFill}) => styler.append({
+			className: ({active, pressed, vertical, styler}) => styler.append({
 				active,
 				pressed,
-				noFill,
 				vertical,
 				horizontal: !vertical
 			}),
 			proportionProgress: computeProportionProgress
 		},
 
-		render: ({backgroundProgress, children, disabled, inputRef, max, min, onBlur, onChange, onKeyDown, onMouseMove, onMouseUp, proportionProgress, scrubbing, sliderBarRef, sliderRef, step, tooltip, tooltipForceSide, tooltipSide, value, vertical, ...rest}) => {
+		render: ({backgroundProgress, children, disabled, inputRef, max, min, noFill, onBlur, onChange, onKeyDown, onMouseMove, onMouseUp, proportionProgress, scrubbing, sliderBarRef, sliderRef, step, tooltip, tooltipForceSide, tooltipSide, value, vertical, ...rest}) => {
 			delete rest.active;
 			delete rest.detachedKnob;
-			delete rest.noFill;
 			delete rest.onActivate;
 			delete rest.onDecrement;
 			delete rest.onIncrement;
@@ -392,6 +390,7 @@ const SliderBaseFactory = factory({css: componentCss}, ({css}) => {
 					ref={sliderRef}
 				>
 					<SliderBar
+						noFill={noFill}
 						proportionBackgroundProgress={backgroundProgress}
 						proportionProgress={proportionProgress}
 						ref={sliderBarRef}

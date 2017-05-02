@@ -171,6 +171,11 @@
 			.fill {
 				background-color: @moon-slider-spotlight-bar-color;
 			}
+			.noFill {
+				.fill {
+					background-color: transparent;
+				}
+			}
 		}
 
 		&.pressed,
@@ -202,18 +207,9 @@
 		}
 	}
 
-	&.noFill {
+	& .noFill {
 		.fill {
 			background-color: transparent;
-		}
-
-		&:global(.spottable) {
-			&.active,
-			&.pressed {
-				.fill {
-					background-color: transparent;
-				}
-			}
 		}
 	}
 }
