@@ -332,14 +332,27 @@ const SliderDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			forwardMouseMove(ev, this.props);
 
 			// We don't want to run this code if any mouse button is being held down. That indicates dragging.
-			if (this.props.disabled || ev.buttons || this.props.vertical) return;
+			if (this.props.disabled || ev.buttons) return;
 
 			const node = this.sliderBarNode.node;
 
+			const keys = this.props.vertical ? {
+				position: 'top',
+				mousePosition: 'clientY',
+				padding: 'paddingTop',
+				offset: 'offsetHeight'
+			} : {
+				position: 'left',
+				mousePosition: 'clientX',
+				padding: 'paddingLeft',
+				offset: 'offsetWidth'
+			};
+
 			// Don't let the positional value exceed the bar width, and account for the dead-space padding
-			const min = parseFloat(window.getComputedStyle(this.inputNode).paddingLeft);
-			const pointer = ev.clientX - this.inputNode.getBoundingClientRect().left;
-			const knob = (clamp(min, min + node.offsetWidth, pointer) - min) / node.offsetWidth;
+			const min = parseFloat(window.getComputedStyle(this.inputNode)[keys.padding]);
+			const pointer = ev[keys.mousePosition] - this.inputNode.getBoundingClientRect()[keys.position];
+			let knob = (clamp(min, min + node[keys.offset], pointer) - min) / node[keys.offset];
+			knob = this.props.vertical ? 1 - knob : knob;
 
 			this.current5WayValue = (this.normalizedMax - this.normalizedMin) * knob;
 
