@@ -771,7 +771,6 @@ const Spotlight = (function () {
 					exclude(getSpottableDescendants(id), currentFocusedElement),
 					config
 				);
-console.log('spotlight.spotNext', isContainer(restrictedNext), restrictedNext, next);
 
 				if (isContainer(restrictedNext)) {
 					if (next && !restrictedNext.contains(next)) {
