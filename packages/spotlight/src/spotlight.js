@@ -752,8 +752,12 @@ const Spotlight = (function () {
 		}
 
 		const currentContainerId = last(currentContainerIds);
-		let next;
-		let preventFindNext;
+		let next = navigate(
+			currentFocusedElement,
+			direction,
+			getAllNavigableElementsFromNode(currentFocusedElement, currentContainerIds),
+			getContainerConfig(currentContainerId)
+		);
 
 		for (let i = currentContainerIds.length; i-- > 0;) {
 			const id = currentContainerIds[i];
@@ -761,27 +765,26 @@ const Spotlight = (function () {
 			const spotlightModal = config.restrict === 'self-only';
 
 			if (spotlightModal || config.restrict === 'self-first') {
-				next = navigate(
+				const restrictedNext = navigate(
 					currentFocusedElement,
 					direction,
 					exclude(getSpottableDescendants(id), currentFocusedElement),
 					config
 				);
+console.log('spotlight.spotNext', isContainer(restrictedNext), restrictedNext, next);
 
-				if (next || spotlightModal) {
-					preventFindNext = true;
+				if (isContainer(restrictedNext)) {
+					if (next && !restrictedNext.contains(next)) {
+						next = restrictedNext;
+					}
+					break;
+				}
+
+				if (spotlightModal) {
+					next = restrictedNext;
 					break;
 				}
 			}
-		}
-
-		if (!next && !preventFindNext) {
-			next = navigate(
-				currentFocusedElement,
-				direction,
-				getAllNavigableElementsFromNode(currentFocusedElement, currentContainerIds),
-				getContainerConfig(currentContainerId)
-			);
 		}
 
 		if (next) {
