@@ -1,4 +1,4 @@
-import platform from '../../core/platform';
+import platform from '@enact/core/platform';
 
 /**
  * Platform identification of webOS variants

@@ -57,33 +57,52 @@ const ua = navigator ? navigator.userAgent : '';
  * @type {object}
  * @property {?boolean} touch - Set true if the platform has native double-finger [events]{@glossary event}
  * @property {?boolean} gesture - Set true if the platform has native double-finger [events]{@glossary event}
- * @property {?boolean} unknown - Set true for any unknown system
  */
 
-let platform = {
-	gesture: hasGesture,
-	touch: hasTouch,
-	unknown: true
+let _platform;
+
+const detect = () => {
+	_platform = {
+		gesture: hasGesture,
+		touch: hasTouch,
+		unknown: true
+	};
+	for (let i = 0, p, m, v; (p = platforms[i]); i++) {
+		m = p.regex.exec(ua);
+		if (m) {
+			// now we know!
+			delete _platform.unknown;
+
+			if (p.forceVersion) {
+				v = p.forceVersion;
+			} else {
+				v = Number(m[1]);
+			}
+			// set key (platform string) to value (version found in user agent)
+			_platform[p.platform] = v;
+			if (p.extra) {
+				// add additional information to platform object
+				_platform = Object.assign(_platform, p.extra);
+			}
+			_platform.platformName = p.platform;
+			break;
+		}
+	}
 };
 
-for (let i = 0, p, m, v; (p = platforms[i]); i++) {
-	m = p.regex.exec(ua);
-	if (m) {
-		delete platform.unknown;
-
-		if (p.forceVersion) {
-			v = p.forceVersion;
-		} else {
-			v = Number(m[1]);
-		}
-		platform[p.platform] = v;
-		if (p.extra) {
-			platform = Object.extend(platform, p.extra);
-		}
-		platform.platformName = p.platform;
-		break;
-	}
+if (!_platform) {
+	detect();
 }
 
+const platform = Object.assign({}, _platform);
+const name = platform.platformName;
+
+Object.defineProperty(platform, name, {
+	get: () => {
+		return _platform[name];
+	},
+	enumerable: true
+});
+
 export default platform;
-export {platform};
+export {detect, platform};
