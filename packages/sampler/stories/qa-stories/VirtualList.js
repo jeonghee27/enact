@@ -19,50 +19,54 @@ const
 		list: {
 			height: ri.unit(552, 'rem')
 		}
-	};
+	},
+	itemList = [];
 
-class StatefulVirtualList extends React.Component {
+for (let i = 0; i < 100; i++) {
+	itemList.push({item :'Item ' + ('00' + i).slice(-3), selected: false});
+}
+
+class StatefulSwitchItem extends React.Component {
 	constructor (props) {
 		super(props);
 		this.state = {
-			itemList: []
+			selected: itemList[props.index].selected
 		};
 	}
 
-	componentWillMount () {
-		this.initializeItems();
-	}
-
-	initializeItems = () => {
-		const initailItems = [];
-		for (let i = 0; i < 100; i++) {
-			initailItems.push({item :'Item ' + ('00' + i).slice(-3), selected:false});
+	componentWillReceiveProps (nextProps) {
+		if (this.props.index !== nextProps.index) {
+			this.setState({selected: itemList[nextProps.index].selected});
 		}
-
-		this.setState({
-			itemList: initailItems
-		});
 	}
 
-	handleClick = (index) => () => {
-		const changedItems = [...this.state.itemList],
-			sel = changedItems[index].selected;
-		changedItems[index] = {
-			...this.state.itemList[index],
-			selected: !sel
-		};
-
-		this.setState({
-			itemList: changedItems
-		});
+	onToggle = () => {
+		itemList[this.props.index].selected = !itemList[this.props.index].selected;
+		this.setState({selected: !this.state.selected});
 	}
 
-	renderItem = (size) => ({data, index, ...rest}) => {
-		const itemStyle = {height: size + 'px', ...style.item};
+	render () {
+		const
+			props = Object.assign({}, this.props),
+			itemStyle = {height: this.props.size + 'px', ...style.item};
+		delete props.size;
+		delete props.selected;
+		delete props.index;
+
 		return (
-			<SwitchItem {...rest} style={itemStyle} selected={data[index].selected} onClick={this.handleClick(index)}>
-				{data[index].item}
+			<SwitchItem {...props} onToggle={this.onToggle} style={itemStyle} selected={this.state.selected}>
+				{this.props.children}
 			</SwitchItem>
+		);
+	}
+}
+
+class StatefulVirtualList extends React.Component {
+	renderItem = (size) => ({data, index, ...rest}) => {
+		return (
+			<StatefulSwitchItem size={size} index={index} {...rest}>
+				{data[index].item}
+			</StatefulSwitchItem>
 		);
 	};
 
@@ -72,8 +76,8 @@ class StatefulVirtualList extends React.Component {
 			<VirtualList
 				{...this.props}
 				component={this.renderItem(itemSize)}
-				data={this.state.itemList}
-				dataSize={number('dataSize', this.state.itemList.length)}
+				data={itemList}
+				dataSize={number('dataSize', itemList.length)}
 				itemSize={itemSize}
 				onScrollStart={action('onScrollStart')}
 				onScrollStop={action('onScrollStop')}
