@@ -10,6 +10,7 @@ import {contextTypes} from '@enact/ui/Resizable';
 import deprecate from '@enact/core/internal/deprecate';
 import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
+import {is} from '@enact/core/keymap';
 import {Job} from '@enact/core/util';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -411,7 +412,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.onMouseUp();
 		}
 
-		startScrollOnFocus = (pos, item) => {
+		startScrollOnFocus = (pos, item, indexToFocus = null) => {
 			if (pos) {
 				if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 					this.start({
@@ -419,7 +420,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						targetY: pos.top,
 						animate: (animationDuration > 0),
 						silent: false,
-						duration: animationDuration
+						duration: animationDuration,
+						indexToFocus: indexToFocus !== null ? indexToFocus : null
 					});
 				}
 				this.lastFocusedItem = item;
@@ -443,10 +445,28 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onKeyDown = ({keyCode, target}) => {
-			if (getDirection(keyCode)) {
+			const direction = getDirection(keyCode);
+
+			if (direction) {
 				if (this.childRef.setSpotlightContainerRestrict) {
 					const index = Number.parseInt(target.getAttribute(dataIndexAttribute));
 					this.childRef.setSpotlightContainerRestrict(keyCode, index);
+				}
+			}
+
+
+			if (this.childRef.getSpottableDataIndex && this.childRef.calculatePositionWithDataIndex) {
+				const isMovable = Spotlight.move(direction);
+
+				if (!isMovable) {
+					const
+						currentDataIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
+						nextDataIndex = this.childRef.getSpottableDataIndex(currentDataIndex, direction, direction),
+						pos = this.childRef.calculatePositionWithDataIndex(nextDataIndex);
+
+					if (pos) {
+						this.startScrollOnFocus(pos, target, nextDataIndex);
+					}
 				}
 			}
 		}

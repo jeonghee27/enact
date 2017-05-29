@@ -705,7 +705,7 @@ const Spotlight = (function () {
 		return false;
 	}
 
-	function spotNext (direction, currentFocusedElement, currentContainerIds) {
+	function spotNext (direction, currentFocusedElement, currentContainerIds, justCheck = false) {
 		const extSelector = currentFocusedElement.getAttribute('data-spot-' + direction);
 		if (typeof extSelector === 'string') {
 			if (extSelector === '' || !focusExtendedSelector(extSelector)) {
@@ -737,6 +737,10 @@ const Spotlight = (function () {
 				candidates.all,
 				getContainerConfig(candidates.allContainerId)
 			);
+		}
+
+		if (justCheck) {
+			return !!next;
 		}
 
 		if (next) {
@@ -1134,7 +1138,7 @@ const Spotlight = (function () {
 		 * @returns {Boolean} `true` if focus successful, `false` if not.
 		 * @public
 		 */
-		move: function (direction, selector) {
+		move: function (direction, selector, justCheck = false) {
 			direction = direction.toLowerCase();
 			if (!_reverseDirections[direction]) {
 				return false;
@@ -1150,7 +1154,7 @@ const Spotlight = (function () {
 				return false;
 			}
 
-			return spotNext(direction, elem, containerIds);
+			return spotNext(direction, elem, containerIds, justCheck);
 		},
 
 		/**

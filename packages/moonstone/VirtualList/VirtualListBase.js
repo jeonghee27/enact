@@ -127,6 +127,14 @@ class VirtualListCore extends Component {
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
 		/**
+		 * The function to get next Spottable item's data-index depending on 5-way key direction
+		 *
+		 * @type {Function}
+		 * @public
+		 */
+		getSpottableDataIndex: PropTypes.func,
+
+		/**
 		 * Number of spare DOM node.
 		 * `3` is good for the default value experimentally and
 		 * this value is highly recommended not to be changed by developers.
@@ -601,34 +609,51 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	calculatePositionOnFocus = (item) => {
+	dataIndexToPosition = (dataIndex) => {
 		const
 			{pageScroll} = this.props,
 			{primary, numOfItems, scrollPosition} = this,
-			offsetToClientEnd = primary.clientSize - primary.itemSize,
-			focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
+			offsetToClientEnd = primary.clientSize - primary.itemSize;
+
+		let gridPosition = this.getGridPosition(dataIndex);
+
+		this.nodeIndexToBeBlurred = this.lastdataIndex % numOfItems;
+		this.lastdataIndex = dataIndex;
+
+		if (primary.clientSize >= primary.itemSize) {
+			if (gridPosition.primaryPosition > scrollPosition + offsetToClientEnd) { // forward over
+				gridPosition.primaryPosition -= pageScroll ? 0 : offsetToClientEnd;
+			} else if (gridPosition.primaryPosition >= scrollPosition) { // inside of client
+				gridPosition.primaryPosition = scrollPosition;
+			} else { // backward over
+				gridPosition.primaryPosition -= pageScroll ? offsetToClientEnd : 0;
+			}
+		}
+
+		// Since the result is used as a target position to be scrolled,
+		// scrondaryPosition should be 0 here.
+		gridPosition.secondaryPosition = 0;
+		return this.gridPositionToItemPosition(gridPosition);
+	}
+
+	calculatePositionOnFocus = (item) => {
+		const focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 
 		if (!isNaN(focusedIndex)) {
-			let gridPosition = this.getGridPosition(focusedIndex);
-
-			this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
-			this.lastFocusedIndex = focusedIndex;
-
-			if (primary.clientSize >= primary.itemSize) {
-				if (gridPosition.primaryPosition > scrollPosition + offsetToClientEnd) { // forward over
-					gridPosition.primaryPosition -= pageScroll ? 0 : offsetToClientEnd;
-				} else if (gridPosition.primaryPosition >= scrollPosition) { // inside of client
-					gridPosition.primaryPosition = scrollPosition;
-				} else { // backward over
-					gridPosition.primaryPosition -= pageScroll ? offsetToClientEnd : 0;
-				}
-			}
-
-			// Since the result is used as a target position to be scrolled,
-			// scrondaryPosition should be 0 here.
-			gridPosition.secondaryPosition = 0;
-			return this.gridPositionToItemPosition(gridPosition);
+			return this.dataIndexToPosition(focusedIndex);
 		}
+	}
+
+	calculatePositionWithDataIndex = (dataIndex) => {
+		if (!isNaN(dataIndex) && dataIndex !== -1) {
+			return this.dataIndexToPosition(dataIndex);
+		}
+	}
+
+	getSpottableDataIndex = (currentDataIndex, direction) => {
+		const {dataSize, getSpottableDataIndex} = this.props;
+
+		return getSpottableDataIndex(currentDataIndex, dataSize, direction);
 	}
 
 	setRestrict = (bool) => {
@@ -709,6 +734,7 @@ class VirtualListCore extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
+		delete props.getSpottableDataIndex;
 		delete props.itemSize;
 		delete props.overhang;
 		delete props.pageScroll;
