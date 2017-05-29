@@ -128,6 +128,9 @@ class VirtualListCore extends Component {
 
 		/**
 		 * The function to get next Spottable item's data-index depending on 5-way key direction
+		 * If returning 0 or positive number, the list scrolls to the index
+		 * If there is no next Spotable item, `-1` should be returned.
+		 * The function should be defined if any items are disabled.
 		 *
 		 * @type {Function}
 		 * @public
