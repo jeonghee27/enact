@@ -456,7 +456,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 
 			if (this.childRef.getSpottableDataIndex && this.childRef.calculatePositionWithDataIndex) {
-				const isMovable = Spotlight.move(direction);
+				const isMovable = Spotlight.move(direction, null, true);
 
 				if (!isMovable) {
 					const
@@ -465,6 +465,14 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						pos = this.childRef.calculatePositionWithDataIndex(nextDataIndex);
 
 					if (pos) {
+						const focusedItem = Spotlight.getCurrent();
+
+						Spotlight.setPointerMode(false);
+						if (focusedItem) {
+							focusedItem.blur();
+						}
+						this.childRef.setContainerDisabled(true);
+
 						this.startScrollOnFocus(pos, target, nextDataIndex);
 					}
 				}
@@ -635,7 +643,9 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 			this.animator.stop();
 			this.isScrollAnimationTargetAccumulated = false;
-			this.childRef.setContainerDisabled(false);
+			if (indexToFocus === null) {
+				this.childRef.setContainerDisabled(false);
+			}
 			this.lastFocusedItem = null;
 			this.hideThumb(bounds);
 			if (indexToFocus !== null && typeof this.childRef.focusByIndex === 'function') {

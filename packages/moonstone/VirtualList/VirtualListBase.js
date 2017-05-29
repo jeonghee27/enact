@@ -600,6 +600,7 @@ class VirtualListCore extends Component {
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
+			this.setContainerDisabled(false);
 		}, 0);
 	}
 
