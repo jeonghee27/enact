@@ -416,7 +416,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.onMouseUp();
 		}
 
-		startScrollOnFocus = (pos, item, indexToFocus = null) => {
+		startScrollOnFocus = (pos, item) => {
 			if (pos) {
 				if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
 					this.start({
@@ -424,8 +424,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						targetY: pos.top,
 						animate: (animationDuration > 0),
 						silent: false,
-						duration: animationDuration,
-						indexToFocus: indexToFocus !== null ? indexToFocus : null
+						duration: animationDuration
 					});
 				}
 				this.lastFocusedItem = item;

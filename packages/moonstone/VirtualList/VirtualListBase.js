@@ -295,14 +295,9 @@ class VirtualListCore extends Component {
 		const
 			{itemSize} = this.props,
 			{dimensionToExtent, primary, secondary} = this,
-			offsetToClientEnd = primary.clientSize - primary.itemSize,
+			offset = ((itemSize instanceof Object) || stickTo === 'floor') ? 0 : primary.clientSize - primary.itemSize,
+			primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize - offset,
 			secondaryPosition = (index % dimensionToExtent) * secondary.gridSize;
-		let primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize;
-
-		// if a list is not a VirtualGridList and it has `ceil` option
-		if (!(itemSize instanceof Object) && stickTo === 'ceil') {
-			primaryPosition -= offsetToClientEnd;
-		}
 
 		return {primaryPosition, secondaryPosition};
 	}
