@@ -1153,7 +1153,7 @@ const Spotlight = (function () {
 			return spotNext(direction, elem, containerIds);
 		},
 
-		isSpottableNext: function (direction) {
+		isMovable: function (direction) {
 			let next = null;
 
 			direction = direction.toLowerCase();

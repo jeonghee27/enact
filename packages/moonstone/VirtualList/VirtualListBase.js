@@ -291,16 +291,23 @@ class VirtualListCore extends Component {
 
 	getMoreInfo = () => this.moreInfo
 
-	getGridPosition (index) {
+	getGridPosition (index, stickTo = 'floor') {
 		const
+			{itemSize} = this.props,
 			{dimensionToExtent, primary, secondary} = this,
-			primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize,
+			offsetToClientEnd = primary.clientSize - primary.itemSize,
 			secondaryPosition = (index % dimensionToExtent) * secondary.gridSize;
+		let primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize;
+
+		// if a list is not a VirtualGridList and it has `ceil` option
+		if (!(itemSize instanceof Object) && stickTo === 'ceil') {
+			primaryPosition -= offsetToClientEnd;
+		}
 
 		return {primaryPosition, secondaryPosition};
 	}
 
-	getItemPosition = (index) => this.gridPositionToItemPosition(this.getGridPosition(index))
+	getItemPosition = (index, stickTo) => this.gridPositionToItemPosition(this.getGridPosition(index, stickTo))
 
 	gridPositionToItemPosition = ({primaryPosition, secondaryPosition}) =>
 		(this.isPrimaryDirectionVertical ? {left: secondaryPosition, top: primaryPosition} : {left: primaryPosition, top: secondaryPosition})
@@ -610,44 +617,33 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	dataIndexToPosition = (dataIndex) => {
+	calculatePositionOnFocus = (item) => {
 		const
 			{pageScroll} = this.props,
 			{primary, numOfItems, scrollPosition} = this,
-			offsetToClientEnd = primary.clientSize - primary.itemSize;
-
-		let gridPosition = this.getGridPosition(dataIndex);
-
-		this.nodeIndexToBeBlurred = this.lastdataIndex % numOfItems;
-		this.lastdataIndex = dataIndex;
-
-		if (primary.clientSize >= primary.itemSize) {
-			if (gridPosition.primaryPosition > scrollPosition + offsetToClientEnd) { // forward over
-				gridPosition.primaryPosition -= pageScroll ? 0 : offsetToClientEnd;
-			} else if (gridPosition.primaryPosition >= scrollPosition) { // inside of client
-				gridPosition.primaryPosition = scrollPosition;
-			} else { // backward over
-				gridPosition.primaryPosition -= pageScroll ? offsetToClientEnd : 0;
-			}
-		}
-
-		// Since the result is used as a target position to be scrolled,
-		// scrondaryPosition should be 0 here.
-		gridPosition.secondaryPosition = 0;
-		return this.gridPositionToItemPosition(gridPosition);
-	}
-
-	calculatePositionOnFocus = (item) => {
-		const focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
+			offsetToClientEnd = primary.clientSize - primary.itemSize,
+			focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 
 		if (!isNaN(focusedIndex)) {
-			return this.dataIndexToPosition(focusedIndex);
-		}
-	}
+			let gridPosition = this.getGridPosition(focusedIndex);
 
-	calculatePositionWithDataIndex = (dataIndex) => {
-		if (!isNaN(dataIndex) && dataIndex !== -1) {
-			return this.dataIndexToPosition(dataIndex);
+			this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
+			this.lastFocusedIndex = focusedIndex;
+
+			if (primary.clientSize >= primary.itemSize) {
+				if (gridPosition.primaryPosition > scrollPosition + offsetToClientEnd) { // forward over
+					gridPosition.primaryPosition -= pageScroll ? 0 : offsetToClientEnd;
+				} else if (gridPosition.primaryPosition >= scrollPosition) { // inside of client
+					gridPosition.primaryPosition = scrollPosition;
+				} else { // backward over
+					gridPosition.primaryPosition -= pageScroll ? offsetToClientEnd : 0;
+				}
+			}
+
+			// Since the result is used as a target position to be scrolled,
+			// scrondaryPosition should be 0 here.
+			gridPosition.secondaryPosition = 0;
+			return this.gridPositionToItemPosition(gridPosition);
 		}
 	}
 

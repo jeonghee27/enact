@@ -10,6 +10,7 @@ import {contextTypes} from '@enact/ui/Resizable';
 import deprecate from '@enact/core/internal/deprecate';
 import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
+import {is} from '@enact/core/keymap';
 import {Job} from '@enact/core/util';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -26,6 +27,10 @@ const
 	forwardScroll = forward('onScroll'),
 	forwardScrollStart = forward('onScrollStart'),
 	forwardScrollStop = forward('onScrollStop');
+
+const
+	isDown = is('down'),
+	isRight = is('right');
 
 const
 	calcVelocity = (d, dt) => (d && dt) ? d / dt : 0,
@@ -453,17 +458,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				}
 			}
 
+			if (this.childRef.getSpottableDataIndex) {
+				const isMovable = Spotlight.isMovable(direction);
 
-			if (this.childRef.getSpottableDataIndex && this.childRef.calculatePositionWithDataIndex) {
-				const isSpottableNext = Spotlight.isSpottableNext(direction);
-
-				if (!isSpottableNext) {
+				if (!isMovable) {
 					const
 						currentDataIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
-						nextDataIndex = this.childRef.getSpottableDataIndex(currentDataIndex, direction, direction),
-						pos = this.childRef.calculatePositionWithDataIndex(nextDataIndex);
+						nextDataIndex = this.childRef.getSpottableDataIndex(currentDataIndex, direction, direction);
 
-					if (pos) {
+					if (nextDataIndex !== -1) {
 						const focusedItem = Spotlight.getCurrent();
 
 						Spotlight.setPointerMode(false);
@@ -472,7 +475,11 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						}
 						this.childRef.setContainerDisabled(true);
 
-						this.startScrollOnFocus(pos, target, nextDataIndex);
+						this.scrollTo({
+							index: nextDataIndex,
+							focus: true,
+							stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
+						});
 					}
 				}
 			}
@@ -699,7 +706,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					}
 				} else {
 					if (typeof opt.index === 'number' && typeof this.childRef.getItemPosition === 'function') {
-						itemPos = this.childRef.getItemPosition(opt.index);
+						itemPos = this.childRef.getItemPosition(opt.index, opt.stickTo);
 					} else if (opt.node instanceof Object) {
 						if (opt.node.nodeType === 1 && typeof this.childRef.getNodePosition === 'function') {
 							itemPos = this.childRef.getNodePosition(opt.node);
