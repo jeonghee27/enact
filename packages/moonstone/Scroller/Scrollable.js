@@ -448,34 +448,34 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onKeyDown = ({keyCode, target}) => {
-			const direction = getDirection(keyCode);
+			const
+				direction = getDirection(keyCode),
+				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
 
 			if (direction) {
 				if (this.childRef.setSpotlightContainerRestrict) {
-					const index = Number.parseInt(target.getAttribute(dataIndexAttribute));
-					this.childRef.setSpotlightContainerRestrict(keyCode, index);
+					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
 				}
 			}
 
-			if (this.childRef.getSpottableDataIndex) {
+			if (this.childRef.getNextSpottableIndex) {
 				const isMovable = Spotlight.isMovable(direction);
 
 				if (!isMovable) {
 					const
-						currentDataIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
-						nextDataIndex = this.childRef.getSpottableDataIndex(currentDataIndex, direction, direction);
+						currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
+						nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
-					if (nextDataIndex !== -1) {
+					if (nextIndex !== -1) {
 						const focusedItem = Spotlight.getCurrent();
 
-						Spotlight.setPointerMode(false);
 						if (focusedItem) {
 							focusedItem.blur();
 						}
 						this.childRef.setContainerDisabled(true);
 
 						this.scrollTo({
-							index: nextDataIndex,
+							index: nextIndex,
 							focus: true,
 							stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
 						});
@@ -648,9 +648,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 			this.animator.stop();
 			this.isScrollAnimationTargetAccumulated = false;
-			if (indexToFocus === null) {
-				this.childRef.setContainerDisabled(false);
-			}
+			this.childRef.setContainerDisabled(false);
 			this.lastFocusedItem = null;
 			this.hideThumb(bounds);
 			if (indexToFocus !== null && typeof this.childRef.focusByIndex === 'function') {

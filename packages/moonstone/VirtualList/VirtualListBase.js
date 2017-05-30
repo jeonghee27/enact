@@ -132,7 +132,7 @@ class VirtualListCore extends Component {
 		 * @type {Function}
 		 * @public
 		 */
-		isDisable: PropTypes.func,
+		isItemDisable: PropTypes.func,
 
 		/**
 		 * Number of spare DOM node.
@@ -295,14 +295,23 @@ class VirtualListCore extends Component {
 		const
 			{itemSize} = this.props,
 			{dimensionToExtent, primary, secondary} = this,
-			offset = ((itemSize instanceof Object) || stickTo === 'floor') ? 0 : primary.clientSize - primary.itemSize,
-			primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize - offset,
+			primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize,
 			secondaryPosition = (index % dimensionToExtent) * secondary.gridSize;
 
 		return {primaryPosition, secondaryPosition};
 	}
 
-	getItemPosition = (index, stickTo) => this.gridPositionToItemPosition(this.getGridPosition(index, stickTo))
+	getItemPosition = (index, stickTo = 'floor') => {
+		const
+			{itemSize} = this.props,
+			{primary} = this,
+			position = this.getGridPosition(index, stickTo),
+			offset = ((itemSize instanceof Object) || stickTo === 'floor') ? 0 : primary.clientSize - primary.itemSize;
+
+		position.primaryPosition -= offset;
+
+		return this.gridPositionToItemPosition(position);
+	}
 
 	gridPositionToItemPosition = ({primaryPosition, secondaryPosition}) =>
 		(this.isPrimaryDirectionVertical ? {left: secondaryPosition, top: primaryPosition} : {left: primaryPosition, top: secondaryPosition})
@@ -642,20 +651,20 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	getSpottableDataIndex = (currentDataIndex, direction) => {
-		const {dataSize, isDisable} = this.props;
+	getNextSpottableIndex = (currentDataIndex, direction) => {
+		const {dataSize, isItemDisable} = this.props;
 		let nextDataIndex = -1;
 
 		if (direction === 'up' || direction === 'left') {
 			for (let i = currentDataIndex - 1; i >= 0; i--) {
-				if (!isDisable(i)) {
+				if (!isItemDisable(i)) {
 					nextDataIndex = i;
 					break;
 				}
 			}
 		} else if (direction === 'down' || direction === 'right') {
 			for (let i = currentDataIndex + 1; i < dataSize; i++) {
-				if (!isDisable(i)) {
+				if (!isItemDisable(i)) {
 					nextDataIndex = i;
 					break;
 				}
@@ -743,7 +752,7 @@ class VirtualListCore extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
-		delete props.isDisable;
+		delete props.isItemDisable;
 		delete props.itemSize;
 		delete props.overhang;
 		delete props.pageScroll;
