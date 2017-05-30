@@ -291,9 +291,8 @@ class VirtualListCore extends Component {
 
 	getMoreInfo = () => this.moreInfo
 
-	getGridPosition (index, stickTo = 'floor') {
+	getGridPosition (index) {
 		const
-			{itemSize} = this.props,
 			{dimensionToExtent, primary, secondary} = this,
 			primaryPosition = Math.floor(index / dimensionToExtent) * primary.gridSize,
 			secondaryPosition = (index % dimensionToExtent) * secondary.gridSize;
@@ -611,7 +610,6 @@ class VirtualListCore extends Component {
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
-			this.setContainerDisabled(false);
 		}, 0);
 	}
 

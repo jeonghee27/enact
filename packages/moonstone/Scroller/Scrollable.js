@@ -452,19 +452,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				direction = getDirection(keyCode),
 				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
 
-			if (direction) {
-				if (this.childRef.setSpotlightContainerRestrict) {
-					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
-				}
+			if (direction && this.childRef.setSpotlightContainerRestrict) {
+				this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
 			}
 
 			if (this.childRef.getNextSpottableIndex) {
 				const isMovable = Spotlight.isMovable(direction);
 
 				if (!isMovable) {
-					const
-						currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
-						nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
+					const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
 					if (nextIndex !== -1) {
 						const focusedItem = Spotlight.getCurrent();
