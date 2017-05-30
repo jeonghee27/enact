@@ -1150,7 +1150,7 @@ const Spotlight = (function () {
 				return false;
 			}
 
-			return spotNext(direction, elem, containerIds, justCheck);
+			return spotNext(direction, elem, containerIds);
 		},
 
 		isSpottableNext: function (direction) {
