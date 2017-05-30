@@ -132,7 +132,7 @@ class VirtualListCore extends Component {
 		 * @type {Function}
 		 * @public
 		 */
-		isItemDisable: PropTypes.func,
+		isItemDisabled: PropTypes.func,
 
 		/**
 		 * Number of spare DOM node.
@@ -650,19 +650,19 @@ class VirtualListCore extends Component {
 	}
 
 	getNextSpottableIndex = (currentDataIndex, direction) => {
-		const {dataSize, isItemDisable} = this.props;
+		const {dataSize, isItemDisabled} = this.props;
 		let nextDataIndex = -1;
 
 		if (direction === 'up' || direction === 'left') {
 			for (let i = currentDataIndex - 1; i >= 0; i--) {
-				if (!isItemDisable(i)) {
+				if (!isItemDisabled(i)) {
 					nextDataIndex = i;
 					break;
 				}
 			}
 		} else if (direction === 'down' || direction === 'right') {
 			for (let i = currentDataIndex + 1; i < dataSize; i++) {
-				if (!isItemDisable(i)) {
+				if (!isItemDisabled(i)) {
 					nextDataIndex = i;
 					break;
 				}
@@ -750,7 +750,7 @@ class VirtualListCore extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
-		delete props.isItemDisable;
+		delete props.isItemDisabled;
 		delete props.itemSize;
 		delete props.overhang;
 		delete props.pageScroll;
