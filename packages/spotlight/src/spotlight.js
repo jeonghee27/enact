@@ -705,7 +705,7 @@ const Spotlight = (function () {
 		return false;
 	}
 
-	function spotNext (direction, currentFocusedElement, currentContainerIds, justCheck = false) {
+	function spotNext (direction, currentFocusedElement, currentContainerIds) {
 		const extSelector = currentFocusedElement.getAttribute('data-spot-' + direction);
 		if (typeof extSelector === 'string') {
 			if (extSelector === '' || !focusExtendedSelector(extSelector)) {
@@ -1134,7 +1134,7 @@ const Spotlight = (function () {
 		 * @returns {Boolean} `true` if focus successful, `false` if not.
 		 * @public
 		 */
-		move: function (direction, selector, justCheck = false) {
+		move: function (direction, selector) {
 			direction = direction.toLowerCase();
 			if (!_reverseDirections[direction]) {
 				return false;
