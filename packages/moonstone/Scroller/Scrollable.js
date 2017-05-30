@@ -455,9 +455,9 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 
 			if (this.childRef.getSpottableDataIndex && this.childRef.calculatePositionWithDataIndex) {
-				const isMovable = Spotlight.move(direction, null, true);
+				const isSpottableNext = Spotlight.isSpottableNext(direction);
 
-				if (!isMovable) {
+				if (!isSpottableNext) {
 					const
 						currentDataIndex = Number.parseInt(target.getAttribute(dataIndexAttribute)),
 						nextDataIndex = this.childRef.getSpottableDataIndex(currentDataIndex, direction, direction),

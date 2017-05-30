@@ -739,10 +739,6 @@ const Spotlight = (function () {
 			);
 		}
 
-		if (justCheck) {
-			return !!next;
-		}
-
 		if (next) {
 			getContainerConfig(currentContainerId).previous = {
 				target: currentFocusedElement,
@@ -1155,6 +1151,57 @@ const Spotlight = (function () {
 			}
 
 			return spotNext(direction, elem, containerIds, justCheck);
+		},
+
+		isSpottableNext: function (direction) {
+			let next = null;
+
+			direction = direction.toLowerCase();
+			if (!_reverseDirections[direction]) {
+				return false;
+			}
+
+			const currentFocusedElement = getCurrent();
+			if (!currentFocusedElement) {
+				return false;
+			}
+
+			const currentContainerIds = getContainersForNode(currentFocusedElement);
+			if (!currentContainerIds.length) {
+				return false;
+			}
+
+			const extSelector = currentFocusedElement.getAttribute('data-spot-' + direction);
+			if (typeof extSelector === 'string') {
+				if (extSelector === '' || !focusExtendedSelector(extSelector)) {
+					return false;
+				}
+				return true;
+			}
+
+			const candidates = getNavigableElementsForNode(currentFocusedElement);
+
+			// try to navigate to a preferred element
+			if (candidates.preferred) {
+				next = navigate(
+					currentFocusedElement,
+					direction,
+					candidates.preferred,
+					getContainerConfig(candidates.preferredContainerId)
+				);
+			}
+
+			// if preferred fails, try "all" (restricted by "self-only" containers) elements
+			if (!next) {
+				next = navigate(
+					currentFocusedElement,
+					direction,
+					candidates.all,
+					getContainerConfig(candidates.allContainerId)
+				);
+			}
+
+			return !!next;
 		},
 
 		/**

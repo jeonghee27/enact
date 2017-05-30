@@ -127,15 +127,12 @@ class VirtualListCore extends Component {
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
 		/**
-		 * The function to get next Spottable item's data-index depending on 5-way key direction
-		 * If returning 0 or positive number, the list scrolls to the index
-		 * If there is no next Spotable item, `-1` should be returned.
-		 * The function should be defined if any items are disabled.
+		 * The function to check if an item is disabled with `index` parameter.
 		 *
 		 * @type {Function}
 		 * @public
 		 */
-		getSpottableDataIndex: PropTypes.func,
+		isDisable: PropTypes.func,
 
 		/**
 		 * Number of spare DOM node.
@@ -655,9 +652,26 @@ class VirtualListCore extends Component {
 	}
 
 	getSpottableDataIndex = (currentDataIndex, direction) => {
-		const {dataSize, getSpottableDataIndex} = this.props;
+		const {dataSize, isDisable} = this.props;
+		let nextDataIndex = -1;
 
-		return getSpottableDataIndex(currentDataIndex, dataSize, direction);
+		if (direction === 'up' || direction === 'left') {
+			for (let i = currentDataIndex - 1; i >= 0; i--) {
+				if (!isDisable(i)) {
+					nextDataIndex = i;
+					break;
+				}
+			}
+		} else if (direction === 'down' || direction === 'right') {
+			for (let i = currentDataIndex + 1; i < dataSize; i++) {
+				if (!isDisable(i)) {
+					nextDataIndex = i;
+					break;
+				}
+			}
+		}
+
+		return nextDataIndex;
 	}
 
 	setRestrict = (bool) => {
@@ -738,7 +752,7 @@ class VirtualListCore extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
-		delete props.getSpottableDataIndex;
+		delete props.isDisable;
 		delete props.itemSize;
 		delete props.overhang;
 		delete props.pageScroll;
