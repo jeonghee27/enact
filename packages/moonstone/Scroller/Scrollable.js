@@ -457,25 +457,21 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (this.childRef.getNextSpottableIndex) {
-				const isMovable = Spotlight.isMovable(direction);
+				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
-				if (!isMovable) {
-					const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
+				if (nextIndex !== -1 && !this.childRef.isItemNodeVisible(nextIndex)) {
+					const focusedItem = Spotlight.getCurrent();
 
-					if (nextIndex !== -1) {
-						const focusedItem = Spotlight.getCurrent();
-
-						if (focusedItem) {
-							focusedItem.blur();
-						}
-						this.childRef.setContainerDisabled(true);
-
-						this.scrollTo({
-							index: nextIndex,
-							focus: true,
-							stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
-						});
+					if (focusedItem) {
+						focusedItem.blur();
 					}
+					this.childRef.setContainerDisabled(true);
+
+					this.scrollTo({
+						index: nextIndex,
+						focus: true,
+						stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
+					});
 				}
 			}
 		}

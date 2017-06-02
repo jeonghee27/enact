@@ -672,6 +672,12 @@ class VirtualListCore extends Component {
 		return nextDataIndex;
 	}
 
+	isItemNodeVisible = (index) => {
+		const {firstVisibleIndex, lastVisibleIndex} = this.moreInfo;
+
+		return this.moreInfo && firstVisibleIndex <= index && index <= lastVisibleIndex;
+	}
+
 	setRestrict = (bool) => {
 		Spotlight.set(this.props[dataContainerIdAttribute], {restrict: (bool) ? 'self-only' : 'self-first'});
 	}
