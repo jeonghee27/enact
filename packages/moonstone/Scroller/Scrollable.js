@@ -459,18 +459,10 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (this.childRef.getNextSpottableIndex) {
 				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
-				if (nextIndex !== -1 && !this.childRef.isNextSpottableDOMExist(nextIndex)) {
-					const focusedItem = Spotlight.getCurrent();
-
-					if (focusedItem) {
-						focusedItem.blur();
-					}
-					this.childRef.setContainerDisabled(true);
-					this.childRef.focusNextSpottable(nextIndex);
-
+				if (nextIndex !== -1) {
 					this.scrollTo({
 						index: nextIndex,
-						stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
+						stickTo: (isDown(keyCode) || isRight(keyCode)) ? 'ceil' : 'floor'
 					});
 				}
 			}

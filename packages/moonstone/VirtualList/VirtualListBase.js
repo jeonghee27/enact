@@ -616,7 +616,6 @@ class VirtualListCore extends Component {
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
-			this.setContainerDisabled(false);
 		}, 0);
 	}
 
@@ -657,41 +656,42 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	getNextSpottableIndex = (currentDataIndex, direction) => {
-		const {dataSize, isItemDisabled} = this.props;
-		let nextDataIndex = -1;
+	getNextSpottableIndex = (currentIndex, direction) => {
+		const
+			{dataSize, isItemDisabled} = this.props,
+			{firstIndex, numOfItems} = this.state;
+
+		let nextIndex = -1;
 
 		if (!isItemDisabled) {
-			return nextDataIndex;
+			return nextIndex;
 		}
 
 		if (direction === 'up' || direction === 'left') {
-			for (let i = currentDataIndex - 1; i >= 0; i--) {
+			for (let i = currentIndex - 1; i >= 0; i--) {
 				if (!isItemDisabled(i)) {
-					nextDataIndex = i;
+					nextIndex = i;
 					break;
 				}
 			}
 		} else if (direction === 'down' || direction === 'right') {
-			for (let i = currentDataIndex + 1; i < dataSize; i++) {
+			for (let i = currentIndex + 1; i < dataSize; i++) {
 				if (!isItemDisabled(i)) {
-					nextDataIndex = i;
+					nextIndex = i;
 					break;
 				}
 			}
 		}
 
-		return nextDataIndex;
-	}
+		if (nextIndex !== -1) {
+			if (firstIndex <= nextIndex && nextIndex < firstIndex + numOfItems) {
+				nextIndex = -1;
+			} else {
+				this.nodeIndexToBeFocused = nextIndex;
+			}
+		}
 
-	isNextSpottableDOMExist = (index) => {
-		const {firstIndex, numOfItems} = this.state;
-
-		return firstIndex <= index && index < firstIndex + numOfItems;
-	}
-
-	focusNextSpottable = (index) => {
-		this.nodeIndexToBeFocused = index;
+		return nextIndex;
 	}
 
 	setRestrict = (bool) => {
