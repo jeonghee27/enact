@@ -452,12 +452,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
 				}
 
-				if (this.childRef.getScrollToOption) {
-					const option = this.childRef.getScrollToOption(currentIndex, direction);
-
-					if (option !== null) {
-						this.scrollTo(option);
-					}
+				if (this.childRef.jumpToSpottableItem) {
+					this.childRef.jumpToSpottableItem(keyCode, currentIndex);
 				}
 			}
 		}

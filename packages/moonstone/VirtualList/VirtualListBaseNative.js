@@ -502,7 +502,6 @@ class VirtualListCoreNative extends Component {
 
 		if (index === this.nodeIndexToBeFocused) {
 			this.focusByIndex(index);
-			this.nodeIndexToBeFocused = null;
 		}
 	}
 
@@ -595,6 +594,7 @@ class VirtualListCoreNative extends Component {
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
+			this.nodeIndexToBeFocused = null;
 		}, 0);
 	}
 
@@ -611,7 +611,7 @@ class VirtualListCoreNative extends Component {
 			offsetToClientEnd = primary.clientSize - primary.itemSize,
 			focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 
-		if (!isNaN(focusedIndex)) {
+		if (!isNaN(focusedIndex) && focusedIndex !== this.lastFocusedIndex) {
 			let gridPosition = this.getGridPosition(focusedIndex);
 
 			this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
@@ -635,9 +635,9 @@ class VirtualListCoreNative extends Component {
 		}
 	}
 
-	getScrollToOption = (currentIndex, direction) => {
+	jumpToSpottableItem = (keyCode, currentIndex) => {
 		const
-			{dataSize, isItemDisabled} = this.props,
+			{cbScrollTo, dataSize, isItemDisabled} = this.props,
 			{firstIndex, numOfItems} = this.state;
 
 		if (!isItemDisabled) {
@@ -645,8 +645,8 @@ class VirtualListCoreNative extends Component {
 		}
 
 		const isForward = (
-			this.isPrimaryDirectionVertical && direction === 'down' ||
-			!this.isPrimaryDirectionVertical && (!this.context.rtl && direction === 'right' || this.context.rtl && direction === 'left')
+			this.isPrimaryDirectionVertical && isDown(keyCode) ||
+			!this.isPrimaryDirectionVertical && (!this.context.rtl && isRight(keyCode) || this.context.rtl && isLeft(keyCode))
 		);
 
 		let nextIndex = -1;
@@ -671,14 +671,16 @@ class VirtualListCoreNative extends Component {
 			if (firstIndex <= nextIndex && nextIndex < firstIndex + numOfItems) {
 				nextIndex = -1;
 			} else {
-				this.nodeIndexToBeFocused = nextIndex;
+				this.lastFocusedIndex = this.nodeIndexToBeFocused = nextIndex;
 			}
 		}
 
-		return (nextIndex === -1) ? null : {
-			index: nextIndex,
-			stickTo: isForward ? 'ceil' : 'floor'
-		};
+		if (nextIndex !== -1) {
+			cbScrollTo({
+				index: nextIndex,
+				stickTo: isForward ? 'ceil' : 'floor'
+			});
+		}
 	}
 
 	setRestrict = (bool) => {
