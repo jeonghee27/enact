@@ -459,16 +459,18 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (this.childRef.getNextSpottableIndex) {
 				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
-				if (nextIndex !== -1 && !this.childRef.isNextSpottableVisible(nextIndex)) {
+				if (nextIndex !== -1 && !this.childRef.isNextSpottableDOMExist(nextIndex)) {
 					const focusedItem = Spotlight.getCurrent();
 
 					if (focusedItem) {
 						focusedItem.blur();
 					}
+					this.childRef.setContainerDisabled(true);
+					this.childRef.focusNextSpottable(nextIndex);
 
 					this.scrollTo({
 						index: nextIndex,
-						focus: true,
+						// focus: true,
 						stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
 					});
 				}
@@ -634,7 +636,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.doScrolling();
 		}
 
-		stop ({indexToFocus, nodeToFocus}) {
+		stop ({indexToFocus = null, nodeToFocus}) {
 			const bounds = this.getScrollBounds();
 
 			this.animator.stop();

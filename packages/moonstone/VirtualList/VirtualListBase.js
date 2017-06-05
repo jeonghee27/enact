@@ -281,6 +281,7 @@ class VirtualListCore extends Component {
 
 	// spotlight
 	nodeIndexToBeBlurred = null
+	nodeIndexToBeFocused = null
 	lastFocusedIndex = null
 
 	isVertical = () => this.isPrimaryDirectionVertical
@@ -528,6 +529,11 @@ class VirtualListCore extends Component {
 			className: classNames(css.listItem, itemElement.props.className),
 			style: {...itemElement.props.style, ...style}
 		});
+
+		if (index === this.nodeIndexToBeFocused) {
+			this.focusByIndex(index, true);
+			this.nodeIndexToBeFocused = null;
+		}
 	}
 
 	positionItems ({updateFrom, updateTo}) {
@@ -605,11 +611,14 @@ class VirtualListCore extends Component {
 		return (Math.ceil(curDataSize / dimensionToExtent) * primary.gridSize) - spacing;
 	}
 
-	focusByIndex = (index) => {
+	focusByIndex = (index, containerEnabled = false) => {
 		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
+			if (containerEnabled) {
+				this.setContainerDisabled(false);
+			}
 		}, 0);
 	}
 
@@ -630,6 +639,7 @@ class VirtualListCore extends Component {
 			let gridPosition = this.getGridPosition(focusedIndex);
 
 			this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
+			this.nodeIndexToBeFocused = null;
 			this.lastFocusedIndex = focusedIndex;
 
 			if (primary.clientSize >= primary.itemSize) {
@@ -676,10 +686,14 @@ class VirtualListCore extends Component {
 		return nextDataIndex;
 	}
 
-	isNextSpottableVisible = (index) => {
-		const {firstVisibleIndex, lastVisibleIndex} = this.moreInfo;
+	isNextSpottableDOMExist = (index) => {
+		const {firstIndex, numOfItems} = this.state;
 
-		return this.moreInfo && firstVisibleIndex <= index && index <= lastVisibleIndex;
+		return firstIndex <= index && index < firstIndex + numOfItems;
+	}
+
+	focusNextSpottable = (index) => {
+		this.nodeIndexToBeFocused = index;
 	}
 
 	setRestrict = (bool) => {
