@@ -12,7 +12,6 @@ import deprecate from '@enact/core/internal/deprecate';
 import {forward} from '@enact/core/handle';
 import {getDirection} from '@enact/spotlight';
 import hoc from '@enact/core/hoc';
-import {is} from '@enact/core/keymap';
 import {Job} from '@enact/core/util';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -27,10 +26,6 @@ const
 	forwardScroll = forward('onScroll'),
 	forwardScrollStart = forward('onScrollStart'),
 	forwardScrollStop = forward('onScrollStop');
-
-const
-	isDown = is('down'),
-	isRight = is('right');
 
 const
 	nop = () => {},
@@ -358,14 +353,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onKeyDown = ({keyCode, target}) => {
-			if (getDirection(keyCode)) {
-				if (this.childRef.setSpotlightContainerRestrict) {
-					const index = Number.parseInt(target.getAttribute(dataIndexAttribute));
-					this.childRef.setSpotlightContainerRestrict(keyCode, index);
-				}
-				this.isKeyDown = true;
-			}
-
 			const
 				direction = getDirection(keyCode),
 				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
@@ -375,16 +362,13 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
 				}
 				this.isKeyDown = true;
-			}
 
-			if (this.childRef.getNextSpottableIndex) {
-				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
+				if (this.childRef.getScrollToOption) {
+					const option = this.childRef.getScrollToOption(currentIndex, direction);
 
-				if (nextIndex !== -1) {
-					this.scrollTo({
-						index: nextIndex,
-						stickTo: (isDown(keyCode) || isRight(keyCode)) ? 'floor' : 'ceil'
-					});
+					if (option !== null) {
+						this.scrollTo(option);
+					}
 				}
 			}
 		}

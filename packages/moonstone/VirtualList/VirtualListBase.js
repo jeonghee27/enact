@@ -656,26 +656,31 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	getNextSpottableIndex = (currentIndex, direction) => {
+	getScrollToOption = (currentIndex, direction) => {
 		const
 			{dataSize, isItemDisabled} = this.props,
 			{firstIndex, numOfItems} = this.state;
 
-		let nextIndex = -1;
-
 		if (!isItemDisabled) {
-			return nextIndex;
+			return null;
 		}
 
-		if (direction === 'up' || direction === 'left') {
-			for (let i = currentIndex - 1; i >= 0; i--) {
+		const isForward = (
+			this.isPrimaryDirectionVertical && direction === 'down' ||
+			!this.isPrimaryDirectionVertical && (!this.context.rtl && direction === 'right' || this.context.rtl && direction === 'left')
+		);
+
+		let nextIndex = -1;
+
+		if (isForward) {
+			for (let i = currentIndex + 1; i < dataSize; i++) {
 				if (!isItemDisabled(i)) {
 					nextIndex = i;
 					break;
 				}
 			}
-		} else if (direction === 'down' || direction === 'right') {
-			for (let i = currentIndex + 1; i < dataSize; i++) {
+		} else {
+			for (let i = currentIndex - 1; i >= 0; i--) {
 				if (!isItemDisabled(i)) {
 					nextIndex = i;
 					break;
@@ -691,7 +696,10 @@ class VirtualListCore extends Component {
 			}
 		}
 
-		return nextIndex;
+		return (nextIndex === -1) ? null : {
+			index: nextIndex,
+			stickTo: isForward ? 'ceil' : 'floor'
+		};
 	}
 
 	setRestrict = (bool) => {

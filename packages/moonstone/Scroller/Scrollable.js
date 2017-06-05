@@ -10,7 +10,6 @@ import {contextTypes} from '@enact/ui/Resizable';
 import deprecate from '@enact/core/internal/deprecate';
 import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
-import {is} from '@enact/core/keymap';
 import {Job} from '@enact/core/util';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -27,10 +26,6 @@ const
 	forwardScroll = forward('onScroll'),
 	forwardScrollStart = forward('onScrollStart'),
 	forwardScrollStop = forward('onScrollStop');
-
-const
-	isDown = is('down'),
-	isRight = is('right');
 
 const
 	calcVelocity = (d, dt) => (d && dt) ? d / dt : 0,
@@ -452,18 +447,17 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				direction = getDirection(keyCode),
 				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
 
-			if (direction && this.childRef.setSpotlightContainerRestrict) {
-				this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
-			}
+			if (direction) {
+				if (this.childRef.setSpotlightContainerRestrict) {
+					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
+				}
 
-			if (this.childRef.getNextSpottableIndex) {
-				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
+				if (this.childRef.getScrollToOption) {
+					const option = this.childRef.getScrollToOption(currentIndex, direction);
 
-				if (nextIndex !== -1) {
-					this.scrollTo({
-						index: nextIndex,
-						stickTo: (isDown(keyCode) || isRight(keyCode)) ? 'ceil' : 'floor'
-					});
+					if (option !== null) {
+						this.scrollTo(option);
+					}
 				}
 			}
 		}
@@ -627,7 +621,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			this.doScrolling();
 		}
 
-		stop ({indexToFocus = null, nodeToFocus}) {
+		stop ({indexToFocus = null, nodeToFocus = null}) {
 			const bounds = this.getScrollBounds();
 
 			this.animator.stop();
