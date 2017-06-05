@@ -667,15 +667,9 @@ class VirtualListCoreNative extends Component {
 			}
 		}
 
-		if (nextIndex !== -1) {
-			if (firstIndex <= nextIndex && nextIndex < firstIndex + numOfItems) {
-				nextIndex = -1;
-			} else {
-				this.lastFocusedIndex = this.nodeIndexToBeFocused = nextIndex;
-			}
-		}
+		if (nextIndex !== -1 && (firstIndex > nextIndex || nextIndex >= firstIndex + numOfItems)) {
+			this.nodeIndexToBeFocused = this.lastFocusedIndex = nextIndex;
 
-		if (nextIndex !== -1) {
 			cbScrollTo({
 				index: nextIndex,
 				stickTo: isForward ? 'ceil' : 'floor'

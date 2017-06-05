@@ -353,18 +353,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onKeyDown = ({keyCode, target}) => {
-			const
-				direction = getDirection(keyCode),
-				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
+			if (getDirection(keyCode)) {
+				const index = Number.parseInt(target.getAttribute(dataIndexAttribute));
 
-			if (direction) {
 				if (this.childRef.setSpotlightContainerRestrict) {
-					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
+					this.childRef.setSpotlightContainerRestrict(keyCode, index);
 				}
 				this.isKeyDown = true;
 
 				if (this.childRef.jumpToSpottableItem) {
-					this.childRef.jumpToSpottableItem(keyCode, currentIndex);
+					this.childRef.jumpToSpottableItem(keyCode, index);
 				}
 			}
 		}
