@@ -12,6 +12,7 @@ import deprecate from '@enact/core/internal/deprecate';
 import {forward} from '@enact/core/handle';
 import {getDirection} from '@enact/spotlight';
 import hoc from '@enact/core/hoc';
+import {is} from '@enact/core/keymap';
 import {Job} from '@enact/core/util';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -26,6 +27,10 @@ const
 	forwardScroll = forward('onScroll'),
 	forwardScrollStart = forward('onScrollStart'),
 	forwardScrollStop = forward('onScrollStop');
+
+const
+	isDown = is('down'),
+	isRight = is('right');
 
 const
 	nop = () => {},
@@ -360,6 +365,28 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				}
 				this.isKeyDown = true;
 			}
+
+			const
+				direction = getDirection(keyCode),
+				currentIndex = Number.parseInt(target.getAttribute(dataIndexAttribute));
+
+			if (direction) {
+				if (this.childRef.setSpotlightContainerRestrict) {
+					this.childRef.setSpotlightContainerRestrict(keyCode, currentIndex);
+				}
+				this.isKeyDown = true;
+			}
+
+			if (this.childRef.getNextSpottableIndex) {
+				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
+
+				if (nextIndex !== -1) {
+					this.scrollTo({
+						index: nextIndex,
+						stickTo: (isDown(keyCode) || isRight(keyCode)) ? 'floor' : 'ceil'
+					});
+				}
+			}
 		}
 
 		onKeyUp = ({keyCode}) => {
@@ -548,7 +575,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					}
 				} else {
 					if (typeof opt.index === 'number' && typeof this.childRef.getItemPosition === 'function') {
-						itemPos = this.childRef.getItemPosition(opt.index);
+						itemPos = this.childRef.getItemPosition(opt.index, opt.stickTo);
 					} else if (opt.node instanceof Object) {
 						if (opt.node.nodeType === 1 && typeof this.childRef.getNodePosition === 'function') {
 							itemPos = this.childRef.getNodePosition(opt.node);

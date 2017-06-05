@@ -129,6 +129,14 @@ class VirtualListCoreNative extends Component {
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
 		/**
+		 * The function to check if an item is disabled with `index` parameter.
+		 *
+		 * @type {Function}
+		 * @public
+		 */
+		isItemDisabled: PropTypes.func,
+
+		/**
 		 * Number of spare DOM node.
 		 * `3` is good for the default value experimentally and
 		 * this value is highly recommended not to be changed by developers.
@@ -252,6 +260,7 @@ class VirtualListCoreNative extends Component {
 
 	// spotlight
 	nodeIndexToBeBlurred = null
+	nodeIndexToBeFocused = null
 	lastFocusedIndex = null
 
 	isVertical = () => this.isPrimaryDirectionVertical
@@ -271,7 +280,17 @@ class VirtualListCoreNative extends Component {
 		return {primaryPosition, secondaryPosition};
 	}
 
-	getItemPosition = (index) => this.gridPositionToItemPosition(this.getGridPosition(index))
+	getItemPosition = (index, stickTo = 'floor') => {
+		const
+			{itemSize} = this.props,
+			{primary} = this,
+			position = this.getGridPosition(index, stickTo),
+			offset = ((itemSize instanceof Object) || stickTo === 'floor') ? 0 : primary.clientSize - primary.itemSize;
+
+		position.primaryPosition -= offset;
+
+		return this.gridPositionToItemPosition(position);
+	}
 
 	gridPositionToItemPosition = ({primaryPosition, secondaryPosition}) =>
 		(this.isPrimaryDirectionVertical ? {left: secondaryPosition, top: primaryPosition} : {left: primaryPosition, top: secondaryPosition})
@@ -480,6 +499,11 @@ class VirtualListCoreNative extends Component {
 			className: classNames(cssItem.listItem, itemElement.props.className),
 			style: {...itemElement.props.style, ...style}
 		});
+
+		if (index === this.nodeIndexToBeFocused) {
+			this.focusByIndex(index);
+			this.nodeIndexToBeFocused = null;
+		}
 	}
 
 	positionItems () {
@@ -591,6 +615,7 @@ class VirtualListCoreNative extends Component {
 			let gridPosition = this.getGridPosition(focusedIndex);
 
 			this.nodeIndexToBeBlurred = this.lastFocusedIndex % numOfItems;
+			this.nodeIndexToBeFocused = null;
 			this.lastFocusedIndex = focusedIndex;
 
 			if (primary.clientSize >= primary.itemSize) {
@@ -608,6 +633,44 @@ class VirtualListCoreNative extends Component {
 			gridPosition.secondaryPosition = 0;
 			return this.gridPositionToItemPosition(gridPosition);
 		}
+	}
+
+	getNextSpottableIndex = (currentIndex, direction) => {
+		const
+			{dataSize, isItemDisabled} = this.props,
+			{firstIndex, numOfItems} = this.state;
+
+		let nextIndex = -1;
+
+		if (!isItemDisabled) {
+			return nextIndex;
+		}
+
+		if (direction === 'up' || direction === 'left') {
+			for (let i = currentIndex - 1; i >= 0; i--) {
+				if (!isItemDisabled(i)) {
+					nextIndex = i;
+					break;
+				}
+			}
+		} else if (direction === 'down' || direction === 'right') {
+			for (let i = currentIndex + 1; i < dataSize; i++) {
+				if (!isItemDisabled(i)) {
+					nextIndex = i;
+					break;
+				}
+			}
+		}
+
+		if (nextIndex !== -1) {
+			if (firstIndex <= nextIndex && nextIndex < firstIndex + numOfItems) {
+				nextIndex = -1;
+			} else {
+				this.nodeIndexToBeFocused = nextIndex;
+			}
+		}
+
+		return nextIndex;
 	}
 
 	setRestrict = (bool) => {
@@ -679,6 +742,7 @@ class VirtualListCoreNative extends Component {
 		delete props.data;
 		delete props.dataSize;
 		delete props.direction;
+		delete props.isItemDisabled;
 		delete props.itemSize;
 		delete props.overhang;
 		delete props.pageScroll;
