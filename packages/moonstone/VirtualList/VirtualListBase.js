@@ -503,7 +503,7 @@ class VirtualListCore extends Component {
 
 		if (node) {
 			if ((index % numOfItems) === this.nodeIndexToBeBlurred && index !== this.lastFocusedIndex) {
-				node.blur();
+				setTimeout(() => {node.blur();}, 0);
 				this.nodeIndexToBeBlurred = null;
 			}
 			this.composeStyle(node.style, ...rest);
@@ -614,6 +614,7 @@ class VirtualListCore extends Component {
 		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
+			Spotlight.resume();
 			this.focusOnNode(item);
 			this.nodeIndexToBeFocused = null;
 		}, 0);
@@ -623,6 +624,10 @@ class VirtualListCore extends Component {
 		if (node) {
 			Spotlight.focus(node);
 		}
+	}
+
+	updateFocusedIndex = (item) => {
+		this.lastFocusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 	}
 
 	calculatePositionOnFocus = (item) => {
@@ -661,8 +666,8 @@ class VirtualListCore extends Component {
 			{cbScrollTo, dataSize, isItemDisabled} = this.props,
 			{firstIndex, numOfItems} = this.state;
 
-		if (!isItemDisabled) {
-			return null;
+		if (!isItemDisabled || isItemDisabled(currentIndex)) {
+			return false;
 		}
 
 		const isForward = (
@@ -689,13 +694,17 @@ class VirtualListCore extends Component {
 		}
 
 		if (nextIndex !== -1 && (firstIndex > nextIndex || nextIndex >= firstIndex + numOfItems)) {
+			this.nodeIndexToBeBlurred = currentIndex % numOfItems;
 			this.nodeIndexToBeFocused = this.lastFocusedIndex = nextIndex;
-
+			Spotlight.pause();
 			cbScrollTo({
 				index: nextIndex,
 				stickTo: isForward ? 'ceil' : 'floor'
 			});
+			return true;
 		}
+
+		return false;
 	}
 
 	setRestrict = (bool) => {
