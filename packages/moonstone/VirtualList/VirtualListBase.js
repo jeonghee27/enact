@@ -531,7 +531,7 @@ class VirtualListCore extends Component {
 		});
 
 		if (index === this.nodeIndexToBeFocused) {
-			this.focusByIndex(index, true);
+			this.focusByIndex(index);
 			this.nodeIndexToBeFocused = null;
 		}
 	}
@@ -611,14 +611,12 @@ class VirtualListCore extends Component {
 		return (Math.ceil(curDataSize / dimensionToExtent) * primary.gridSize) - spacing;
 	}
 
-	focusByIndex = (index, containerEnabled = false) => {
+	focusByIndex = (index) => {
 		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
 		setTimeout(() => {
 			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
 			this.focusOnNode(item);
-			if (containerEnabled) {
-				this.setContainerDisabled(false);
-			}
+			this.setContainerDisabled(false);
 		}, 0);
 	}
 
