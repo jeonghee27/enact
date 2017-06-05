@@ -459,13 +459,12 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (this.childRef.getNextSpottableIndex) {
 				const nextIndex = this.childRef.getNextSpottableIndex(currentIndex, direction);
 
-				if (nextIndex !== -1 && !this.childRef.isItemNodeVisible(nextIndex)) {
+				if (nextIndex !== -1 && !this.childRef.isNextSpottableVisible(nextIndex)) {
 					const focusedItem = Spotlight.getCurrent();
 
 					if (focusedItem) {
 						focusedItem.blur();
 					}
-					this.childRef.setContainerDisabled(true);
 
 					this.scrollTo({
 						index: nextIndex,

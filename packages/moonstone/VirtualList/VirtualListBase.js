@@ -653,6 +653,10 @@ class VirtualListCore extends Component {
 		const {dataSize, isItemDisabled} = this.props;
 		let nextDataIndex = -1;
 
+		if (!isItemDisabled) {
+			return nextDataIndex;
+		}
+
 		if (direction === 'up' || direction === 'left') {
 			for (let i = currentDataIndex - 1; i >= 0; i--) {
 				if (!isItemDisabled(i)) {
@@ -672,7 +676,7 @@ class VirtualListCore extends Component {
 		return nextDataIndex;
 	}
 
-	isItemNodeVisible = (index) => {
+	isNextSpottableVisible = (index) => {
 		const {firstVisibleIndex, lastVisibleIndex} = this.moreInfo;
 
 		return this.moreInfo && firstVisibleIndex <= index && index <= lastVisibleIndex;
