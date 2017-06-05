@@ -470,7 +470,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 					this.scrollTo({
 						index: nextIndex,
-						// focus: true,
 						stickTo: isDown(keyCode) || isRight(keyCode) ? 'ceil' : 'floor'
 					});
 				}
