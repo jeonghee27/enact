@@ -601,7 +601,12 @@ class VirtualListCoreNative extends Component {
 	focusOnNode = (node) => {
 		if (node) {
 			Spotlight.focus(node);
+			node.focus();
 		}
+	}
+
+	updateFocusedIndex = (item) => {
+		this.lastFocusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 	}
 
 	calculatePositionOnFocus = (item) => {
@@ -640,8 +645,8 @@ class VirtualListCoreNative extends Component {
 			{cbScrollTo, dataSize, isItemDisabled} = this.props,
 			{firstIndex, numOfItems} = this.state;
 
-		if (!isItemDisabled) {
-			return null;
+		if (!isItemDisabled || isItemDisabled(currentIndex)) {
+			return false;
 		}
 
 		const isForward = (
@@ -668,13 +673,17 @@ class VirtualListCoreNative extends Component {
 		}
 
 		if (nextIndex !== -1 && (firstIndex > nextIndex || nextIndex >= firstIndex + numOfItems)) {
+			this.nodeIndexToBeBlurred = currentIndex % numOfItems;
 			this.nodeIndexToBeFocused = this.lastFocusedIndex = nextIndex;
-
+			Spotlight.pause();
 			cbScrollTo({
 				index: nextIndex,
 				stickTo: isForward ? 'ceil' : 'floor'
 			});
+			return true;
 		}
+
+		return false;
 	}
 
 	setRestrict = (bool) => {

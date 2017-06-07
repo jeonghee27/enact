@@ -156,8 +156,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			 */
 			onScrollStop: PropTypes.func,
 
-			style: PropTypes.object,
-
 			/**
 			 * Specifies how to show vertical scrollbar. Acceptable values are `'auto'`,
 			 * `'visible'`, and `'hidden'`.
@@ -334,7 +332,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		// event handlers for Spotlight support
 
 		onFocus = (e) => {
-			if (this.isKeyDown) {
+			if (this.isKeyDown && !this.isKeyHandled) {
 				const
 					item = e.target,
 					positionFn = this.childRef.calculatePositionOnFocus,
@@ -349,10 +347,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						this.lastFocusedItem = item;
 					}
 				}
+			} else if (this.childRef.updateFocusedIndex) {
+				this.childRef.updateFocusedIndex(e.target);
 			}
 		}
 
-		onKeyDown = ({keyCode, target}) => {
+		onKeyDown = (e) => {
+			const {keyCode, target} = e;
+
+			this.isKeyHandled = false;
+
 			if (getDirection(keyCode)) {
 				const index = Number.parseInt(target.getAttribute(dataIndexAttribute));
 
@@ -362,9 +366,11 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				this.isKeyDown = true;
 
 				if (this.childRef.jumpToSpottableItem) {
-					this.childRef.jumpToSpottableItem(keyCode, index);
+					this.isKeyHandled = this.childRef.jumpToSpottableItem(keyCode, index);
 				}
 			}
+
+			e.preventDefault();
 		}
 
 		onKeyUp = ({keyCode}) => {
@@ -809,7 +815,6 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			delete props.onScroll;
 			delete props.onScrollStart;
 			delete props.onScrollStop;
-			delete props.style;
 			delete props.verticalScrollbar;
 
 			return (
