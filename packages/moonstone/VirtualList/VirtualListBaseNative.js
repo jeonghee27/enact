@@ -321,6 +321,7 @@ class VirtualListCoreNative extends Component {
 		}
 	}
 
+	// public for Scrollable
 	getScrollBounds = () => this.scrollBounds
 
 	getMoreInfo = () => this.moreInfo
@@ -629,6 +630,7 @@ class VirtualListCoreNative extends Component {
 		return (Math.ceil(curDataSize / dimensionToExtent) * primary.gridSize) - spacing;
 	}
 
+	// public for Scrollable
 	focusByIndex = (index) => {
 		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
 		setTimeout(() => {
@@ -681,6 +683,7 @@ class VirtualListCoreNative extends Component {
 		}
 	}
 
+	// public for Scrollable
 	syncClientSize = () => {
 		const
 			{props} = this,

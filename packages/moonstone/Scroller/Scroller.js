@@ -116,11 +116,12 @@ class ScrollerBase extends Component {
 		left: 0
 	}
 
+	// public for Scrollable
 	getScrollBounds = () => this.scrollBounds
 
 	getRtlPositionX = (x) => (this.context.rtl ? this.scrollBounds.maxLeft - x : x)
 
-	// for Scrollable
+	// public for Scrollable
 	setScrollPosition (x, y) {
 		const
 			node = this.containerRef;
@@ -355,11 +356,14 @@ class ScrollerBase extends Component {
 		}
 	}
 
+	// public for Scrollable
 	setContainerDisabled = (bool) => {
 		if (this.containerRef) {
 			this.containerRef.setAttribute(dataContainerDisabledAttribute, bool);
 		}
 	}
+
+	// render
 
 	initRef = (ref) => {
 		this.containerRef = ref;

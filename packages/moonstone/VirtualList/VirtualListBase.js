@@ -5,7 +5,6 @@
  * export is {@link moonstone/VirtualList.VirtualListBase}.
  */
 
-import classNames from 'classnames';
 import {contextTypes} from '@enact/i18n/I18nDecorator';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -15,7 +14,8 @@ import SpotlightContainerDecorator from '@enact/spotlight/SpotlightContainerDeco
 
 import {dataIndexAttribute, Scrollable} from '../Scroller/Scrollable';
 
-import css from './ListItem.less';
+import VirtualListBounds from './VirtualListBounds.js';
+import VirtualListDOM from './VirtualListDOM.js';
 
 const SpotlightPlaceholder = Spottable('div');
 
@@ -178,12 +178,15 @@ class VirtualListCore extends Component {
 
 		this.state = {firstIndex: 0, numOfItems: 0};
 		this.initContainerRef = this.initRef('containerRef');
+
+		this.virtualListDOM = new VirtualListDOM(this);
+		this.virtualListBounds = new VirtualListBounds(this);
 	}
 
 	componentWillMount () {
 		if (this.props.clientSize) {
-			this.calculateMetrics(this.props);
-			this.updateStatesAndBounds(this.props);
+			this.virtualListBounds.calculateMetrics(this.props);
+			this.virtualListBounds.updateStatesAndBounds(this.props);
 		}
 	}
 
@@ -193,8 +196,8 @@ class VirtualListCore extends Component {
 		const containerNode = this.containerRef;
 
 		if (!this.props.clientSize) {
-			this.calculateMetrics(this.props);
-			this.updateStatesAndBounds(this.props);
+			this.virtualListBounds.calculateMetrics(this.props);
+			this.virtualListBounds.updateStatesAndBounds(this.props);
 		}
 		// prevent native scrolling by Spotlight
 		this.preventScroll = () => {
@@ -221,10 +224,10 @@ class VirtualListCore extends Component {
 			hasDataChanged = (dataSize !== nextProps.dataSize);
 
 		if (hasMetricsChanged) {
-			this.calculateMetrics(nextProps);
-			this.updateStatesAndBounds(nextProps);
+			this.virtualListBounds.calculateMetrics(nextProps);
+			this.virtualListBounds.updateStatesAndBounds(nextProps);
 		} else if (hasDataChanged) {
-			this.updateStatesAndBounds(nextProps);
+			this.virtualListBounds.updateStatesAndBounds(nextProps);
 		}
 
 		const placeholder = this.getPlaceholder();
@@ -263,15 +266,6 @@ class VirtualListCore extends Component {
 		}
 	}
 
-	scrollBounds = {
-		clientWidth: 0,
-		clientHeight: 0,
-		scrollWidth: 0,
-		scrollHeight: 0,
-		maxLeft: 0,
-		maxTop: 0
-	}
-
 	moreInfo = {
 		firstVisibleIndex: null,
 		lastVisibleIndex: null
@@ -289,8 +283,6 @@ class VirtualListCore extends Component {
 	curDataSize = 0
 	cc = []
 	scrollPosition = 0
-	updateFrom = null
-	updateTo = null
 
 	containerRef = null
 
@@ -298,10 +290,22 @@ class VirtualListCore extends Component {
 	nodeIndexToBeBlurred = null
 	lastFocusedIndex = null
 
+	// public for Scrollable
 	isVertical = () => this.isPrimaryDirectionVertical
 
+	// public for Scrollable
 	isHorizontal = () => !this.isPrimaryDirectionVertical
 
+	// public for Scrollable
+	syncClientSize = () => this.virtualListBounds.syncClientSize()
+
+	// public for Scrollable
+	getScrollBounds = () => this.virtualListBounds.scrollBounds
+
+	// public for Scrollable
+	getMoreInfo = () => this.moreInfo
+
+	// private
 	getPlaceholder () {
 		const current = Spotlight.getCurrent();
 		if (current && current.dataset.vlPlaceholder && this.containerRef.contains(current)) {
@@ -311,36 +315,7 @@ class VirtualListCore extends Component {
 		return false;
 	}
 
-	restoreFocus () {
-		const {firstVisibleIndex, lastVisibleIndex} = this.moreInfo;
-		if (
-			this.restoreLastFocused &&
-			!this.getPlaceholder() &&
-			firstVisibleIndex <= this.lastFocusedIndex &&
-			lastVisibleIndex >= this.lastFocusedIndex
-		) {
-			// if we're supposed to restore focus and virtual list has positioned a set of items
-			// that includes lastFocusedIndex, clear the indicator
-			this.restoreLastFocused = false;
-			const containerId = this.props['data-container-id'];
-
-			// try to focus the last focused item
-			const foundLastFocused = Spotlight.focus(
-				`[data-container-id="${containerId}"] [data-index="${this.lastFocusedIndex}"]`
-			);
-
-			// but if that fails (because it isn't found or is disabled), focus the container so
-			// spotlight isn't lost
-			if (!foundLastFocused) {
-				Spotlight.focus(containerId);
-			}
-		}
-	}
-
-	getScrollBounds = () => this.scrollBounds
-
-	getMoreInfo = () => this.moreInfo
-
+	// private
 	getGridPosition (index) {
 		const
 			{dimensionToExtent, primary, secondary} = this,
@@ -350,134 +325,14 @@ class VirtualListCore extends Component {
 		return {primaryPosition, secondaryPosition};
 	}
 
-	getItemPosition = (index) => this.gridPositionToItemPosition(this.getGridPosition(index))
-
+	// private
 	gridPositionToItemPosition = ({primaryPosition, secondaryPosition}) =>
 		(this.isPrimaryDirectionVertical ? {left: secondaryPosition, top: primaryPosition} : {left: primaryPosition, top: secondaryPosition})
 
-	getClientSize = (node) => {
-		return {
-			clientWidth: node.clientWidth,
-			clientHeight: node.clientHeight
-		};
-	}
+	// public for Scrollable
+	getItemPosition = (index) => this.gridPositionToItemPosition(this.getGridPosition(index))
 
-	calculateMetrics (props) {
-		const
-			{clientSize, direction, itemSize, spacing} = props,
-			node = this.containerRef;
-
-		if (!clientSize && !node) {
-			return;
-		}
-
-		const
-			{clientWidth, clientHeight} = (clientSize || this.getClientSize(node)),
-			heightInfo = {
-				clientSize: clientHeight,
-				minItemSize: itemSize.minHeight || null,
-				itemSize: itemSize
-			},
-			widthInfo = {
-				clientSize: clientWidth,
-				minItemSize: itemSize.minWidth || null,
-				itemSize: itemSize
-			};
-		let primary, secondary, dimensionToExtent, thresholdBase;
-
-		this.isPrimaryDirectionVertical = (direction === 'vertical');
-
-		if (this.isPrimaryDirectionVertical) {
-			primary = heightInfo;
-			secondary = widthInfo;
-		} else {
-			primary = widthInfo;
-			secondary = heightInfo;
-		}
-		dimensionToExtent = 1;
-
-		this.isItemSized = (primary.minItemSize && secondary.minItemSize);
-
-		if (this.isItemSized) {
-			// the number of columns is the ratio of the available width plus the spacing
-			// by the minimum item width plus the spacing
-			dimensionToExtent = Math.max(Math.floor((secondary.clientSize + spacing) / (secondary.minItemSize + spacing)), 1);
-			// the actual item width is a ratio of the remaining width after all columns
-			// and spacing are accounted for and the number of columns that we know we should have
-			secondary.itemSize = Math.floor((secondary.clientSize - (spacing * (dimensionToExtent - 1))) / dimensionToExtent);
-			// the actual item height is related to the item width
-			primary.itemSize = Math.floor(primary.minItemSize * (secondary.itemSize / secondary.minItemSize));
-		}
-
-		primary.gridSize = primary.itemSize + spacing;
-		secondary.gridSize = secondary.itemSize + spacing;
-		thresholdBase = primary.gridSize * 2;
-
-		this.threshold = {min: -Infinity, max: thresholdBase, base: thresholdBase};
-		this.dimensionToExtent = dimensionToExtent;
-
-		this.primary = primary;
-		this.secondary = secondary;
-
-		// reset
-		this.scrollPosition = 0;
-		// eslint-disable-next-line react/no-direct-mutation-state
-		this.state.firstIndex = 0;
-		// eslint-disable-next-line react/no-direct-mutation-state
-		this.state.numOfItems = 0;
-	}
-
-	updateStatesAndBounds (props) {
-		const
-			{dataSize, overhang} = props,
-			{firstIndex} = this.state,
-			{dimensionToExtent, primary, moreInfo} = this,
-			numOfItems = Math.min(dataSize, dimensionToExtent * (Math.ceil(primary.clientSize / primary.gridSize) + overhang)),
-			wasFirstIndexMax = ((this.maxFirstIndex < moreInfo.firstVisibleIndex - dimensionToExtent) && (firstIndex === this.maxFirstIndex));
-
-		this.maxFirstIndex = dataSize - numOfItems;
-		this.curDataSize = dataSize;
-		this.updateFrom = null;
-		this.updateTo = null;
-
-		// reset children
-		this.cc = [];
-
-		this.setState({firstIndex: wasFirstIndexMax ? this.maxFirstIndex : Math.min(firstIndex, this.maxFirstIndex), numOfItems});
-		this.calculateScrollBounds(props);
-	}
-
-	calculateScrollBounds (props) {
-		const
-			{clientSize} = props,
-			node = this.containerRef;
-
-		if (!clientSize && !node) {
-			return;
-		}
-
-		const
-			{scrollBounds, isPrimaryDirectionVertical} = this,
-			{clientWidth, clientHeight} = clientSize || this.getClientSize(node);
-		let maxPos;
-
-		scrollBounds.clientWidth = clientWidth;
-		scrollBounds.clientHeight = clientHeight;
-		scrollBounds.scrollWidth = this.getScrollWidth();
-		scrollBounds.scrollHeight = this.getScrollHeight();
-		scrollBounds.maxLeft = Math.max(0, scrollBounds.scrollWidth - clientWidth);
-		scrollBounds.maxTop = Math.max(0, scrollBounds.scrollHeight - clientHeight);
-
-		// correct position
-		maxPos = isPrimaryDirectionVertical ? scrollBounds.maxTop : scrollBounds.maxLeft;
-
-		this.syncThreshold(maxPos);
-
-		if (this.scrollPosition > maxPos) {
-			this.props.cbScrollTo({position: (isPrimaryDirectionVertical) ? {y: maxPos} : {x: maxPos}});
-		}
-	}
-
+	// private
 	syncThreshold (maxPos) {
 		const {threshold} = this;
 
@@ -492,12 +347,13 @@ class VirtualListCore extends Component {
 		}
 	}
 
+	// public for Scrollable
 	setScrollPosition (x, y, dirX, dirY) {
 		const
 			{firstIndex, numOfItems} = this.state,
-			{isPrimaryDirectionVertical, threshold, dimensionToExtent, maxFirstIndex, scrollBounds} = this,
+			{isPrimaryDirectionVertical, threshold, dimensionToExtent, maxFirstIndex} = this,
 			{gridSize} = this.primary,
-			maxPos = isPrimaryDirectionVertical ? scrollBounds.maxTop : scrollBounds.maxLeft,
+			maxPos = isPrimaryDirectionVertical ? this.getScrollBounds().maxTop : this.getScrollBounds().maxLeft,
 			minOfMax = threshold.base,
 			maxOfMin = maxPos - minOfMax;
 		let
@@ -531,120 +387,38 @@ class VirtualListCore extends Component {
 		if (firstIndex !== newFirstIndex) {
 			this.setState({firstIndex: newFirstIndex});
 		} else {
-			this.positionItems({updateFrom: firstIndex, updateTo: firstIndex + numOfItems});
+			this.virtualListDOM.positionItems({updateFrom: firstIndex, updateTo: firstIndex + numOfItems}, this.moreInfo);
 		}
 	}
 
-	applyStyleToExistingNode = (index, ...rest) => {
-		const
-			{numOfItems} = this.state,
-			node = this.containerRef.children[index % numOfItems];
+	// private
+	restoreFocus () {
+		const {firstVisibleIndex, lastVisibleIndex} = this.moreInfo;
+		if (
+			this.restoreLastFocused &&
+			!this.getPlaceholder() &&
+			firstVisibleIndex <= this.lastFocusedIndex &&
+			lastVisibleIndex >= this.lastFocusedIndex
+		) {
+			// if we're supposed to restore focus and virtual list has positioned a set of items
+			// that includes lastFocusedIndex, clear the indicator
+			this.restoreLastFocused = false;
+			const containerId = this.props['data-container-id'];
 
-		if (node) {
-			if ((index % numOfItems) === this.nodeIndexToBeBlurred && index !== this.lastFocusedIndex) {
-				node.blur();
-				this.nodeIndexToBeBlurred = null;
-			}
-			this.composeStyle(node.style, ...rest);
-		}
-	}
+			// try to focus the last focused item
+			const foundLastFocused = Spotlight.focus(
+				`[data-container-id="${containerId}"] [data-index="${this.lastFocusedIndex}"]`
+			);
 
-	applyStyleToNewNode = (index, ...rest) => {
-		const
-			{component, data} = this.props,
-			{numOfItems} = this.state,
-			key = index % numOfItems,
-			itemElement = component({
-				data,
-				[dataIndexAttribute]: index,
-				index,
-				key
-			}),
-			style = {};
-
-		this.composeStyle(style, ...rest);
-
-		this.cc[key] = React.cloneElement(itemElement, {
-			className: classNames(css.listItem, itemElement.props.className),
-			style: {...itemElement.props.style, ...style}
-		});
-	}
-
-	positionItems ({updateFrom, updateTo}) {
-		const {isPrimaryDirectionVertical, dimensionToExtent, moreInfo, primary, secondary, scrollPosition} = this;
-
-		// we only calculate position of the first child
-		let
-			{primaryPosition, secondaryPosition} = this.getGridPosition(updateFrom),
-			firstVisibleIndex = null, lastVisibleIndex = null,
-			width, height;
-
-		primaryPosition -= scrollPosition;
-		width = (isPrimaryDirectionVertical ? secondary.itemSize : primary.itemSize) + 'px';
-		height = (isPrimaryDirectionVertical ? primary.itemSize : secondary.itemSize) + 'px';
-
-		// positioning items
-		for (let i = updateFrom, j = updateFrom % dimensionToExtent; i < updateTo; i++) {
-
-			// determine the first and the last visible item
-			if (firstVisibleIndex === null && (primaryPosition + primary.itemSize) > 0) {
-				firstVisibleIndex = i;
-			}
-			if (primaryPosition < primary.clientSize) {
-				lastVisibleIndex = i;
-			}
-			if (this.updateFrom === null || this.updateTo === null || this.updateFrom > i || this.updateTo <= i) {
-				this.applyStyleToNewNode(i, width, height, primaryPosition, secondaryPosition);
-			} else {
-				this.applyStyleToExistingNode(i, width, height, primaryPosition, secondaryPosition);
-			}
-
-			if (++j === dimensionToExtent) {
-				secondaryPosition = 0;
-				primaryPosition += primary.gridSize;
-				j = 0;
-			} else {
-				secondaryPosition += secondary.gridSize;
+			// but if that fails (because it isn't found or is disabled), focus the container so
+			// spotlight isn't lost
+			if (!foundLastFocused) {
+				Spotlight.focus(containerId);
 			}
 		}
-
-		this.updateFrom = updateFrom;
-		this.updateTo = updateTo;
-		moreInfo.firstVisibleIndex = firstVisibleIndex;
-		moreInfo.lastVisibleIndex = lastVisibleIndex;
 	}
 
-	composeStyle (style, width, height, ...rest) {
-		if (this.isItemSized) {
-			style.width = width;
-			style.height = height;
-		}
-		this.composeTransform(style, ...rest);
-	}
-
-	getXY = (primaryPosition, secondaryPosition) => {
-		const rtlDirection = this.context.rtl ? -1 : 1;
-		return (this.isPrimaryDirectionVertical ? {x: (secondaryPosition * rtlDirection), y: primaryPosition} : {x: (primaryPosition * rtlDirection), y: secondaryPosition});
-	}
-
-	composeTransform (style, primaryPosition, secondaryPosition = 0) {
-		const {x, y} = this.getXY(primaryPosition, secondaryPosition);
-
-		style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
-	}
-
-	getScrollHeight = () => (this.isPrimaryDirectionVertical ? this.getVirtualScrollDimension() : this.scrollBounds.clientHeight)
-
-	getScrollWidth = () => (this.isPrimaryDirectionVertical ? this.scrollBounds.clientWidth : this.getVirtualScrollDimension())
-
-	getVirtualScrollDimension = () => {
-		const
-			{dimensionToExtent, primary, curDataSize} = this,
-			{spacing} = this.props;
-
-		return (Math.ceil(curDataSize / dimensionToExtent) * primary.gridSize) - spacing;
-	}
-
+	// public for Scrollable
 	focusByIndex = (index) => {
 		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
 		setTimeout(() => {
@@ -653,12 +427,14 @@ class VirtualListCore extends Component {
 		}, 0);
 	}
 
+	// private
 	focusOnNode = (node) => {
 		if (node) {
 			Spotlight.focus(node);
 		}
 	}
 
+	// public for Scrollable
 	calculatePositionOnFocus = (item) => {
 		const
 			{pageScroll} = this.props,
@@ -689,30 +465,12 @@ class VirtualListCore extends Component {
 		}
 	}
 
+	// public for Scrollable
 	setContainerDisabled = (bool) => {
 		const containerNode = this.containerRef;
 
 		if (containerNode) {
 			containerNode.setAttribute(dataContainerMutedAttribute, bool);
-		}
-	}
-
-	syncClientSize = () => {
-		const
-			{props} = this,
-			node = this.containerRef;
-
-		if (!props.clientSize && !node) {
-			return;
-		}
-
-		const
-			{clientWidth, clientHeight} = props.clientSize || this.getClientSize(node),
-			{scrollBounds} = this;
-
-		if (clientWidth !== scrollBounds.clientWidth || clientHeight !== scrollBounds.clientHeight) {
-			this.calculateMetrics(props);
-			this.updateStatesAndBounds(props);
 		}
 	}
 
@@ -724,13 +482,14 @@ class VirtualListCore extends Component {
 		};
 	}
 
+	// private
 	renderCalculate () {
 		const
 			{dataSize} = this.props,
 			{firstIndex, numOfItems} = this.state,
 			max = Math.min(dataSize, firstIndex + numOfItems);
 
-		this.positionItems({updateFrom: firstIndex, updateTo: max});
+		this.virtualListDOM.positionItems({updateFrom: firstIndex, updateTo: max}, this.moreInfo);
 	}
 
 	render () {
