@@ -1,0 +1,60 @@
+// Layout.less
+//
+
+.layout {
+	display: flex;
+	margin: 0;
+	box-sizing: border-box;
+
+	// Children
+	.cell {
+		flex: 1 0;
+
+		&.flexible {
+			flex: 1 1 100%;
+		}
+
+		&.fixed {
+			flex: 0 0 0;
+		}
+	}
+
+	// Modes
+	&.horizontal {
+		flex-direction: row;
+
+		> .cell {
+			&.flexible {
+				width: 0;
+			}
+		}
+	}
+
+	&.vertical {
+		flex-direction: column;
+		height: 100%;
+
+		> .cell {
+			&.flexible {
+				height: 0;
+			}
+		}
+	}
+
+	&.inline {
+		display: inline-flex;
+	}
+
+	// Debug lines to help see what's going on
+	:global(.debug)&,
+	:global(.debug) & {
+		outline: 1px dotted teal;
+	}
+
+	.cell {
+		:global(.debug)&,
+		:global(.debug) & {
+			outline: 1px dashed orange;
+		}
+	}
+}
