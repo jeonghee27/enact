@@ -180,12 +180,76 @@ const PickerBase = class extends React.Component {
 		onDecrementSpotlightDisappear: PropTypes.func,
 
 		/**
-		 * A function to run when the Increment button is disabled
+		 * A function to run when the 5-way down key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightDown: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way left key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightLeft: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way right key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightRight: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way up key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightUp: PropTypes.func,
+
+		/**
+		 * A function to run when the increment button is disabled
 		 *
 		 * @type {Function}
 		 * @private
 		 */
 		onIncrementSpotlightDisappear: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way down key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightDown: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way left key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightLeft: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way right key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightRight: PropTypes.func,
+
+		/**
+		 * A function to run when the 5-way up key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightUp: PropTypes.func,
 
 		/**
 		 * Initiate the pressed state
@@ -553,7 +617,15 @@ const PickerBase = class extends React.Component {
 			index,
 			joined,
 			onDecrementSpotlightDisappear,
+			onDecrementSpotlightDown,
+			onDecrementSpotlightLeft,
+			onDecrementSpotlightRight,
+			onDecrementSpotlightUp,
 			onIncrementSpotlightDisappear,
+			onIncrementSpotlightDown,
+			onIncrementSpotlightLeft,
+			onIncrementSpotlightRight,
+			onIncrementSpotlightUp,
 			orientation,
 			spotlightDisabled,
 			step,
@@ -619,6 +691,10 @@ const PickerBase = class extends React.Component {
 					onMouseDown={this.handleIncDown}
 					onMouseUp={this.handleUp}
 					onSpotlightDisappear={onIncrementSpotlightDisappear}
+					onSpotlightDown={onIncrementSpotlightDown}
+					onSpotlightLeft={onIncrementSpotlightLeft}
+					onSpotlightRight={onIncrementSpotlightRight}
+					onSpotlightUp={onIncrementSpotlightUp}
 					spotlightDisabled={spotlightDisabled}
 				/>
 				<div
@@ -652,6 +728,10 @@ const PickerBase = class extends React.Component {
 					onMouseDown={this.handleDecDown}
 					onMouseUp={this.handleUp}
 					onSpotlightDisappear={onDecrementSpotlightDisappear}
+					onSpotlightDown={onDecrementSpotlightDown}
+					onSpotlightLeft={onDecrementSpotlightLeft}
+					onSpotlightRight={onDecrementSpotlightRight}
+					onSpotlightUp={onDecrementSpotlightUp}
 					spotlightDisabled={spotlightDisabled}
 				/>
 			</div>

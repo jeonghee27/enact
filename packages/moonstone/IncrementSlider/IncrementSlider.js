@@ -196,6 +196,38 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 			onDecrementSpotlightDisappear: PropTypes.func,
 
 			/**
+			 * The handler to run when the 5-way down key is pressed while the decrement button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onDecrementSpotlightDown: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way left key is pressed while the decrement button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onDecrementSpotlightLeft: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way right key is pressed while the decrement button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onDecrementSpotlightRight: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way up key is pressed while the decrement button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onDecrementSpotlightUp: PropTypes.func,
+
+			/**
 			 * The handler to run when the value is incremented.
 			 *
 			 * @type {Function}
@@ -212,6 +244,69 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 			 */
 			onIncrementSpotlightDisappear: PropTypes.func,
 
+			/**
+			 * The handler to run when the 5-way down key is pressed while the increment button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onIncrementSpotlightDown: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way left key is pressed while the increment button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onIncrementSpotlightLeft: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way right key is pressed while the increment button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onIncrementSpotlightRight: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way up key is pressed while the increment button is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onIncrementSpotlightUp: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way down key is pressed while the slider is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onSliderSpotlightDown: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way left key is pressed while the slider is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onSliderSpotlightLeft: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way right key is pressed while the slider is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onSliderSpotlightRight: PropTypes.func,
+
+			/**
+			 * The handler to run when the 5-way up key is pressed while the slider is focused
+			 *
+			 * @type {Function}
+			 * @private
+			 */
+			onSliderSpotlightUp: PropTypes.func,
 
 			/**
 			 * The handler to run when the component is removed while retaining focus.
@@ -386,8 +481,20 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 			onChange,
 			onDecrement,
 			onDecrementSpotlightDisappear,
+			onDecrementSpotlightDown,
+			onDecrementSpotlightLeft,
+			onDecrementSpotlightRight,
+			onDecrementSpotlightUp,
 			onIncrement,
 			onIncrementSpotlightDisappear,
+			onIncrementSpotlightDown,
+			onIncrementSpotlightLeft,
+			onIncrementSpotlightRight,
+			onIncrementSpotlightUp,
+			onSliderSpotlightDown,
+			onSliderSpotlightLeft,
+			onSliderSpotlightRight,
+			onSliderSpotlightUp,
 			onSpotlightDisappear,
 			scrubbing,
 			sliderBarRef,
@@ -413,6 +520,10 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 						disabled={decrementDisabled}
 						onClick={onDecrement}
 						onSpotlightDisappear={onDecrementSpotlightDisappear}
+						onSpotlightDown={onDecrementSpotlightDown}
+						onSpotlightLeft={onDecrementSpotlightLeft}
+						onSpotlightRight={onDecrementSpotlightRight}
+						onSpotlightUp={onDecrementSpotlightUp}
 						spotlightDisabled={spotlightDisabled}
 					>
 						{decrementIcon}
@@ -435,6 +546,10 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 						onDecrement={onDecrement}
 						onIncrement={onIncrement}
 						onSpotlightDisappear={onSpotlightDisappear}
+						onSpotlightDown={onSliderSpotlightDown}
+						onSpotlightLeft={onSliderSpotlightLeft}
+						onSpotlightRight={onSliderSpotlightRight}
+						onSpotlightUp={onSliderSpotlightUp}
 						scrubbing={scrubbing}
 						sliderBarRef={sliderBarRef}
 						sliderRef={sliderRef}
@@ -456,6 +571,10 @@ const IncrementSliderBaseFactory = factory({css: componentCss}, ({css}) => {
 						disabled={incrementDisabled}
 						onClick={onIncrement}
 						onSpotlightDisappear={onIncrementSpotlightDisappear}
+						onSpotlightDown={onIncrementSpotlightDown}
+						onSpotlightLeft={onIncrementSpotlightLeft}
+						onSpotlightRight={onIncrementSpotlightRight}
+						onSpotlightUp={onIncrementSpotlightUp}
 						spotlightDisabled={spotlightDisabled}
 					>
 						{incrementIcon}

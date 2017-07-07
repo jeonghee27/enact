@@ -14,8 +14,17 @@ const SpottablePicker = hoc(null, (config, Wrapped) => {
 		}
 
 		render () {
-			const Component = this.props.joined ? Joined : Wrapped;
-			return <Component {...this.props} />;
+			const props = Object.assign({}, this.props);
+			const Component = props.joined ? Joined : Wrapped;
+
+			if (!props.joined) {
+				delete props.onSpotlightDown;
+				delete props.onSpotlightLeft;
+				delete props.onSpotlightRight;
+				delete props.onSpotlightUp;
+			}
+
+			return <Component {...props} />;
 		}
 	};
 });

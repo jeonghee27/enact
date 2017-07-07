@@ -22,6 +22,10 @@ const PickerButtonBase = kind({
 		]),
 		joined: PropTypes.bool,
 		onSpotlightDisappear: PropTypes.func,
+		onSpotlightDown: PropTypes.func,
+		onSpotlightLeft: PropTypes.func,
+		onSpotlightRight: PropTypes.func,
+		onSpotlightUp: PropTypes.func,
 		skin: PropTypes.string,
 		spotlightDisabled: PropTypes.bool
 	},
@@ -40,6 +44,10 @@ const PickerButtonBase = kind({
 		if (joined) {
 			delete rest.hidden;
 			delete rest.onSpotlightDisappear;
+			delete rest.onSpotlightDown;
+			delete rest.onSpotlightLeft;
+			delete rest.onSpotlightRight;
+			delete rest.onSpotlightUp;
 			delete rest.skin;
 			delete rest.spotlightDisabled;
 
