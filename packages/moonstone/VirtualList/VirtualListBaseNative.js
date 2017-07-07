@@ -565,7 +565,8 @@ class VirtualListCoreNative extends Component {
 
 		this.cc[key] = React.cloneElement(itemElement, {
 			className: classNames(cssItem.listItem, itemElement.props.className),
-			style: {...itemElement.props.style, ...style}
+			style: {...itemElement.props.style, ...style},
+			["data-preventscrollonfocus"]: true
 		});
 
 		if (index === this.nodeIndexToBeFocused) {
