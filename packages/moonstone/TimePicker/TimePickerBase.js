@@ -169,6 +169,134 @@ const TimePickerBase = kind({
 		onClose: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while the `hour` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onHourSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the `hour` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onHourSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the `hour` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onHourSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the `hour` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onHourSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the `meridiem` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMeridiemSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the `meridiem` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMeridiemSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the `meridiem` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMeridiemSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the `meridiem` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMeridiemSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the `minute` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMinuteSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the `minute` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMinuteSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the `minute` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMinuteSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the `minute` component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMinuteSpotlightUp: PropTypes.func,
+
+		/**
 		 * The handler to run when the component is removed while retaining focus.
 		 *
 		 * @type {Function}
@@ -207,7 +335,34 @@ const TimePickerBase = kind({
 		hasMeridiem: ({order}) => order.indexOf('a') >= 0
 	},
 
-	render: ({handlePickerKeyDown, hasMeridiem, hour, meridiem, meridiems, minute, noLabels, onChangeHour, onChangeMeridiem, onChangeMinute, onSpotlightDisappear, order, spotlightDisabled, ...rest}) => {
+	render: ({
+		handlePickerKeyDown,
+		hasMeridiem,
+		hour,
+		meridiem,
+		meridiems,
+		minute,
+		noLabels,
+		onChangeHour,
+		onChangeMeridiem,
+		onChangeMinute,
+		onHourSpotlightDown,
+		onHourSpotlightLeft,
+		onHourSpotlightRight,
+		onHourSpotlightUp,
+		onMeridiemSpotlightDown,
+		onMeridiemSpotlightLeft,
+		onMeridiemSpotlightRight,
+		onMeridiemSpotlightUp,
+		onMinuteSpotlightDown,
+		onMinuteSpotlightLeft,
+		onMinuteSpotlightRight,
+		onMinuteSpotlightUp,
+		onSpotlightDisappear,
+		order,
+		spotlightDisabled,
+		...rest
+	}) => {
 		return (
 			<ExpandableItemBase {...rest} showLabel="always" autoClose={false} lockBottom={false} onSpotlightDisappear={onSpotlightDisappear} spotlightDisabled={spotlightDisabled}>
 				<div className={dateComponentPickers} onKeyDown={handlePickerKeyDown}>
@@ -223,6 +378,10 @@ const TimePickerBase = kind({
 											label={noLabels ? null : $L('hour')}
 											onChange={onChangeHour}
 											onSpotlightDisappear={onSpotlightDisappear}
+											onSpotlightDown={onHourSpotlightDown}
+											onSpotlightLeft={onHourSpotlightLeft}
+											onSpotlightRight={onHourSpotlightRight}
+											onSpotlightUp={onHourSpotlightUp}
 											spotlightDisabled={spotlightDisabled}
 											value={hour}
 											width={2}
@@ -241,6 +400,10 @@ const TimePickerBase = kind({
 											min={0}
 											onChange={onChangeMinute}
 											onSpotlightDisappear={onSpotlightDisappear}
+											onSpotlightDown={onMinuteSpotlightDown}
+											onSpotlightLeft={onMinuteSpotlightLeft}
+											onSpotlightRight={onMinuteSpotlightRight}
+											onSpotlightUp={onMinuteSpotlightUp}
 											spotlightDisabled={spotlightDisabled}
 											padded
 											value={minute}
@@ -256,6 +419,10 @@ const TimePickerBase = kind({
 											label={noLabels ? null : $L('meridiem')}
 											onChange={onChangeMeridiem}
 											onSpotlightDisappear={onSpotlightDisappear}
+											onSpotlightDown={onMeridiemSpotlightDown}
+											onSpotlightLeft={onMeridiemSpotlightLeft}
+											onSpotlightRight={onMeridiemSpotlightRight}
+											onSpotlightUp={onMeridiemSpotlightUp}
 											reverse
 											spotlightDisabled={spotlightDisabled}
 											value={meridiem}

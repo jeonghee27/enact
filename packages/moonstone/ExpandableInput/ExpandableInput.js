@@ -104,6 +104,70 @@ class ExpandableInputBase extends React.Component {
 		onInputChange: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while the input is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onInputSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the input is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onInputSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the input is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onInputSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the input is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onInputSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
 		 * The handler to run when the component is removed while retaining focus.
 		 *
 		 * @type {Function}
@@ -276,7 +340,21 @@ class ExpandableInputBase extends React.Component {
 	}
 
 	render () {
-		const {disabled, iconAfter, iconBefore, onSpotlightDisappear, placeholder, spotlightDisabled, type, value, ...rest} = this.props;
+		const {
+			disabled,
+			iconAfter,
+			iconBefore,
+			onInputSpotlightDown,
+			onInputSpotlightLeft,
+			onInputSpotlightRight,
+			onInputSpotlightUp,
+			onSpotlightDisappear,
+			placeholder,
+			spotlightDisabled,
+			type,
+			value,
+			...rest
+		} = this.props;
 		delete rest.onChange;
 		delete rest.onInputChange;
 
@@ -303,6 +381,10 @@ class ExpandableInputBase extends React.Component {
 					onKeyDown={this.handleInputKeyDown}
 					onMouseDown={this.handleInputMouseDown}
 					onSpotlightDisappear={onSpotlightDisappear}
+					onSpotlightDown={onInputSpotlightDown}
+					onSpotlightLeft={onInputSpotlightLeft}
+					onSpotlightRight={onInputSpotlightRight}
+					onSpotlightUp={onInputSpotlightUp}
 					placeholder={placeholder}
 					spotlightDisabled={spotlightDisabled}
 					type={type}

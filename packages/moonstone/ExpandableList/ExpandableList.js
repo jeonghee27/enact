@@ -121,6 +121,70 @@ const ExpandableListBase = kind({
 		onClose: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
 		 * Called when the expandable is opening
 		 *
 		 * @type {Function}
@@ -207,7 +271,21 @@ const ExpandableListBase = kind({
 	computed: {
 		'aria-multiselectable': ({select}) => select === 'multiple',
 
-		itemProps: ({onSpotlightDisappear, spotlightDisabled}) => ({onSpotlightDisappear, spotlightDisabled}),
+		itemProps: ({
+			onItemSpotlightDown,
+			onItemSpotlightLeft,
+			onItemSpotlightRight,
+			onItemSpotlightUp,
+			onSpotlightDisappear,
+			spotlightDisabled
+		}) => ({
+			onSpotlightDisappear,
+			onSpotlightDown: onItemSpotlightDown,
+			onSpotlightLeft: onItemSpotlightLeft,
+			onSpotlightRight: onItemSpotlightRight,
+			onSpotlightUp: onItemSpotlightUp,
+			spotlightDisabled
+		}),
 
 		// generate a label that concatenates the text of the selected items
 		label: ({children, label, select, selected}) => {
@@ -238,8 +316,26 @@ const ExpandableListBase = kind({
 		}
 	},
 
-	render: ({children, itemProps, ListItem, noAutoClose, noLockBottom, onSelect, select, selected, ...rest}) => {
+	render: ({
+		children,
+		itemProps,
+		ListItem,
+		noAutoClose,
+		noLockBottom,
+		onLabelSpotlightDown,
+		onLabelSpotlightLeft,
+		onLabelSpotlightRight,
+		onLabelSpotlightUp,
+		onSelect,
+		select,
+		selected,
+		...rest
+	}) => {
 		delete rest.closeOnSelect;
+		delete rest.onItemSpotlightDown;
+		delete rest.onItemSpotlightLeft;
+		delete rest.onItemSpotlightRight;
+		delete rest.onItemSpotlightUp;
 
 		return (
 			<ExpandableItemBase
@@ -247,6 +343,10 @@ const ExpandableListBase = kind({
 				showLabel="auto"
 				autoClose={!noAutoClose}
 				lockBottom={!noLockBottom}
+				onLabelSpotlightDown={onLabelSpotlightDown}
+				onLabelSpotlightLeft={onLabelSpotlightLeft}
+				onLabelSpotlightRight={onLabelSpotlightRight}
+				onLabelSpotlightUp={onLabelSpotlightUp}
 			>
 				<Group
 					childComponent={ListItem}

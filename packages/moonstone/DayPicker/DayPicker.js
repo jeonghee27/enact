@@ -68,6 +68,70 @@ const DayPickerBase = class extends React.Component {
 		onClose: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while an item is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onItemSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
 		 * Callback to be called when a condition occurs which should cause the expandable to open
 		 *
 		 * @type {Function}

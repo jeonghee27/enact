@@ -114,6 +114,38 @@ const ExpandableItemBase = kind({
 		onHide: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
 		 * Callback to be called when a condition occurs which should cause the expandable to open
 		 *
 		 * @type {Function}
@@ -229,7 +261,27 @@ const ExpandableItemBase = kind({
 		transitionSpotlightDisabled: ({open, spotlightDisabled}) => (spotlightDisabled || !open)
 	},
 
-	render: ({children, disabled, handleKeyDown, handleOpen, label, open, onHide, onShow, onSpotlightDisappear, setContainerNode, spotlightDisabled, title, titleIcon, transitionSpotlightDisabled, ...rest}) => {
+	render: ({
+		children,
+		disabled,
+		handleKeyDown,
+		handleOpen,
+		label,
+		open,
+		onHide,
+		onLabelSpotlightDown,
+		onLabelSpotlightLeft,
+		onLabelSpotlightRight,
+		onLabelSpotlightUp,
+		onShow,
+		onSpotlightDisappear,
+		setContainerNode,
+		spotlightDisabled,
+		title,
+		titleIcon,
+		transitionSpotlightDisabled,
+		...rest
+	}) => {
 		delete rest.autoClose;
 		delete rest.lockBottom;
 		delete rest.noneText;
@@ -254,6 +306,10 @@ const ExpandableItemBase = kind({
 					label={label}
 					onClick={handleOpen}
 					onSpotlightDisappear={onSpotlightDisappear}
+					onSpotlightDown={onLabelSpotlightDown}
+					onSpotlightLeft={onLabelSpotlightLeft}
+					onSpotlightRight={onLabelSpotlightRight}
+					onSpotlightUp={onLabelSpotlightUp}
 					spotlightDisabled={spotlightDisabled}
 					titleIcon={titleIcon}
 				>{title}</LabeledItem>

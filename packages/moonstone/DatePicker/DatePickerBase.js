@@ -147,6 +147,102 @@ const DatePickerBase = kind({
 		onClose: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while the day picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDaySpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the day picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDaySpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the day picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDaySpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the day picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDaySpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the month picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMonthSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the month picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMonthSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the month picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMonthSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the month picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onMonthSpotlightUp: PropTypes.func,
+
+		/**
 		 * The handler to run when the component is removed while retaining focus.
 		 *
 		 * @type {Function}
@@ -154,6 +250,38 @@ const DatePickerBase = kind({
 		 * @public
 		 */
 		onSpotlightDisappear: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the year picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onYearSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the year picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onYearSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the year picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onYearSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the year picker component is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onYearSpotlightUp: PropTypes.func,
 
 		/**
 		 * When `true`, the component cannot be navigated using spotlight.
@@ -183,7 +311,36 @@ const DatePickerBase = kind({
 		)
 	},
 
-	render: ({day, handlePickerKeyDown, maxDays, maxMonths, maxYear, minYear, month, noLabels, onChangeDate, onChangeMonth, onChangeYear, onSpotlightDisappear, order, spotlightDisabled, year, ...rest}) => {
+	render: ({
+		day,
+		handlePickerKeyDown,
+		maxDays,
+		maxMonths,
+		maxYear,
+		minYear,
+		month,
+		noLabels,
+		onChangeDate,
+		onChangeMonth,
+		onChangeYear,
+		onDaySpotlightDown,
+		onDaySpotlightLeft,
+		onDaySpotlightRight,
+		onDaySpotlightUp,
+		onMonthSpotlightDown,
+		onMonthSpotlightLeft,
+		onMonthSpotlightRight,
+		onMonthSpotlightUp,
+		onSpotlightDisappear,
+		onYearSpotlightDown,
+		onYearSpotlightLeft,
+		onYearSpotlightRight,
+		onYearSpotlightUp,
+		order,
+		spotlightDisabled,
+		year,
+		...rest
+	}) => {
 
 		return (
 			<ExpandableItemBase {...rest} showLabel="always" autoClose={false} lockBottom={false} onSpotlightDisappear={onSpotlightDisappear} spotlightDisabled={spotlightDisabled}>
@@ -199,6 +356,10 @@ const DatePickerBase = kind({
 										min={1}
 										onChange={onChangeDate}
 										onSpotlightDisappear={onSpotlightDisappear}
+										onSpotlightDown={onDaySpotlightDown}
+										onSpotlightLeft={onDaySpotlightLeft}
+										onSpotlightRight={onDaySpotlightRight}
+										onSpotlightUp={onDaySpotlightUp}
 										spotlightDisabled={spotlightDisabled}
 										value={day}
 										width={2}
@@ -214,6 +375,10 @@ const DatePickerBase = kind({
 										min={1}
 										onChange={onChangeMonth}
 										onSpotlightDisappear={onSpotlightDisappear}
+										onSpotlightDown={onMonthSpotlightDown}
+										onSpotlightLeft={onMonthSpotlightLeft}
+										onSpotlightRight={onMonthSpotlightRight}
+										onSpotlightUp={onMonthSpotlightUp}
 										spotlightDisabled={spotlightDisabled}
 										value={month}
 										width={2}
@@ -230,6 +395,10 @@ const DatePickerBase = kind({
 										min={minYear}
 										onChange={onChangeYear}
 										onSpotlightDisappear={onSpotlightDisappear}
+										onSpotlightDown={onYearSpotlightDown}
+										onSpotlightLeft={onYearSpotlightLeft}
+										onSpotlightRight={onYearSpotlightRight}
+										onSpotlightUp={onYearSpotlightUp}
 										spotlightDisabled={spotlightDisabled}
 										value={year}
 										width={4}

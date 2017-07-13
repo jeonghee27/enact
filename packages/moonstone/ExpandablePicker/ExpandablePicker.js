@@ -109,12 +109,172 @@ const ExpandablePickerBase = kind({
 		onClose: PropTypes.func,
 
 		/**
+		 * The handler to run when the 5-way down key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the decrement button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onDecrementSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the increment button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onIncrementSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the label is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onLabelSpotlightUp: PropTypes.func,
+
+		/**
 		 * Callback to be called when an item is picked.
 		 *
 		 * @type {Function}
 		 * @public
 		 */
 		onPick: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while a joined picker button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onPickerSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while a joined picker button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onPickerSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while a joined picker button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onPickerSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while a joined picker button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onPickerSpotlightUp: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way down key is pressed while the selector button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onSelectorSpotlightDown: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way left key is pressed while the selector button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onSelectorSpotlightLeft: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way right key is pressed while the selector button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onSelectorSpotlightRight: PropTypes.func,
+
+		/**
+		 * The handler to run when the 5-way up key is pressed while the selector button is focused
+		 *
+		 * @type {Function}
+		 * @private
+		 */
+		onSelectorSpotlightUp: PropTypes.func,
 
 		/**
 		 * The handler to run when the component is removed while retaining focus.
@@ -208,7 +368,23 @@ const ExpandablePickerBase = kind({
 			joined,
 			noAnimation,
 			onChange,
+			onDecrementSpotlightDown,
+			onDecrementSpotlightLeft,
+			onDecrementSpotlightRight,
+			onDecrementSpotlightUp,
+			onIncrementSpotlightDown,
+			onIncrementSpotlightLeft,
+			onIncrementSpotlightRight,
+			onIncrementSpotlightUp,
 			onPick,
+			onPickerSpotlightDown,
+			onPickerSpotlightLeft,
+			onPickerSpotlightRight,
+			onPickerSpotlightUp,
+			onSelectorSpotlightDown,
+			onSelectorSpotlightLeft,
+			onSelectorSpotlightRight,
+			onSelectorSpotlightUp,
 			onSpotlightDisappear,
 			orientation,
 			spotlightDisabled,
@@ -229,6 +405,18 @@ const ExpandablePickerBase = kind({
 					incrementIcon={incrementIcon}
 					joined={joined}
 					noAnimation={noAnimation}
+					onDecrementSpotlightDown={onDecrementSpotlightDown}
+					onDecrementSpotlightLeft={onDecrementSpotlightLeft}
+					onDecrementSpotlightRight={onDecrementSpotlightRight}
+					onDecrementSpotlightUp={onDecrementSpotlightUp}
+					onIncrementSpotlightDown={onIncrementSpotlightDown}
+					onIncrementSpotlightLeft={onIncrementSpotlightLeft}
+					onIncrementSpotlightRight={onIncrementSpotlightRight}
+					onIncrementSpotlightUp={onIncrementSpotlightUp}
+					onSpotlightDown={onPickerSpotlightDown}
+					onSpotlightLeft={onPickerSpotlightLeft}
+					onSpotlightRight={onPickerSpotlightRight}
+					onSpotlightUp={onPickerSpotlightUp}
 					onSpotlightDisappear={onSpotlightDisappear}
 					orientation={orientation}
 					spotlightDisabled={spotlightDisabled}
@@ -237,7 +425,19 @@ const ExpandablePickerBase = kind({
 				>
 					{children}
 				</Picker>
-				<IconButton onClick={onChange} onSpotlightDisappear={onSpotlightDisappear} spotlightDisabled={spotlightDisabled} className={css.button} small>check</IconButton>
+				<IconButton
+					onClick={onChange}
+					onSpotlightDisappear={onSpotlightDisappear}
+					onSpotlightDown={onSelectorSpotlightDown}
+					onSpotlightLeft={onSelectorSpotlightLeft}
+					onSpotlightRight={onSelectorSpotlightRight}
+					onSpotlightUp={onSelectorSpotlightUp}
+					spotlightDisabled={spotlightDisabled}
+					className={css.button}
+					small
+				>
+					check
+				</IconButton>
 			</ExpandableItemBase>
 		);
 	}
