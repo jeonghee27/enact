@@ -7,6 +7,11 @@ import {MarqueeText} from '../Marquee';
 
 import css from './VideoPlayer.less';
 
+const generateId = function (prefix) {
+	return prefix + Math.random().toString(36).substr(2, 8);
+};
+const titleId = generateId('md_title_id-');
+const infoId = generateId('md_info_id-');
 /**
  * MediaTitle {@link moonstone/VideoPlayer}.
  *
@@ -75,7 +80,6 @@ const MediaTitleBase = kind({
 			'infoComponents',
 			infoVisible ? 'visible' : 'hidden'
 		),
-		childrenRole: ({infoVisible}) => infoVisible ? 'alert' : '',
 		className: ({visible, styler}) => styler.append(
 			visible ? 'visible' : 'hidden'
 		),
@@ -85,16 +89,16 @@ const MediaTitleBase = kind({
 		})
 	},
 
-	render: ({childrenRole, children, childrenClassName, title, titleClassName, ...rest}) => {
+	render: ({children, childrenClassName, title, titleClassName, ...rest}) => {
 		delete rest.infoVisible;
 		delete rest.visible;
 
 		return (
 			<div {...rest}>
-				<MarqueeText className={titleClassName} marqueeOn="render">
+				<MarqueeText className={titleClassName} id={titleId} marqueeOn="render">
 					{title}
 				</MarqueeText>
-				<div role={childrenRole} className={childrenClassName}>  {/* tabIndex={-1} */}
+				<div className={childrenClassName} id={infoId}>  {/* tabIndex={-1} */}
 					{children}
 				</div>
 			</div>
@@ -106,6 +110,8 @@ const MediaTitle = onlyUpdateForKeys(['children', 'title', 'infoVisible', 'visib
 
 export default MediaTitle;
 export {
+	infoId,
+	titleId,
 	MediaTitle,
 	MediaTitleBase
 };

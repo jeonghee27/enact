@@ -28,7 +28,7 @@ import Skinnable from '../Skinnable';
 import {calcNumberValueOfPlaybackRate, getNow, secondsToTime} from './util';
 import Overlay from './Overlay';
 import MediaControls from './MediaControls';
-import MediaTitle from './MediaTitle';
+import {infoId, MediaTitle, titleId} from './MediaTitle';
 import MediaSlider from './MediaSlider';
 import FeedbackTooltip from './FeedbackTooltip';
 import Times from './Times';
@@ -93,7 +93,6 @@ const forwardPlayButtonClick = forward('onPlayButtonClick');
 // localized strings
 const playLabel = 'Play';
 const pauseLabel = 'Pause';
-
 /**
  * Every callback sent by [VideoPlayer]{@link moonstone/VideoPlayer} receives a status package,
  * which includes an object with the following key/value pairs as the first argument:
@@ -503,6 +502,8 @@ const VideoPlayerBase = class extends React.Component {
 		this.speedIndex = 0;
 		this.titleOffsetCalculated = false;
 		this.selectPlaybackRates('fastForward');
+		this.skipReadTitle = false;
+		this.skipReadInfo = false;
 
 		this.initI18n();
 
@@ -624,6 +625,7 @@ const VideoPlayerBase = class extends React.Component {
 		this.stopDelayedTitleHide();
 		this.stopDelayedFeedbackHide();
 		this.renderBottomControl.stop();
+		this.readBackMoreButonJob.stop();
 	}
 
 	//
@@ -704,9 +706,6 @@ const VideoPlayerBase = class extends React.Component {
 	}
 
 	showControls = () => {
-		// Read the title
-		this.announce(this.props.title);
-
 		this.startDelayedFeedbackHide();
 		this.startDelayedTitleHide();
 		forwardControlsAvailable({available: true}, this.props);
@@ -723,6 +722,7 @@ const VideoPlayerBase = class extends React.Component {
 		this.stopDelayedTitleHide();
 		forwardControlsAvailable({available: false}, this.props);
 		this.setState({bottomControlsVisible: false, more: false});
+		this.skipReadTitle = true;
 	}
 
 	autoCloseJob = new Job(this.hideControls)
@@ -739,6 +739,7 @@ const VideoPlayerBase = class extends React.Component {
 
 	hideTitle = () => {
 		this.setState({titleVisible: false});
+		this.skipReadTitle = true;
 	}
 
 	hideTitleJob = new Job(this.hideTitle)
@@ -853,6 +854,8 @@ const VideoPlayerBase = class extends React.Component {
 	reloadVideo = () => {
 		// When changing a HTML5 video, you have to reload it.
 		this.video.load();
+		this.skipReadTitle = false;
+		this.skipReadInfo = false;
 	}
 
 	/**
@@ -1162,6 +1165,7 @@ const VideoPlayerBase = class extends React.Component {
 	}
 
 	handleKeyDownFromControls = (ev) => {
+		this.skipReadTitle = true;
 		if (getDirection(ev.keyCode) === 'down') {
 			this.hideControls();
 		}
@@ -1256,7 +1260,18 @@ const VideoPlayerBase = class extends React.Component {
 		(ev, props) => forwardJumpForwardButtonClick(this.addStateToEvent(ev), props),
 		() => this.jump(this.props.jumpBy)
 	)
+
+	readBackMoreButon = (fosusedItem) => {
+		Spotlight.focus(fosusedItem);
+		this.skipReadInfo = true;
+	}
+
+	readBackMoreButonJob = new Job(this.readBackMoreButon, 100)
+
 	onMoreClick = () => {
+		this.skipReadTitle = true;
+		this.readBackMoreButonJob.start(Spotlight.getCurrent());
+
 		if (this.state.more) {
 			this.moreInProgress = false;
 			this.startAutoCloseTimeout();	// Restore the timer since we are leaving "more.
@@ -1268,6 +1283,7 @@ const VideoPlayerBase = class extends React.Component {
 			// Interrupt the title-hide since we don't want it hiding autonomously in "more".
 			this.stopDelayedTitleHide();
 		}
+
 		this.setState({
 			more: !this.state.more,
 			titleVisible: true
@@ -1321,6 +1337,10 @@ const VideoPlayerBase = class extends React.Component {
 
 		// Handle some cases when the "more" button is pressed
 		const moreDisabled = !(this.state.more);
+		const enableTitleAlert = !this.skipReadTitle && 'alert' || null;
+		const enableInfoAlert = !this.skipReadInfo && this.state.more && 'alert' || null;
+		const enableAlert = enableTitleAlert || enableInfoAlert || null;
+		const readId = enableTitleAlert && titleId || enableInfoAlert && infoId || null;
 
 		return (
 			<div className={css.videoPlayer + (className ? ' ' + className : '')} style={style} onClick={this.activityDetected} onKeyDown={this.activityDetected} ref={this.setPlayerRef}>
@@ -1341,8 +1361,8 @@ const VideoPlayerBase = class extends React.Component {
 				</Overlay>
 
 				{this.state.bottomControlsRendered ?
-					<div className={css.fullscreen + ' enyo-fit scrim'} style={{display: this.state.bottomControlsVisible ? 'block' : 'none'}}>
-						<Container className={css.bottom} data-container-disabled={!this.state.bottomControlsVisible}>
+					<div role={enableAlert} aria-live={enableAlert && 'off'} aria-labelledby={readId} className={css.fullscreen + ' enyo-fit scrim'} style={{display: this.state.bottomControlsVisible ? 'block' : 'none'}}>
+						<Container  className={css.bottom} data-container-disabled={!this.state.bottomControlsVisible}>
 							{/* Info Section: Title, Description, Times */}
 							<div className={css.infoFrame}>
 								<MediaTitle
