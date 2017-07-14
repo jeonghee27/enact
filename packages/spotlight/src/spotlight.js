@@ -150,7 +150,9 @@ const Spotlight = (function () {
 	}
 
 	function focusElement (elem, containerIds, fromPointer) {
-		if (!elem) {
+		let currentFocusedElement = getCurrent();
+
+		if (!elem || currentFocusedElement === elem) {
 			return false;
 		}
 
@@ -158,8 +160,6 @@ const Spotlight = (function () {
 			setContainerLastFocusedElement(elem, containerIds);
 			return false;
 		}
-
-		let currentFocusedElement = getCurrent();
 
 		let silentFocus = function () {
 			if (currentFocusedElement) {
