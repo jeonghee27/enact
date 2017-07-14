@@ -150,14 +150,18 @@ const Spotlight = (function () {
 	}
 
 	function focusElement (elem, containerIds, fromPointer) {
-		let currentFocusedElement = getCurrent();
-
-		if (!elem || currentFocusedElement === elem) {
+		if (!elem) {
 			return false;
 		}
 
 		if ((getPointerMode() && !fromPointer)) {
 			setContainerLastFocusedElement(elem, containerIds);
+			return false;
+		}
+
+		let currentFocusedElement = getCurrent();
+
+		if (elem === currentFocusedElement) {
 			return false;
 		}
 
