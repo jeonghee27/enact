@@ -37,6 +37,10 @@ The following is a curated list of changes in the Enact moonstone module, newest
 - `moonstone/InputDecorator` 5-way spot behavior
 - `moonstone/Panels` layout in RTL locales
 
+### Changed
+
+### Fixed
+
 ## [1.4.1] - 2017-07-05
 
 ### Changed
