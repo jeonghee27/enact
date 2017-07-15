@@ -2,7 +2,6 @@ import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {shape} from '@enact/ui/ViewManager';
-import Toggleable from '@enact/ui/Toggleable';
 
 import Skinnable from '../Skinnable';
 
@@ -127,11 +126,16 @@ const PanelsBase = kind({
 		className: ({noCloseButton, styler}) => styler.append({
 			hasCloseButton: !noCloseButton
 		}),
-		applicationCloseButton: ({id, index, noCloseButton, onApplicationClose, transitioning}) => {
-			if (!noCloseButton && !transitioning) {
+		applicationCloseButton: ({id, noCloseButton, onApplicationClose}) => {
+			if (!noCloseButton) {
 				const closeId = id ? `${id}_close` : null;
+
 				return (
-					<ApplicationCloseButton id={closeId} onApplicationClose={onApplicationClose} data-index={index} />
+					<ApplicationCloseButton
+						className={css.close}
+						id={closeId}
+						onApplicationClose={onApplicationClose}
+					/>
 				);
 			}
 		},
@@ -154,11 +158,10 @@ const PanelsBase = kind({
 		}
 	},
 
-	render: ({noAnimation, arranger, childProps, children, generateId, index, applicationCloseButton, onTransition, onWillTransition, ...rest}) => {
+	render: ({noAnimation, arranger, childProps, children, generateId, index, applicationCloseButton, ...rest}) => {
 		delete rest.noCloseButton;
 		delete rest.onApplicationClose;
 		delete rest.onBack;
-		delete rest.transitioning;
 
 		return (
 			<div {...rest}>
@@ -169,8 +172,6 @@ const PanelsBase = kind({
 					generateId={generateId}
 					index={index}
 					noAnimation={noAnimation}
-					onTransition={onTransition}
-					onWillTransition={onWillTransition}
 				>
 					{children}
 				</Viewport>
@@ -181,12 +182,9 @@ const PanelsBase = kind({
 
 const Panels = CancelDecorator(
 	{cancel: 'onBack'},
-	Toggleable(
-		{activate: 'onWillTransition', deactivate: 'onTransition', prop: 'transitioning', toggle: null},
-		IdProvider(
-			Skinnable(
-				PanelsBase
-			)
+	IdProvider(
+		Skinnable(
+			PanelsBase
 		)
 	)
 );
