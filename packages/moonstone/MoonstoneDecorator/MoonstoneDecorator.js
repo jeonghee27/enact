@@ -101,7 +101,7 @@ const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			let gpuClass = ' gpu-optimized';
 
 			// eslint-disable-next-line no-undef
-			if (process.env['NO_GPU_OPTIMIZED']) {
+			if (process.env['NO_GPU_OPTIMIZED'] === false) {
 				gpuClass = '';
 			}
 
