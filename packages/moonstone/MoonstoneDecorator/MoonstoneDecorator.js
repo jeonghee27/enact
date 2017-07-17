@@ -98,6 +98,15 @@ const MoonstoneDecorator = hoc(defaultConfig, (config, Wrapped) => {
 				className += ` ${this.props.className}`;
 			}
 
+			let gpuClass = ' gpu-optimized';
+
+			// eslint-disable-next-line no-undef
+			if (process.env['NO_GPU_OPTIMIZED']) {
+				gpuClass = '';
+			}
+
+			className += gpuClass;
+
 			return (
 				<App {...this.props} className={className} />
 			);
