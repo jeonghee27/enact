@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Uppercase from '@enact/i18n/Uppercase';
 import {isRtlText} from '@enact/i18n/util';
+import Layout, {Cell} from '@enact/ui/Layout';
 import Slottable from '@enact/ui/Slottable';
 
 import {MarqueeDecorator, MarqueeText} from '../Marquee';
@@ -155,13 +156,13 @@ const HeaderBase = kind({
 
 		switch (type) {
 			case 'compact': return (
-				<header aria-label={title} {...rest}>
-					<MarqueeText className={css.headerCell} marqueeOn={marqueeOn} forceDirection={direction}>
+				<Layout component="header" aria-label={title} {...rest}>
+					<Cell component={MarqueeText} marqueeOn={marqueeOn} forceDirection={direction}>
 						<UppercaseH1 casing={casing} className={css.title} preserveCase={preserveCase}>{title}</UppercaseH1>
 						{titleBelowComponent}
-					</MarqueeText>
-					<nav className={css.headerComponents}>{children}</nav>
-				</header>
+					</Cell>
+					<Cell component="nav" shrink className={css.headerComponents}>{children}</Cell>
+				</Layout>
 			);
 			// Keeping this block in case we need to add it back after discussing with UX and GUI about future plans.
 			// case 'large': return (
@@ -178,13 +179,13 @@ const HeaderBase = kind({
 					<HeaderH1 casing={casing} className={css.title} preserveCase={preserveCase} marqueeOn={marqueeOn}>
 						{title}
 					</HeaderH1>
-					<div className={css.headerRow}>
-						<div className={css.headerCell}>
+					<Layout>
+						<Cell>
 							{titleBelowComponent}
 							{subTitleBelowComponent}
-						</div>
-						<nav className={css.headerComponents}>{children}</nav>
-					</div>
+						</Cell>
+						<Cell component="nav" shrink className={css.headerComponents}>{children}</Cell>
+					</Layout>
 				</header>
 			);
 		}

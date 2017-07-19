@@ -3,6 +3,7 @@ import {forward, handle} from '@enact/core/handle';
 import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
+import Layout, {Cell} from '@enact/ui/Layout';
 import Slottable from '@enact/ui/Slottable';
 import Spotlight from '@enact/spotlight';
 import SpotlightContainerDecorator, {spotlightDefaultClass} from '@enact/spotlight/SpotlightContainerDecorator';
@@ -169,10 +170,10 @@ const PanelBase = kind({
 		delete rest.noAutoFocus;
 
 		return (
-			<article role="region" {...rest} aria-labelledby={headerId} ref={spotOnRender}>
-				<div className={css.header} id={headerId}>{header}</div>
-				<section className={bodyClassName}>{children}</section>
-			</article>
+			<Layout component="article" role="region" {...rest} orientation="vertical" aria-labelledby={headerId} ref={spotOnRender}>
+				<Cell className={css.header} id={headerId} shrink>{header}</Cell>
+				<Cell component="section" className={bodyClassName}>{children}</Cell>
+			</Layout>
 		);
 	}
 });
