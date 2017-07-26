@@ -12,8 +12,6 @@ The following is a curated list of changes in the Enact moonstone module, newest
 
 ### Fixed
 
-- `moonstone/ContextualPopupDecorator` behavior to not close the popup when pressing a 5-way direction at the edge of a popup using a `spotlightRestrict` prop value of 'self-only'
-
 ## [1.5.0] - 2017-07-19
 
 ### Added
