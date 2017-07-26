@@ -20,13 +20,6 @@ import SpotlightContainerDecorator from '@enact/spotlight/SpotlightContainerDeco
 import {ContextualPopup} from './ContextualPopup';
 import css from './ContextualPopupDecorator.less';
 
-const reverseDirections = {
-	'left': 'right',
-	'up': 'down',
-	'right': 'left',
-	'down': 'up'
-};
-
 /**
  * Default config for {@link moonstone/ContextualPopupDecorator.ContextualPopupDecorator}
  *
@@ -451,9 +444,8 @@ const ContextualPopupDecorator = hoc(defaultConfig, (config, Wrapped) => {
 		handleKeyDown = (ev) => {
 			const {onClose, spotlightRestrict} = this.props;
 			const direction = getDirection(ev.keyCode);
-			const spotlightModal = spotlightRestrict === 'self-only';
 			const spottables = Spotlight.getSpottableDescendants(this.state.containerId).length;
-			const spotlessSpotlightModal = spotlightModal && !spottables;
+			const spotlessSpotlightModal = spotlightRestrict === 'self-only' && !spottables;
 
 			if (direction && (this.containerNode.contains(document.activeElement) || spotlessSpotlightModal)) {
 				// prevent default page scrolling
@@ -465,18 +457,10 @@ const ContextualPopupDecorator = hoc(defaultConfig, (config, Wrapped) => {
 
 				// we guard against attempting a focus change by verifying the case where a spotlightModal
 				// popup contains no spottable components
-				if (!spotlessSpotlightModal) {
-					const focusChanged = Spotlight.move(direction);
+				if (!spotlessSpotlightModal && Spotlight.move(direction)) {
 
-					if (
-						onClose &&
-						(
-							// if focus changed and current focus is not within the popup's container
-							focusChanged && !this.containerNode.contains(document.activeElement) ||
-							// if focus couldn't exit a spotlightModal popup's container and direction was toward the activator
-							!focusChanged && spotlightModal && reverseDirections[direction] === this.adjustedDirection
-						)
-					) {
+					// if current focus is not within the popup's container, issue the `onClose` event
+					if (!this.containerNode.contains(document.activeElement) && onClose) {
 						onClose(ev);
 					}
 				}
