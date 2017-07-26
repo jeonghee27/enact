@@ -501,15 +501,15 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		startScrollOnFocus = (pos, item) => {
 			if (pos) {
-				if (pos.left !== this.scrollLeft || pos.top !== this.scrollTop) {
-					this.start({
-						targetX: pos.left,
-						targetY: pos.top,
-						animate: (animationDuration > 0) && this.animateOnFocus,
-						silent: false,
-						duration: animationDuration
-					});
-				}
+				this.start({
+					targetX: pos.left,
+					targetY: pos.top,
+					animate: (animationDuration > 0) && this.animateOnFocus,
+					silent: false,
+					duration: animationDuration
+				});
+				this.setScrollLeft(pos.left);
+				this.setScrollTop(pos.top);
 				this.lastFocusedItem = item;
 				this.lastScrollPositionOnFocus = pos;
 			}
@@ -536,7 +536,10 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					} else {
 						pos = positionFn({item});
 					}
-					this.startScrollOnFocus(pos, item);
+
+					if (pos && (pos.left !== this.scrollLeft || pos.top !== this.scrollTop)) {
+						this.startScrollOnFocus(pos, item);
+					}
 				}
 			} else if (this.childRef.setLastFocusedIndex) {
 				this.childRef.setLastFocusedIndex(e.target);
