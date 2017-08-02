@@ -16,6 +16,7 @@ import ilib from '@enact/i18n';
 import {Job} from '@enact/core/util';
 import {on, off} from '@enact/core/dispatcher';
 import {platform} from '@enact/core/platform';
+import {is} from '@enact/core/keymap';
 import Slottable from '@enact/ui/Slottable';
 import {getDirection, Spotlight} from '@enact/spotlight';
 import {Spottable, spottableClass} from '@enact/spotlight/Spottable';
@@ -227,6 +228,16 @@ const VideoPlayerBase = class extends React.Component {
 		infoComponents: PropTypes.node,
 
 		/**
+		 * The amount of milliseconds that the player will pause before firing the
+		 * first jump event on a right or left pulse.
+		 *
+		 * @type {Number}
+		 * @default 400
+		 * @public
+		 */
+		initialJumpDelay: PropTypes.number,
+
+		/**
 		 * A string which is sent to the `jumpBackward` icon of the player controls. This can be
 		 * anything that is accepted by {@link moonstone/Icon}.
 		 *
@@ -253,6 +264,16 @@ const VideoPlayerBase = class extends React.Component {
 		 * @public
 		 */
 		jumpBy: PropTypes.number,
+
+		/**
+		 * The amount of milliseconds that the player will throttle before firing a
+		 * jump event on a right or left pulse.
+		 *
+		 * @type {Number}
+		 * @default 200
+		 * @public
+		 */
+		jumpDelay: PropTypes.number,
 
 		/**
 		 * A string which is sent to the `jumpForward` icon of the play controls. This can be
@@ -311,6 +332,15 @@ const VideoPlayerBase = class extends React.Component {
 		 * @public
 		 */
 		muted: PropTypes.bool,
+
+		/**
+		 * Setting this to `true` will disable left and right keys for seeking.
+		 *
+		 * @type {Boolean}
+		 * @default false
+		 * @public
+		 */
+		no5wayJump: PropTypes.bool,
 
 		/**
 		 * By default, the video will start playing immediately after it's loaded, unless this is set.
@@ -543,11 +573,14 @@ const VideoPlayerBase = class extends React.Component {
 		backwardIcon: 'backward',
 		feedbackHideDelay: 3000,
 		forwardIcon: 'forward',
+		initialJumpDelay: 400,
 		jumpBackwardIcon: 'skipbackward',
 		jumpBy: 30,
+		jumpDelay: 200,
 		jumpForwardIcon: 'skipforward',
 		moreButtonDisabled: false,
 		muted: false,
+		no5wayJump: false,
 		noAutoPlay: false,
 		noJumpButtons: false,
 		pauseAtEnd: false,
@@ -711,6 +744,7 @@ const VideoPlayerBase = class extends React.Component {
 		this.renderBottomControl.stop();
 		this.refocusMoreButton.stop();
 		this.sliderTooltipTimeJob.stop();
+		this.stopListeningForPulses();
 	}
 
 	//
@@ -869,12 +903,42 @@ const VideoPlayerBase = class extends React.Component {
 
 	handle = handle.bind(this)
 
-	handleLeft = () => {
-		this.jump(-1 * this.props.jumpBy);
+	startListeningForPulses = (keyCode) => () => {
+		if (this.pulsing) {
+			this.handlePulse(keyCode);
+			this.keyLoop = setTimeout(this.startListeningForPulses(keyCode), this.props.jumpDelay);
+		} else {
+			this.handlePulse(keyCode);
+			this.keyLoop = setTimeout(this.startListeningForPulses(keyCode), this.props.initialJumpDelay);
+			this.pulsing = true;
+		}
 	}
 
-	handleRight = () => {
-		this.jump(this.props.jumpBy);
+	handlePulse (keyCode) {
+		if (is('left', keyCode)) {
+			this.jump(-1 * this.props.jumpBy);
+		} else if (is('right', keyCode)) {
+			this.jump(this.props.jumpBy);
+		}
+	}
+
+	stopListeningForPulses () {
+		this.pulsing = false;
+		if (this.keyLoop) {
+			clearTimeout(this.keyLoop);
+			this.keyLoop = null;
+		}
+
+	}
+
+	handleKeyDown = (ev) => {
+		if ((is('left', ev.keyCode) || is('right', ev.keyCode)) && !this.props.no5wayJump && !this.state.bottomControlsVisible) {
+			Spotlight.pause();
+			if (!this.pulsing) {
+				this.startListeningForPulses(ev.keyCode)();
+			}
+		}
+		return true;
 	}
 
 	showControlsFromPointer = () => {
@@ -907,9 +971,15 @@ const VideoPlayerBase = class extends React.Component {
 				this.seek(0);
 				break;
 		}
+
+		if ((is('left', ev.keyCode) || is('right', ev.keyCode)) && !this.props.no5wayJump) {
+			this.stopListeningForPulses();
+			Spotlight.resume();
+		}
 	}
 
 	handleGlobalKeyDown = this.handle(
+		this.handleKeyDown,
 		forKey('down'),
 		() => (
 			!this.state.bottomControlsVisible &&
@@ -1486,7 +1556,10 @@ const VideoPlayerBase = class extends React.Component {
 		delete rest.announce;
 		delete rest.autoCloseTimeout;
 		delete rest.feedbackHideDelay;
+		delete rest.initialJumpDelay;
 		delete rest.jumpBy;
+		delete rest.jumpDelay;
+		delete rest.no5wayJump;
 		delete rest.onControlsAvailable;
 		delete rest.onBackwardButtonClick;
 		delete rest.onForwardButtonClick;
@@ -1613,8 +1686,6 @@ const VideoPlayerBase = class extends React.Component {
 					// It's non-visible but lives at the top of the VideoPlayer.
 					className={css.controlsHandleAbove}
 					onSpotlightDown={this.showControls}
-					onSpotlightLeft={this.handleLeft}
-					onSpotlightRight={this.handleRight}
 					onClick={this.showControls}
 				/>
 				<Announce ref={this.setAnnounceRef} />
