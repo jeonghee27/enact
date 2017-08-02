@@ -971,6 +971,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			delete props.style;
 			delete props.verticalScrollbar;
 
+			const bounds = this.childRef ? this.getScrollBounds() : null;
+
 			return (
 				<ScrollableSpotlightContainer
 					className={scrollableClasses}
@@ -978,7 +980,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					focusableScrollbar={focusableScrollbar}
 					style={style}
 				>
-					<div className={css.container}>
+					<div className={css.container} style={{height: bounds && bounds.clientHeight ? bounds.clientHeight + 'px' : null}}>
 						<Wrapped {...props} ref={this.initChildRef} cbScrollTo={this.scrollTo} className={childClasses} onKeyUp={this.onKeyUp} />
 						{isVerticalScrollbarVisible ? <Scrollbar {...this.verticalScrollbarProps} className={verticalScrollbarClasses} disabled={!isVerticalScrollbarVisible} /> : null}
 					</div>
