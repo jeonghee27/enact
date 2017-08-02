@@ -13,6 +13,7 @@ import hoc from '@enact/core/hoc';
 import {on, off} from '@enact/core/dispatcher';
 import React from 'react';
 import PropTypes from 'prop-types';
+import {is} from '@enact/core/keymap';
 import ri from '@enact/ui/resolution';
 import Spotlight, {getDirection} from '@enact/spotlight';
 import SpotlightContainerDecorator from '@enact/spotlight/SpotlightContainerDecorator';
@@ -445,9 +446,14 @@ const ContextualPopupDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			const {onClose, spotlightRestrict} = this.props;
 			const current = Spotlight.getCurrent();
 			const direction = getDirection(ev.keyCode);
+			const isCancel = is('cancel');
 			const spottables = Spotlight.getSpottableDescendants(this.state.containerId).length;
 			const spotlessSpotlightModal = spotlightRestrict === 'self-only' && !spottables;
 			const shouldSpotPopup = spottables && current === this.state.activator && direction === this.adjustedDirection;
+
+			if (isCancel(ev.keyCode)) {
+				onClose(ev);
+			}
 
 			if (direction && (shouldSpotPopup || (this.containerNode.contains(current) || spotlessSpotlightModal))) {
 				// prevent default page scrolling

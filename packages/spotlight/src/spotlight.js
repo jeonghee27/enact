@@ -65,9 +65,12 @@ import {
 	parseSelector
 } from './utils';
 
+const isCancel = is('cancel');
 const isDown = is('down');
 const isEnter = is('enter');
 const isLeft = is('left');
+const isPagedown = is('pagedown');
+const isPageup = is('pageup');
 const isRight = is('right');
 const isUp = is('up');
 
@@ -84,7 +87,9 @@ const getDirection = function (keyCode) {
 	return	isDown(keyCode) && 'down' ||
 			isLeft(keyCode) && 'left' ||
 			isRight(keyCode) && 'right' ||
-			isUp(keyCode) && 'up';
+			isUp(keyCode) && 'up' ||
+			isPagedown(keyCode) && 'pagedown' ||
+			isPageup(keyCode) && 'pageup';
 };
 
 
@@ -304,7 +309,7 @@ const Spotlight = (function () {
 	function onKeyUp (evt) {
 		const keyCode = evt.keyCode;
 
-		if (getDirection(keyCode) || isEnter(keyCode)) {
+		if (getDirection(keyCode) || isEnter(keyCode) || isCancel(keyCode)) {
 			SpotlightAccelerator.reset();
 			_5WayKeyHold = false;
 		}
@@ -324,9 +329,16 @@ const Spotlight = (function () {
 
 		const keyCode = evt.keyCode;
 		const direction = getDirection(keyCode);
+		const pointerHide = 1537; // keyCode for `pointerHide`
+
+		if (isPagedown(keyCode) || isPageup(keyCode) || isCancel(keyCode)) {
+			// Fallback for handling keyCodes that should also trigger `pointerHide`
+			notifyKeyDown(pointerHide, handlePointerHide);
+		}
+
 		const pointerHandled = notifyKeyDown(keyCode, handlePointerHide);
 
-		if (pointerHandled || !(direction || isEnter(keyCode))) {
+		if (pointerHandled || !(direction || isEnter(keyCode) || isCancel(keyCode))) {
 			return;
 		}
 

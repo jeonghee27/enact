@@ -20,6 +20,7 @@ import LabeledItem from '../LabeledItem';
 import Expandable from './Expandable';
 import ExpandableTransitionContainer from './ExpandableTransitionContainer';
 
+const isCancel = is('cancel');
 const isUp = is('up');
 const isDown = is('down');
 
@@ -227,7 +228,10 @@ const ExpandableItemBase = kind({
 
 	handlers: {
 		handleKeyDown: (ev, {autoClose, lockBottom, onClose, onSpotlightDown}) => {
-			if (autoClose || lockBottom || onSpotlightDown) {
+			if (isCancel(ev.keyCode) && onClose) {
+				onClose();
+				ev.nativeEvent.stopImmediatePropagation();
+			} else if (autoClose || lockBottom || onSpotlightDown) {
 				const {keyCode, target} = ev;
 				// Basing first/last child on the parent of the target to support both the use
 				// case here in which the children of the container are spottable and the
