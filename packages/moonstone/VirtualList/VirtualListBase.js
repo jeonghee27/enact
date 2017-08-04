@@ -706,6 +706,10 @@ class VirtualListCore extends Component {
 				Spotlight.resume();
 			}
 
+			if (this.scrollPlaceholderRef) {
+				this.scrollPlaceholderRef.node.classList.remove('spottable');
+			}
+
 			this.focusOnNode(item);
 			this.nodeIndexToBeFocused = null;
 		}, 0);
@@ -876,6 +880,10 @@ class VirtualListCore extends Component {
 				Spotlight.pause();
 			}
 
+			if (this.scrollPlaceholderRef) {
+				this.scrollPlaceholderRef.node.classList.add('spottable');
+			}
+
 			cbScrollTo({
 				index: nextIndex,
 				stickTo: isForward ? 'end' : 'start'
@@ -933,6 +941,13 @@ class VirtualListCore extends Component {
 		};
 	}
 
+	initScrollPlaceholderRef = (ref) => {
+		if (ref) {
+			ref.node.classList.add('spottable');
+			this.scrollPlaceholderRef = ref;
+		}
+	}
+
 	renderCalculate () {
 		const
 			{dataSize} = this.props,
@@ -976,7 +991,7 @@ class VirtualListCore extends Component {
 					/>
 				)}
 				{needsScrollingPlaceholder ? (
-					<SpotlightPlaceholder />
+					<SpotlightPlaceholder ref={this.initScrollPlaceholderRef} />
 				) : null}
 			</div>
 		);
