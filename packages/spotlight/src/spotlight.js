@@ -65,11 +65,20 @@ import {
 	parseSelector
 } from './utils';
 
+import css from '../styles/debug.less';
+
 const isDown = is('down');
 const isEnter = is('enter');
 const isLeft = is('left');
 const isRight = is('right');
 const isUp = is('up');
+
+const debugClassMapping = {
+	up: css.spotlightUpTarget,
+	down: css.spotlightDownTarget,
+	left: css.spotlightLeftTarget,
+	right: css.spotlightRightTarget
+};
 
 /**
  * Translates keyCodes into 5-way direction descriptions (e.g. `'down'`)
@@ -119,6 +128,8 @@ const Spotlight = (function () {
 	let _initialized = false;
 	let _pause = false;
 	let _duringFocusChange = false;
+	let _debug = true;
+	let debugTarget = [];
 
 	/*
 	 * Whether a 5-way directional key is being held.
@@ -206,6 +217,9 @@ const Spotlight = (function () {
 		if (containerId) {
 			setContainerLastFocusedElement(elem, containerIds);
 			setLastContainer(containerId);
+		}
+		if (_debug) {
+			updateDebugHighlight();
 		}
 	}
 
@@ -382,6 +396,20 @@ const Spotlight = (function () {
 			}
 
 			preventDefault(evt);
+		}
+	}
+
+	function updateDebugHighlight () {
+		for (let dir of ['up', 'down', 'left', 'right']) {
+			if (debugTarget[dir]) {
+				debugTarget[dir].classList.remove(debugClassMapping[dir]);
+			}
+			if (!getPointerMode()) {
+				debugTarget[dir] = getTargetByDirectionFromElement(dir, getCurrent());
+				if (debugTarget[dir]) {
+					debugTarget[dir].classList.add(debugClassMapping[dir]);
+				}
+			}
 		}
 	}
 

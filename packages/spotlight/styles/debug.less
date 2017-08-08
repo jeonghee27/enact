@@ -1,0 +1,47 @@
+.spotlightUpTarget {
+	outline: 3px dashed magenta;
+
+	&::before {
+		content: 'up';
+		color: magenta;
+		position: absolute;
+		left: 50%;
+		top: -50%;
+	}
+}
+
+.spotlightDownTarget {
+	outline: 3px dashed yellow;
+
+	&::before {
+		content: 'down';
+		color: yellow;
+		position: absolute;
+		left: 0;
+		bottom: -30px;
+	}
+}
+
+.spotlightLeftTarget {
+	outline: 3px dashed purple;
+
+	&::before {
+		content: 'left';
+		color: purple;
+		position: absolute;
+		left: 0;
+		top: -30px;
+	}
+}
+
+.spotlightRightTarget {
+	outline: 3px dashed teal;
+
+	&::before {
+		content: 'right';
+		color: teal;
+		position: absolute;
+		right: 0;
+		top: -30px;
+	}
+}
