@@ -21,6 +21,7 @@ The following is a curated list of changes in the Enact moonstone module, newest
 
 - `moonstone/VideoPlayer` to handle play, pause, stop, fast forward and rewind on remote controller
 - `moonstone/Marquee` to also start when hovered if `marqueeOnRender` is set
+- `moonstone/VideoPlayer` to display 'mini' feedback when controlling playback from the remote control
 
 ### Fixed
 

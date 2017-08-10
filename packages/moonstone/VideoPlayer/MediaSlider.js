@@ -3,6 +3,7 @@ import onlyUpdateForKeys from 'recompose/onlyUpdateForKeys';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import ProgressBar from '../ProgressBar';
 import {SliderFactory} from '../Slider';
 
 import css from './VideoPlayer.less';
@@ -40,6 +41,15 @@ const MediaSliderBase = kind({
 		disabled: PropTypes.bool,
 
 		/**
+		 * Setting this to `true` will render a non-actionable progress bar component
+		 *
+		 * @type {Boolean}
+		 * @default false
+		 * @public
+		 */
+		noInteraction: PropTypes.bool,
+
+		/**
 		 * The handler to run when the value is changed.
 		 *
 		 * @type {Function}
@@ -59,18 +69,28 @@ const MediaSliderBase = kind({
 		value: PropTypes.number
 	},
 
-	render: (props) => (
+	computed: {
+		component: ({noInteraction}) => (noInteraction ? ProgressBar : Slider),
+		props: ({backgroundProgress, noInteraction, value, ...rest}) => (noInteraction ? {
+			backgroundProgress: backgroundProgress,
+			progress: value
+		} : {
+			'aria-hidden': 'true',
+			backgroundProgress: backgroundProgress,
+			className: css.mediaSlider,
+			detachedKnob: 'true',
+			min: 0,
+			max: 1,
+			step: 0.00001,
+			knobStep: 0.05,
+			value: value,
+			...rest
+		})
+	},
+
+	render: ({component: Component, props}) => (
 		<div className={css.sliderFrame}>
-			<Slider
-				{...props}
-				aria-hidden="true"
-				className={css.mediaSlider}
-				detachedKnob
-				min={0}
-				max={1}
-				step={0.00001}
-				knobStep={0.05}
-			/>
+			<Component {...props} />
 		</div>
 	)
 });
