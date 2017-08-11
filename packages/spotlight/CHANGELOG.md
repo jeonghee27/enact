@@ -15,6 +15,7 @@ The following is a curated list of changes in the Enact spotlight module, newest
 ### Fixed
 
 - `spotlight` to not blur and re-focus an element that is already focused
+- `spotlight` to correctly set focus when a container wraps other nested container, both using `enterTo` configs
 
 ## [1.5.0] - 2017-07-19
 

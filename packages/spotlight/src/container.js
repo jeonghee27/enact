@@ -740,7 +740,7 @@ function persistLastFocusedElement (containerId) {
  */
 function restoreLastFocusedElement (containerId) {
 	const cfg = getContainerConfig(containerId);
-	if (cfg && cfg.lastFocusedKey) {
+	if (cfg && cfg.lastFocusedKey && cfg.lastFocusedKey.element) {
 		const all = getDeepSpottableDescendants(containerId);
 		const lastFocusedElement = cfg.lastFocusedRestore(cfg.lastFocusedKey, all);
 
