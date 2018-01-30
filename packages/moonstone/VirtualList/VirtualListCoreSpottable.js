@@ -25,7 +25,7 @@ const SpotlightPlaceholder = Spottable('div');
  * @memberof moonstone/VirtualList
  * @private
  */
-const VirtualListCoreSpottable = (BaseComponent) => (
+const VirtualListCoreSpottable = (type) => (BaseComponent) => (
 
 	class VirtualListCoreSpotlightManager extends Component {
 		static propTypes = /** @lends moonstone/VirtualList.VirtualListCore.prototype */ {
@@ -234,9 +234,11 @@ const VirtualListCoreSpottable = (BaseComponent) => (
 					isRtl = this.list.context.rtl,
 					isForward = (direction === 'down' || isRtl && direction === 'left' || !isRtl && direction === 'right');
 
-				// To prevent item positioning issue, make all items to be rendered.
-				this.list.updateFrom = null;
-				this.list.updateTo = null;
+				if (type === 'JS') {
+					// To prevent item positioning issue, make all items to be rendered.
+					this.list.updateFrom = null;
+					this.list.updateTo = null;
+				}
 
 				if (firstVisibleIndex <= indexToScroll && indexToScroll <= lastVisibleIndex) {
 					const node = this.list.containerRef.querySelector(`[data-index='${indexToScroll}'].spottable`);
@@ -379,6 +381,9 @@ const VirtualListCoreSpottable = (BaseComponent) => (
 
 			this.isScrolledBy5way = false;
 			if (getDirection(keyCode)) {
+				if (type === 'Native') {
+					e.preventDefault();
+				}
 				this._setSpotlightContainerRestrict(keyCode, target);
 				this.isScrolledBy5way = this._jumpToSpottableItem(keyCode, target);
 			}
@@ -394,7 +399,7 @@ const VirtualListCoreSpottable = (BaseComponent) => (
 		}
 
 		setContainerDisabled = (bool) => {
-			const containerNode = this.list.containerRef;
+			const containerNode = (type === 'Native') ? this.list.containerRef : this.list.contentRef;
 
 			if (containerNode) {
 				containerNode.setAttribute(dataContainerDisabledAttribute, bool);
@@ -508,7 +513,7 @@ const VirtualListCoreSpottable = (BaseComponent) => (
 		 * setter/getter
 		 */
 
-		shouldPreventScrollByFocus = () => this.isScrolledBy5way
+		shouldPreventScrollByFocus = () => ((type === 'Native') ? (this.isScrolledBy5way) : (this.isScrolledBy5way || this.isScrolledByJump))
 
 		getNodeIndexToBeFocused = () => this.nodeIndexToBeFocused
 

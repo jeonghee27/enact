@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
 import {dataIndexAttribute, ScrollableNative} from '../Scroller/ScrollableNative';
-import {VirtualListCoreSpottableNative} from './VirtualListCoreSpottableNative';
+import {VirtualListCoreSpottable} from './VirtualListCoreSpottable';
 import {VirtualListContainerSpottable} from './VirtualListContainerSpottable';
 
 import cssItem from './ListItem.less';
@@ -129,7 +129,7 @@ class VirtualListCoreNative extends Component {
 
 		focusOnNode: PropTypes.func,
 
-		getNodeIndexToBeFocused: PropTypes.object,
+		getNodeIndexToBeFocused: PropTypes.func,
 
 		lastFocusedIndex: PropTypes.object,
 
@@ -848,7 +848,7 @@ class VirtualListCoreNative extends Component {
  */
 const VirtualListBaseNative = VirtualListContainerSpottable(
 	ScrollableNative( // including ScrollableSpotlightContainerDecorator
-		VirtualListCoreSpottableNative(VirtualListCoreNative)
+		VirtualListCoreSpottable('Native')(VirtualListCoreNative)
 	)
 );
 

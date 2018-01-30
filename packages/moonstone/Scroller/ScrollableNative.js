@@ -21,7 +21,7 @@ import Spotlight from '@enact/spotlight';
 
 import css from './Scrollable.less';
 import Scrollbar from './Scrollbar';
-import ScrollableSpotlightContainerDecoratorNative from './ScrollableSpotlightContainerDecoratorNative';
+import ScrollableSpotlightContainerDecorator from './ScrollableSpotlightContainerDecorator';
 
 const
 	forwardScroll = forward('onScroll'),
@@ -1080,7 +1080,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			delete props.verticalScrollbar;
 
 			return (
-				<ScrollableSpotlightContainerDecoratorNative
+				<ScrollableSpotlightContainerDecorator
 					className={scrollableClasses}
 					containerRef={this.initContainerRef}
 					focusableScrollbar={focusableScrollbar}
@@ -1097,7 +1097,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						{isVerticalScrollbarVisible ? <Scrollbar {...this.verticalScrollbarProps} disabled={!isVerticalScrollbarVisible} /> : null}
 					</div>
 					{isHorizontalScrollbarVisible ? <Scrollbar {...this.horizontalScrollbarProps} corner={isVerticalScrollbarVisible} disabled={!isHorizontalScrollbarVisible} /> : null}
-				</ScrollableSpotlightContainerDecoratorNative>
+				</ScrollableSpotlightContainerDecorator>
 			);
 		}
 	};

@@ -128,7 +128,7 @@ class VirtualListCore extends Component {
 
 		focusOnNode: PropTypes.func,
 
-		getNodeIndexToBeFocused: PropTypes.object,
+		getNodeIndexToBeFocused: PropTypes.func,
 
 		lastFocusedIndex: PropTypes.object,
 
@@ -810,6 +810,8 @@ class VirtualListCore extends Component {
 		delete rest.data;
 		delete rest.dataSize;
 		delete rest.direction;
+		delete rest.focusOnNode;
+		delete rest.getNodeIndexToBeFocused;
 		delete rest.itemSize;
 		delete rest.lastFocusedIndex;
 		delete rest.nodeIndexToBeFocused;
@@ -818,6 +820,7 @@ class VirtualListCore extends Component {
 		delete rest.preservedIndex;
 		delete rest.restoreLastFocused;
 		delete rest.spacing;
+		delete rest.withPlaceholder;
 
 		if (primary) {
 			this.positionItems({updateFrom: firstIndex, updateTo: firstIndex + numOfItems});
@@ -845,7 +848,7 @@ class VirtualListCore extends Component {
  */
 const VirtualListBase = VirtualListContainerSpottable(
 	Scrollable( // including ScrollableSpotlightContainerDecorator
-		VirtualListCoreSpottable(VirtualListCore)
+		VirtualListCoreSpottable('JS')(VirtualListCore)
 	)
 );
 
