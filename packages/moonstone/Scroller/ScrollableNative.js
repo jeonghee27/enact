@@ -198,8 +198,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				isVerticalScrollbarVisible: props.verticalScrollbar === 'visible'
 			};
 
-			this.initVirtuaListCoreRef = this.initRef('virtualListCoreRef');
-			this.initVirtualListCoreWrapperRef = this.initRef('virtualListCoreWrapperRef');
+			this.initInnerChildRef = this.initRef('innerChildRef');
+			this.initChildRef = this.initRef('childRef');
 			this.initContainerRef = this.initRef('containerRef');
 
 			this.verticalScrollbarProps = {
@@ -233,7 +233,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			const bounds = this.getScrollBounds();
 
 			this.pageDistance = (this.canScrollVertically(bounds) ? bounds.clientHeight : bounds.clientWidth) * paginationPageMultiplier;
-			this.direction = this.virtualListCoreRef.props.direction;
+			this.direction = this.innerChildRef.props.direction;
 			this.updateEventListeners();
 			this.updateScrollbars();
 
@@ -246,19 +246,19 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		componentDidUpdate () {
 			// Need to sync calculated client size if it is different from the real size
-			if (this.virtualListCoreRef.syncClientSize) {
+			if (this.innerChildRef.syncClientSize) {
 				const {isVerticalScrollbarVisible, isHorizontalScrollbarVisible} = this.state;
 				// If we actually synced, we need to reset scroll position.
-				if (this.virtualListCoreRef.syncClientSize()) {
+				if (this.innerChildRef.syncClientSize()) {
 					this.setScrollLeft(0);
 					this.setScrollTop(0);
 				}
 				// Need to check item total size is same with client size when scrollbar is visible
 				// By hiding scrollbar again, infinite function call maybe happens
-				this.isFitClientSize = (isVerticalScrollbarVisible || isHorizontalScrollbarVisible) && this.virtualListCoreRef.isSameTotalItemSizeWithClient();
+				this.isFitClientSize = (isVerticalScrollbarVisible || isHorizontalScrollbarVisible) && this.innerChildRef.isSameTotalItemSizeWithClient();
 			}
 
-			this.direction = this.virtualListCoreRef.props.direction;
+			this.direction = this.innerChildRef.props.direction;
 			this.updateEventListeners();
 			if (!this.isFitClientSize) {
 				this.updateScrollbars();
@@ -276,7 +276,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		componentWillUnmount () {
 			const
 				{containerRef} = this,
-				childContainerRef = this.virtualListCoreRef.containerRef;
+				childContainerRef = this.innerChildRef.containerRef;
 
 			// Before call cancelAnimationFrame, you must send scrollStop Event.
 			if (this.scrolling) {
@@ -339,8 +339,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		nodeToFocus = null
 
 		// component info
-		virtualListCoreRef = null
-		virtualListCoreWrapperRef = null
+		innerChildRef = null
+		childRef = null
 		containerRef = null
 
 		// browser native scrolling
@@ -363,16 +363,16 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		onMouseDown = () => {
 			this.isScrollAnimationTargetAccumulated = false;
 			this.lastFocusedItem = null;
-			this.virtualListCoreWrapperRef.setContainerDisabled(false);
+			this.childRef.setContainerDisabled(false);
 		}
 
 		onMouseOver = () => {
-			this.resetPosition = this.virtualListCoreRef.containerRef.scrollTop;
+			this.resetPosition = this.innerChildRef.containerRef.scrollTop;
 		}
 
 		onMouseMove = () => {
 			if (this.resetPosition !== null) {
-				const childContainerRef = this.virtualListCoreRef.containerRef;
+				const childContainerRef = this.innerChildRef.containerRef;
 				childContainerRef.style.scrollBehavior = null;
 				childContainerRef.scrollTop = this.resetPosition;
 				childContainerRef.style.scrollBehavior = 'smooth';
@@ -410,7 +410,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					const {horizontalScrollbarRef, verticalScrollbarRef} = this;
 
 					if (!this.isWheeling) {
-						this.virtualListCoreWrapperRef.setContainerDisabled(true);
+						this.childRef.setContainerDisabled(true);
 						this.isWheeling = true;
 					}
 
@@ -426,7 +426,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			} else if (canScrollHorizontally) { // this routine handles wheel events on any children for horizontal scroll.
 				if (eventDelta < 0 && this.scrollLeft > 0 || eventDelta > 0 && this.scrollLeft < bounds.maxLeft) {
 					if (!this.isWheeling) {
-						this.virtualListCoreWrapperRef.setContainerDisabled(true);
+						this.childRef.setContainerDisabled(true);
 						this.isWheeling = true;
 					}
 					delta = this.calculateDistanceByWheel(eventDeltaMode, eventDelta, bounds.clientWidth * scrollWheelPageMultiplierForMaxPixel);
@@ -494,8 +494,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		}
 
 		onFocus = (e) => {
-			const shouldPreventScrollByFocus = this.virtualListCoreWrapperRef.shouldPreventScrollByFocus ?
-				this.virtualListCoreWrapperRef.shouldPreventScrollByFocus() :
+			const shouldPreventScrollByFocus = this.childRef.shouldPreventScrollByFocus ?
+				this.childRef.shouldPreventScrollByFocus() :
 				false;
 
 			if (!Spotlight.getPointerMode()) {
@@ -505,7 +505,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			if (!(shouldPreventScrollByFocus || Spotlight.getPointerMode())) {
 				const
 					item = e.target,
-					positionFn = this.virtualListCoreRef.calculatePositionOnFocus,
+					positionFn = this.innerChildRef.calculatePositionOnFocus,
 					spotItem = Spotlight.getCurrent();
 
 				if (item && item === spotItem && positionFn) {
@@ -514,8 +514,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 					const focusedIndex = Number.parseInt(item.getAttribute(dataIndexAttribute));
 					if (!isNaN(focusedIndex)) {
-						this.virtualListCoreWrapperRef.setNodeIndexToBeFocused(null);
-						this.virtualListCoreWrapperRef.setLastFocusedIndex(focusedIndex);
+						this.childRef.setNodeIndexToBeFocused(null);
+						this.childRef.setLastFocusedIndex(focusedIndex);
 					}
 
 					// If scroll animation is ongoing, we need to pass last target position to
@@ -528,8 +528,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 					this.startScrollOnFocus(pos, item);
 				}
-			} else if (this.virtualListCoreWrapperRef.setLastFocusedIndex) {
-				this.virtualListCoreWrapperRef.setLastFocusedIndex(e.target);
+			} else if (this.childRef.setLastFocusedIndex) {
+				this.childRef.setLastFocusedIndex(e.target);
 			}
 		}
 
@@ -577,22 +577,22 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				{getEndPoint, scrollToAccumulatedTarget} = this,
 				bounds = this.getScrollBounds(),
 				canScrollVertically = this.canScrollVertically(bounds),
-				virtualListCoreRef = this.virtualListCoreRef,
-				virtualListCoreWrapperRef = this.virtualListCoreWrapperRef,
+				innerChildRef = this.innerChildRef,
+				childRef = this.childRef,
 				pageDistance = isPageUp(keyCode) ? (this.pageDistance * -1) : this.pageDistance,
 				spotItem = Spotlight.getCurrent();
 
 			if (!Spotlight.getPointerMode() && spotItem) {
 				// Should skip scroll by page when spotItem is paging control button of Scrollbar
-				if (!virtualListCoreRef.containerRef.contains(spotItem)) {
+				if (!innerChildRef.containerRef.contains(spotItem)) {
 					return;
 				}
 				const
 					containerId = (
 						// ScrollerNative has a containerId on containerRef
-						virtualListCoreRef.containerRef.dataset.containerId ||
+						innerChildRef.containerRef.dataset.containerId ||
 						// VirtualListNative has a containerId on contentRef
-						virtualListCoreRef.contentRef.dataset.containerId
+						innerChildRef.contentRef.dataset.containerId
 					),
 					direction = this.getPageDirection(keyCode),
 					rDirection = reverseDirections[direction],
@@ -600,13 +600,13 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 					spotItemBounds = spotItem.getBoundingClientRect(),
 					endPoint = getEndPoint(direction, spotItemBounds, viewportBounds),
 					next = getTargetByDirectionFromPosition(rDirection, endPoint, containerId),
-					scrollFn = virtualListCoreWrapperRef.scrollToNextPage || virtualListCoreWrapperRef.scrollToNextItem;
+					scrollFn = childRef.scrollToNextPage || childRef.scrollToNextItem;
 
 				// If there is no next spottable DOM elements, scroll one page with animation
 				if (!next) {
 					scrollToAccumulatedTarget(pageDistance, canScrollVertically);
 				// If there is a next spottable DOM element vertically or horizontally, focus it without animation
-				} else if (next !== spotItem && virtualListCoreWrapperRef.scrollToNextPage) {
+				} else if (next !== spotItem && childRef.scrollToNextPage) {
 					this.animateOnFocus = false;
 					Spotlight.focus(next);
 				// If a next spottable DOM element is equals to the current spottable item, we need to find a next item
@@ -703,7 +703,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 
 		scrollStopOnScroll = () => {
 			this.isScrollAnimationTargetAccumulated = false;
-			this.virtualListCoreWrapperRef.setContainerDisabled(false);
+			this.childRef.setContainerDisabled(false);
 			this.focusOnItem();
 			this.lastFocusedItem = null;
 			this.lastScrollPositionOnFocus = null;
@@ -740,7 +740,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		start (targetX, targetY, animate = true) {
 			const
 				bounds = this.getScrollBounds(),
-				childContainerRef = this.virtualListCoreRef.containerRef;
+				childContainerRef = this.innerChildRef.containerRef;
 
 			targetX = clamp(0, bounds.maxLeft, targetX);
 			targetY = clamp(0, bounds.maxTop, targetY);
@@ -753,22 +753,22 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 			}
 
 			if (animate) {
-				this.virtualListCoreRef.scrollToPosition(targetX, targetY);
+				this.innerChildRef.scrollToPosition(targetX, targetY);
 			} else {
 				childContainerRef.style.scrollBehavior = null;
-				this.virtualListCoreRef.scrollToPosition(targetX, targetY);
+				this.innerChildRef.scrollToPosition(targetX, targetY);
 				childContainerRef.style.scrollBehavior = 'smooth';
 				this.focusOnItem();
 			}
 		}
 
 		focusOnItem () {
-			if (this.indexToFocus !== null && typeof this.virtualListCoreRef.focusByIndex === 'function') {
-				this.virtualListCoreRef.focusByIndex(this.indexToFocus);
+			if (this.indexToFocus !== null && typeof this.innerChildRef.focusByIndex === 'function') {
+				this.innerChildRef.focusByIndex(this.indexToFocus);
 				this.indexToFocus = null;
 			}
-			if (this.nodeToFocus !== null && typeof this.virtualListCoreRef.focusOnNode === 'function') {
-				this.virtualListCoreRef.focusOnNode(this.nodeToFocus);
+			if (this.nodeToFocus !== null && typeof this.innerChildRef.focusOnNode === 'function') {
+				this.innerChildRef.focusOnNode(this.nodeToFocus);
 				this.nodeToFocus = null;
 			}
 		}
@@ -787,8 +787,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				this.setScrollTop(top);
 			}
 
-			if (this.virtualListCoreRef.didScroll) {
-				this.virtualListCoreRef.didScroll(this.scrollLeft, this.scrollTop, dirHorizontal, dirVertical);
+			if (this.innerChildRef.didScroll) {
+				this.innerChildRef.didScroll(this.scrollLeft, this.scrollTop, dirHorizontal, dirVertical);
 			}
 			this.doScrolling();
 		}
@@ -835,11 +835,11 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 						}
 					}
 				} else {
-					if (typeof opt.index === 'number' && typeof this.virtualListCoreRef.getItemPosition === 'function') {
-						itemPos = this.virtualListCoreRef.getItemPosition(opt.index, opt.stickTo);
+					if (typeof opt.index === 'number' && typeof this.innerChildRef.getItemPosition === 'function') {
+						itemPos = this.innerChildRef.getItemPosition(opt.index, opt.stickTo);
 					} else if (opt.node instanceof Object) {
-						if (opt.node.nodeType === 1 && typeof this.virtualListCoreRef.getNodePosition === 'function') {
-							itemPos = this.virtualListCoreRef.getNodePosition(opt.node);
+						if (opt.node.nodeType === 1 && typeof this.innerChildRef.getNodePosition === 'function') {
+							itemPos = this.innerChildRef.getNodePosition(opt.node);
 						}
 					}
 					if (itemPos) {
@@ -982,7 +982,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		alertThumbAfterRendered = () => {
 			const spotItem = Spotlight.getCurrent();
 
-			if (!Spotlight.getPointerMode() && spotItem && this.virtualListCoreRef.containerRef.contains(spotItem) && this.isUpdatedScrollThumb) {
+			if (!Spotlight.getPointerMode() && spotItem && this.innerChildRef.containerRef.contains(spotItem) && this.isUpdatedScrollThumb) {
 				this.alertThumb();
 			}
 		}
@@ -990,21 +990,21 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		// ref
 
 		getScrollBounds () {
-			if (typeof this.virtualListCoreRef.getScrollBounds === 'function') {
-				return this.virtualListCoreRef.getScrollBounds();
+			if (typeof this.innerChildRef.getScrollBounds === 'function') {
+				return this.innerChildRef.getScrollBounds();
 			}
 		}
 
 		getMoreInfo () {
-			if (typeof this.virtualListCoreRef.getMoreInfo === 'function') {
-				return this.virtualListCoreRef.getMoreInfo();
+			if (typeof this.innerChildRef.getMoreInfo === 'function') {
+				return this.innerChildRef.getMoreInfo();
 			}
 		}
 
 		updateEventListeners = () => {
 			const
 				{containerRef} = this,
-				childContainerRef = this.virtualListCoreRef.containerRef;
+				childContainerRef = this.innerChildRef.containerRef;
 
 			if (containerRef && containerRef.addEventListener) {
 				// FIXME `onWheel` doesn't work on the v8 snapshot.
@@ -1027,7 +1027,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		updateScrollOnFocus () {
 			const
 				focusedItem = Spotlight.getCurrent(),
-				{containerRef, calculatePositionOnFocus} = this.virtualListCoreRef;
+				{containerRef, calculatePositionOnFocus} = this.innerChildRef;
 
 			if (focusedItem && containerRef && containerRef.contains(focusedItem)) {
 				const
@@ -1049,7 +1049,7 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 		// TODO: consider replacing forceUpdate() by storing bounds in state rather than a non-
 		// state member.
 		enqueueForceUpdate = () => {
-			this.virtualListCoreRef.calculateMetrics();
+			this.innerChildRef.calculateMetrics();
 			this.forceUpdate();
 		}
 
@@ -1091,8 +1091,8 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 							{...props}
 							cbScrollTo={this.scrollTo}
 							className={css.content}
-							innerRef={this.initVirtuaListCoreRef}
-							ref={this.initVirtualListCoreWrapperRef}
+							innerRef={this.initInnerChildRef}
+							ref={this.initChildRef}
 						/>
 						{isVerticalScrollbarVisible ? <Scrollbar {...this.verticalScrollbarProps} disabled={!isVerticalScrollbarVisible} /> : null}
 					</div>
