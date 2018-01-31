@@ -417,15 +417,44 @@ const VirtualListCoreSpottable = (type) => (BaseComponent) => (
 		 */
 
 		focusOnNode = (node) => {
-			if (Spotlight.isPaused()) {
-				Spotlight.resume();
-				this.list.forceUpdate();
-			}
-
 			if (node) {
 				Spotlight.focus(node);
 			}
+		}
+
+		focusOnItem = (index) => {
+			const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
+
+			if (Spotlight.isPaused()) {
+				Spotlight.resume();
+				if (type === 'JS') {
+					this.forceUpdate();
+				}
+			}
+			this.focusOnNode(item);
 			this.nodeIndexToBeFocused = null;
+		}
+
+		initItemRef = (ref, index) => {
+			if (ref) {
+				if (type === 'JS') {
+					this.focusOnItem(index);
+				} else if (type === 'Native') {
+					// If focusing the item of VirtuallistNative, `onFocus` in Scrollable will be called.
+					// Then VirtualListNative tries to scroll again differently from VirtualList.
+					// So we would like to skip `focus` handling when focusing the item as a workaround.
+					this.isScrolledByJump = true;
+					this.focusOnItem(index);
+					this.isScrolledByJump = false;
+				}
+			}
+		}
+
+		focusByIndex = (index) => {
+			// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
+			setTimeout(() => {
+				this.focusOnItem(index);
+			}, 0);
 		}
 
 		/**
@@ -458,10 +487,11 @@ const VirtualListCoreSpottable = (type) => (BaseComponent) => (
 						<SpotlightPlaceholder
 							data-index={0}
 							data-vl-placeholder
+							key='1'
 							onFocus={this._handlePlaceholderFocus}
 							role="region"
 						/>,
-					needsScrollingPlaceholder ? <SpotlightPlaceholder /> : null
+					needsScrollingPlaceholder ? <SpotlightPlaceholder key='2' /> : null
 				];
 
 			return cc;
@@ -543,7 +573,7 @@ const VirtualListCoreSpottable = (type) => (BaseComponent) => (
 				<BaseComponent
 					{...props}
 					getNodeIndexToBeFocused={this.getNodeIndexToBeFocused}
-					focusOnNode={this.focusOnNode}
+					initItemRef={this.initItemRef}
 					lastFocusedIndex={this.lastFocusedIndex}
 					preservedIndex={this.preservedIndex}
 					ref={this.initRef}

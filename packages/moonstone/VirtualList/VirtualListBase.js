@@ -126,7 +126,7 @@ class VirtualListCore extends Component {
 		 */
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
-		focusOnNode: PropTypes.func,
+		initItemRef: PropTypes.func,
 
 		getNodeIndexToBeFocused: PropTypes.func,
 
@@ -590,7 +590,7 @@ class VirtualListCore extends Component {
 
 	applyStyleToNewNode = (index, ...rest) => {
 		const
-			{component, data, getNodeIndexToBeFocused} = this.props,
+			{component, data, getNodeIndexToBeFocused, initItemRef} = this.props,
 			{numOfItems} = this.state,
 			key = index % numOfItems,
 			itemElement = component({
@@ -604,40 +604,10 @@ class VirtualListCore extends Component {
 		this.composeStyle(style, ...rest);
 
 		this.cc[key] = React.cloneElement(itemElement, {
-			ref: (index === getNodeIndexToBeFocused()) ? (ref) => this.initItemRef(ref, index) : null,
+			ref: (index === getNodeIndexToBeFocused()) ? (ref) => initItemRef(ref, index) : null,
 			className: classNames(css.listItem, itemElement.props.className),
 			style: {...itemElement.props.style, ...style}
 		});
-	}
-
-	focusOnNode = (node) => {
-		if (node) {
-			Spotlight.focus(node);
-		}
-	}
-
-	focusOnItem = (index) => {
-		const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
-
-		if (Spotlight.isPaused()) {
-			Spotlight.resume();
-			this.forceUpdate();
-		}
-		this.focusOnNode(item);
-		this.nodeIndexToBeFocused = null;
-	}
-
-	initItemRef = (ref, index) => {
-		if (ref) {
-			this.focusOnItem(index);
-		}
-	}
-
-	focusByIndex = (index) => {
-		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
-		setTimeout(() => {
-			this.focusOnItem(index);
-		}, 0);
 	}
 
 	applyStyleToHideNode = (index) => {
@@ -810,9 +780,9 @@ class VirtualListCore extends Component {
 		delete rest.data;
 		delete rest.dataSize;
 		delete rest.direction;
-		delete rest.focusOnNode;
 		delete rest.getNodeIndexToBeFocused;
 		delete rest.itemSize;
+		delete rest.initItemRef;
 		delete rest.lastFocusedIndex;
 		delete rest.nodeIndexToBeFocused;
 		delete rest.overhang;

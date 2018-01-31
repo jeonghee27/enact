@@ -127,7 +127,7 @@ class VirtualListCoreNative extends Component {
 		 */
 		direction: PropTypes.oneOf(['horizontal', 'vertical']),
 
-		focusOnNode: PropTypes.func,
+		initItemRef: PropTypes.func,
 
 		getNodeIndexToBeFocused: PropTypes.func,
 
@@ -558,7 +558,7 @@ class VirtualListCoreNative extends Component {
 
 	applyStyleToNewNode = (index, ...rest) => {
 		const
-			{component, data, getNodeIndexToBeFocused} = this.props,
+			{component, data, getNodeIndexToBeFocused, initItemRef} = this.props,
 			{numOfItems} = this.state,
 			key = index % numOfItems,
 			itemElement = component({
@@ -572,45 +572,11 @@ class VirtualListCoreNative extends Component {
 		this.composeStyle(style, ...rest);
 
 		this.cc[key] = React.cloneElement(itemElement, {
-			ref: (index === getNodeIndexToBeFocused()) ? (ref) => this.initItemRef(ref, index) : null,
+			ref: (index === getNodeIndexToBeFocused()) ? (ref) => initItemRef(ref, index) : null,
 			className: classNames(cssItem.listItem, itemElement.props.className),
 			['data-preventscrollonfocus']: true, // Added this attribute to prevent scroll on focus by browser
 			style: {...itemElement.props.style, ...style}
 		});
-	}
-
-	focusOnNode = (node) => {
-		if (node) {
-			Spotlight.focus(node);
-		}
-	}
-
-	focusOnItem = (index) => {
-		const item = this.containerRef.querySelector(`[data-index='${index}'].spottable`);
-
-		if (Spotlight.isPaused()) {
-			Spotlight.resume();
-		}
-		this.focusOnNode(item);
-		this.nodeIndexToBeFocused = null;
-	}
-
-	initItemRef = (ref, index) => {
-		if (ref) {
-			// If focusing the item of VirtuallistNative, `onFocus` in Scrollable will be called.
-			// Then VirtualListNative tries to scroll again differently from VirtualList.
-			// So we would like to skip `focus` handling when focusing the item as a workaround.
-			this.isScrolledByJump = true;
-			this.focusOnItem(index);
-			this.isScrolledByJump = false;
-		}
-	}
-
-	focusByIndex = (index) => {
-		// We have to focus node async for now since list items are not yet ready when it reaches componentDid* lifecycle methods
-		setTimeout(() => {
-			this.focusOnItem(index);
-		}, 0);
 	}
 
 	applyStyleToHideNode = (index) => {
@@ -808,9 +774,9 @@ class VirtualListCoreNative extends Component {
 		delete rest.data;
 		delete rest.dataSize;
 		delete rest.direction;
-		delete rest.focusOnNode;
 		delete rest.getNodeIndexToBeFocused;
 		delete rest.itemSize;
+		delete rest.initItemRef;
 		delete rest.lastFocusedIndex;
 		delete rest.nodeIndexToBeFocused;
 		delete rest.overhang;
