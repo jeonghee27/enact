@@ -19,9 +19,10 @@ import React, {Component} from 'react';
 import ri from '@enact/ui/resolution';
 import Spotlight from '@enact/spotlight';
 
-import css from './Scrollable.less';
 import Scrollbar from './Scrollbar';
 import ScrollableSpotlightContainerDecorator from './ScrollableSpotlightContainerDecorator';
+
+import css from '@enact/moonstone/Scroller/Scrollable.less';
 
 const
 	forwardScroll = forward('onScroll'),

@@ -2,20 +2,20 @@ import kind from '@enact/core/kind';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import css from './ScrollThumb.less';
+import css from '@enact/moonstone/Scroller/ScrollThumb.less';
 
 /**
- * {@link ui/Scroller.ScrollThumb} is a stateless ScrollThumb.
+ * {@link moonstone/Scroller.ScrollThumb} is a stateless ScrollThumb with Moonstone styling applied.
  *
  * @class ScrollThumb
- * @memberof ui/Scroller
+ * @memberof moonstone/Scroller
  * @ui
- * @public
+ * @private
  */
 const ScrollThumb = kind({
 	name: 'ScrollThumb',
 
-	propTypes: /** @lends ui/Scroller.ScrollThumb.prototype */ {
+	propTypes: /** @lends moonstone/Scroller.ScrollThumb.prototype */ {
 		/**
 		 * The function to pass a wrapped ref.
 		 *

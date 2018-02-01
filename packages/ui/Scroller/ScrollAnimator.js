@@ -1,4 +1,5 @@
 import clamp from 'ramda/src/clamp';
+import {perfNow} from '@enact/core/util';
 
 const
 	// Use eases library
@@ -35,11 +36,11 @@ const
 	clampVelocity = clamp(-maxVelocity, maxVelocity);
 
 /**
- * {@link ui/Scroller.ScrollAnimator} is the class to scroll a list or a scroller with
+ * {@link moonstone/Scroller.ScrollAnimator} is the class to scroll a list or a scroller with
  * animation.
  *
  * @class ScrollAnimator
- * @memberof ui/Scroller
+ * @memberof moonstone/Scroller
  * @private
  */
 class ScrollAnimator {
@@ -51,7 +52,7 @@ class ScrollAnimator {
 	 *	`'linear'`, `'ease-in'`, `'ease-out'`, or `'ease-in-out'`, or null. If `null`, defaults to
 	 *	`'ease-out'`.
 	 * @constructor
-	 * @memberof ui/Scroller.ScrollAnimator
+	 * @memberof moonstone/Scroller.ScrollAnimator
 	 */
 	constructor (type) {
 		this.timingFunction = timingFunctions[type || this.type];
@@ -82,15 +83,14 @@ class ScrollAnimator {
 
 	animate (rAFCallbackFuntion) {
 		const
-			perf = window.performance,
 			rAF = window.requestAnimationFrame,
-			startTimeStamp = perf.now(),
+			startTimeStamp = perfNow(),
 			fn = () => {
 				const
 					// schedule next frame
 					rAFId = rAF(fn),
 					// current timestamp
-					curTimeStamp = perf.now(),
+					curTimeStamp = perfNow(),
 					// current time if 0 at starting position
 					curTime = curTimeStamp - startTimeStamp;
 

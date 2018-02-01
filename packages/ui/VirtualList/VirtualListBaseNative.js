@@ -14,7 +14,7 @@ import {dataIndexAttribute, ScrollableNative} from '../Scroller/ScrollableNative
 import {VirtualListCoreSpottable} from './VirtualListCoreSpottable';
 import {VirtualListContainerSpottable} from './VirtualListContainerSpottable';
 
-import cssItem from './ListItem.less';
+import cssItem from '@enact/moonstone/VirtualList/ListItem.less';
 
 const nop = () => {};
 

@@ -2,7 +2,7 @@ import React from 'react';
 import Spotlight from '@enact/spotlight';
 import SpotlightContainerDecorator from '@enact/spotlight/SpotlightContainerDecorator';
 
-import scrollbarCss from './Scrollbar.less';
+import scrollbarCss from '@enact/moonstone/Scroller/Scrollbar.less';
 
 const ScrollableSpotlightContainerDecorator = SpotlightContainerDecorator(
 	{
