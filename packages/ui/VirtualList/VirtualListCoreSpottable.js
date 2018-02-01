@@ -6,7 +6,7 @@ import React, {Component} from 'react';
 import Spotlight, {getDirection} from '@enact/spotlight';
 import Spottable from '@enact/spotlight/Spottable';
 
-import {dataIndexAttribute} from '../Scroller/Scrollable';
+import {dataIndexAttribute} from '../Scrollable';
 
 const
 	dataContainerDisabledAttribute = 'data-container-disabled',

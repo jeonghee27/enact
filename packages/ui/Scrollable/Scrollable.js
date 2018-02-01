@@ -19,8 +19,9 @@ import ri from '@enact/ui/resolution';
 import Spotlight from '@enact/spotlight';
 import {contextTypes as contextTypesState, Publisher} from '@enact/core/internal/PubSub';
 
-import ScrollAnimator from './ScrollAnimator';
-import Scrollbar from './Scrollbar';
+import ScrollAnimator from '../Scroller/ScrollAnimator';
+import Scrollbar from '../Scrollbar';
+
 import ScrollableSpotlightContainerDecorator from './ScrollableSpotlightContainerDecorator';
 
 import css from '@enact/moonstone/Scroller/Scrollable.less';

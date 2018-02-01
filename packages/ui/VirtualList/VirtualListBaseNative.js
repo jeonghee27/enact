@@ -10,7 +10,7 @@ import {contextTypes} from '@enact/i18n/I18nDecorator';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
-import {dataIndexAttribute, ScrollableNative} from '../Scroller/ScrollableNative';
+import {dataIndexAttribute, ScrollableNative} from '../ScrollableNative';
 import {VirtualListCoreSpottable} from './VirtualListCoreSpottable';
 import {VirtualListContainerSpottable} from './VirtualListContainerSpottable';
 

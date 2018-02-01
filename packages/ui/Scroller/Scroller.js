@@ -15,7 +15,7 @@ import React, {Component} from 'react';
 import {Spotlight, getDirection} from '@enact/spotlight';
 import SpotlightContainerDecorator from '@enact/spotlight/SpotlightContainerDecorator';
 
-import Scrollable from './Scrollable';
+import Scrollable from '../Scrollable';
 
 import css from '@enact/moonstone/Scroller/Scroller.less';
 

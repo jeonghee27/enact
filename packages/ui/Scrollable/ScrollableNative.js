@@ -19,7 +19,8 @@ import React, {Component} from 'react';
 import ri from '@enact/ui/resolution';
 import Spotlight from '@enact/spotlight';
 
-import Scrollbar from './Scrollbar';
+import Scrollbar from '../Scrollbar';
+
 import ScrollableSpotlightContainerDecorator from './ScrollableSpotlightContainerDecorator';
 
 import css from '@enact/moonstone/Scroller/Scrollable.less';
