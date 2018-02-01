@@ -11,8 +11,7 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
 import {dataIndexAttribute, Scrollable} from '../Scrollable';
-import {VirtualListCoreSpottable} from './VirtualListCoreSpottable';
-import {VirtualListContainerSpottable} from './VirtualListContainerSpottable';
+import {VirtualListCoreSpottable, VirtualListContainerSpottable} from './VirtualListCoreSpottable';
 
 import css from '@enact/moonstone/VirtualList/ListItem.less';
 
