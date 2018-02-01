@@ -14,6 +14,7 @@ import {dataIndexAttribute, ScrollableNative} from '../Scrollable/ScrollableNati
 import {VirtualListCoreSpottable} from './VirtualListCoreSpottable';
 import {VirtualListContainerSpottable} from './VirtualListContainerSpottable';
 
+import css from '@enact/moonstone/VirtualList/VirtualListNative.less';
 import cssItem from '@enact/moonstone/VirtualList/ListItem.less';
 
 const nop = () => {};
@@ -482,7 +483,7 @@ class VirtualListCoreNative extends Component {
 			this.props.cbScrollTo({position: (isPrimaryDirectionVertical) ? {y: maxPos} : {x: maxPos}, animate: false});
 		}
 
-		this.containerClass = (isPrimaryDirectionVertical) ? cssItem.vertical : cssItem.horizontal;
+		this.containerClass = (isPrimaryDirectionVertical) ? css.vertical : css.horizontal;
 	}
 
 	setContainerSize = () => {
@@ -766,7 +767,7 @@ class VirtualListCoreNative extends Component {
 		const
 			{className, style, withPlaceholder, ...rest} = this.props,
 			{primary, cc} = this,
-			mergedClasses = classNames(cssItem.list, this.containerClass, className);
+			mergedClasses = classNames(css.list, this.containerClass, className);
 
 		delete rest.cbScrollTo;
 		delete rest.clientSize;

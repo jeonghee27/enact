@@ -450,11 +450,9 @@ const ScrollableHoC = hoc((config, Wrapped) => {
 				this.scrollToAccumulatedTarget(delta, canScrollVertically);
 			}
 
-			/* FIXME
 			if (needToHideThumb) {
-				this.hideThumbJob.start();
+				this.startHidingThumb();
 			}
-			*/
 		}
 
 		onScroll = (e) => {
