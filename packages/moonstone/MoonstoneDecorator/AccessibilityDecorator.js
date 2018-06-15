@@ -1,7 +1,7 @@
 import hoc from '@enact/core/hoc';
-import {contextTypes, Publisher} from '@enact/core/internal/PubSub';
-import React from 'react';
+import {ResizeContent} from '@enact/ui/internal/ResizeContext';
 import PropTypes from 'prop-types';
+import React from 'react';
 
 /**
  * {@link moonstone/MoonstoneDecorator.AccessibilityDecorator} is a Higher-order Component that
@@ -15,10 +15,6 @@ import PropTypes from 'prop-types';
 const AccessibilityDecorator = hoc((config, Wrapped) => {
 	return class extends React.Component {
 		static displayName = 'AccessibilityDecorator'
-
-		static contextTypes = contextTypes
-
-		static childContextTypes = contextTypes
 
 		static propTypes =  /** @lends moonstone/MoonstoneDecorator.AccessibilityDecorator.prototype */ {
 			/**
@@ -48,23 +44,14 @@ const AccessibilityDecorator = hoc((config, Wrapped) => {
 			textSize: 'normal'
 		}
 
-		getChildContext () {
-			return {
-				Subscriber: this.publisher.getSubscriber()
-			};
+		state = {
+			resize: false
 		}
 
-		componentWillMount () {
-			this.publisher = Publisher.create('resize', this.context.Subscriber);
-		}
-
-		componentDidUpdate (prevProps) {
-			if (prevProps.textSize !== this.props.textSize) {
-				this.publisher.publish({
-					horizontal: true,
-					vertical: true
-				});
-			}
+		componentWillReceiveProps (nextProps) {
+			this.setState({
+				resize: nextProps.textSize !== this.props.textSize && Date.now()
+			});
 		}
 
 		render () {
@@ -72,10 +59,16 @@ const AccessibilityDecorator = hoc((config, Wrapped) => {
 			const accessibilityClassName = highContrast ? `enact-a11y-high-contrast enact-text-${textSize}` : `enact-text-${textSize}`;
 			const combinedClassName = className ? `${className} ${accessibilityClassName}` : accessibilityClassName;
 
-			return <Wrapped className={combinedClassName} {...props} />;
+			return (
+				<ResizeContent.Provider value={this.state.resize}>
+					<Wrapped className={combinedClassName} {...props} />
+				</ResizeContent.Provider>
+			);
 		}
 	};
 });
 
 export default AccessibilityDecorator;
-export {AccessibilityDecorator};
+export {
+	AccessibilityDecorator
+};

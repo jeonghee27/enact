@@ -10,6 +10,7 @@ import shallowEqual from 'recompose/shallowEqual';
 
 import MarqueeBase from './MarqueeBase';
 import {contextTypes} from './MarqueeController';
+import {ResizeContentConsumerDecorator} from '../../moonstone/node_modules/@enact/ui/internal/ResizeContext/ResizeContext';
 
 /**
  * Default configuration parameters for {@link ui/Marquee.MarqueeDecorator}
@@ -139,7 +140,7 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 	const forwardEnter = forward(enter);
 	const forwardLeave = forward(leave);
 
-	return class extends React.Component {
+	const Decorator = class extends React.Component {
 		static displayName = 'ui:MarqueeDecorator'
 
 		static contextTypes = {
@@ -249,7 +250,16 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			 *
 			 * @private
 			 */
-			remeasure: PropTypes.any
+			remeasure: PropTypes.any,
+
+			/**
+			 * Informs the compoennt that its contents have changed requiring its bounds be
+			 * recalculated.
+			 *
+			 * @type {Boolean}
+			 * @private
+			 */
+			resize: PropTypes.bool
 		}
 
 		static defaultProps = {
@@ -277,7 +287,6 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 
 		componentWillMount () {
 			if (this.context.Subscriber) {
-				this.context.Subscriber.subscribe('resize', this.handleResize);
 				this.context.Subscriber.subscribe('i18n', this.handleLocaleChange);
 			}
 		}
@@ -333,7 +342,7 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			);
 		}
 
-		componentDidUpdate () {
+		componentDidUpdate (prevProps) {
 			// if text directionality was invalidated by a prop change, we need to revalidate now
 			// potentially causing a re-render if rtl changes
 			if (this.textDirectionValidated === false) {
@@ -346,6 +355,10 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 				this.tryStartingAnimation(this.props.marqueeOn === 'render' ? this.props.marqueeOnRenderDelay : this.props.marqueeDelay);
 			}
 			this.forceRestartMarquee = false;
+
+			if (this.props.resize && this.props.resize !== prevProps.resize) {
+				this.handleResize();
+			}
 		}
 
 		componentWillUnmount () {
@@ -356,7 +369,6 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			}
 
 			if (this.context.Subscriber) {
-				this.context.Subscriber.unsubscribe('resize', this.handleResize);
 				this.context.Subscriber.unsubscribe('i18n', this.handleLocaleChange);
 			}
 			off('keydown', this.handlePointerHide);
@@ -608,7 +620,7 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			this.stop();
 		}
 
-		handleResize = () => {
+		handleResize () {
 			if (this.node && !this.props.marqueeDisabled) {
 				this.invalidateMetrics();
 				this.calculateMetrics();
@@ -795,6 +807,11 @@ const MarqueeDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 	};
+
+	return ResizeContentConsumerDecorator(
+		{prop: 'resize'},
+		Decorator
+	);
 });
 
 export default MarqueeDecorator;

@@ -9,8 +9,9 @@
 import React from 'react';
 import invariant from 'invariant';
 import hoc from '@enact/core/hoc';
-import {contextTypes, Publisher, Subscription} from '@enact/core/internal/PubSub';
 import {perfNow} from '@enact/core/util';
+
+const ResizeContext = React.createContext();
 
 /**
  * Default config for {@link ui/Remeasurable.RemeasurableDecorator}
@@ -45,32 +46,11 @@ const RemeasurableDecorator = hoc(defaultConfig, (config, Wrapped) => {
 	return class extends React.Component {
 		static displayName = 'RemeasurableDecorator'
 
-		static contextTypes = contextTypes
-
-		static childContextTypes = contextTypes
-
 		constructor (props) {
 			super(props);
 			this.state = {
 				remeasure: null
 			};
-		}
-
-		getChildContext () {
-			return {
-				Subscriber: this.publisher.getSubscriber()
-			};
-		}
-
-		componentWillMount () {
-			this.publisher = Publisher.create('resize', this.context.Subscriber);
-			this.publisher.publish({
-				remeasure: null
-			});
-
-			if (this.context.Subscriber) {
-				this.context.Subscriber.subscribe('resize', this.handleSubscription);
-			}
 		}
 
 		componentWillReceiveProps (nextProps) {
@@ -81,35 +61,15 @@ const RemeasurableDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 
-		componentDidUpdate (prevProps, prevState) {
-			if (this.state.remeasure !== prevState.remeasure) {
-				this.publisher.publish(this.state);
-			}
-		}
-
-		componentWillUnmount () {
-			if (this.context.Subscriber) {
-				this.context.Subscriber.unsubscribe('resize', this.handleSubscription);
-			}
-		}
-
-		handleSubscription = ({message}) => {
-			this.updateRemeasure(message);
-		}
-
-		updateRemeasure (state) {
-			this.setState(state);
-			this.publisher.publish(state);
-		}
-
 		render () {
 			return (
-				<Wrapped {...this.props} />
+				<ResizeContext.Provider value={this.state.remeasure}>
+					<Wrapped {...this.props} />
+				</ResizeContext.Provider>
 			);
 		}
 	};
 });
-
 
 /**
  * {@link ui/Remeasurable.Remeasurable} is a Higher-order Component which notifies a child of a
@@ -121,10 +81,21 @@ const RemeasurableDecorator = hoc(defaultConfig, (config, Wrapped) => {
  * @hoc
  * @private
  */
-const Remeasurable = Subscription({
-	channels: ['resize'],
-	mapMessageToProps: (channel, state) => state
+const Remeasurable = hoc((config, Wrapped) => {
+	// eslint-disable-next-line no-shadow
+	return function Remeasurable (props) {
+		return (
+			<ResizeContext.Consumer>
+				{remeasure => (
+					<Wrapped {...props} remeasure={remeasure} />
+				)}
+			</ResizeContext.Consumer>
+		);
+	};
 });
 
 export default Remeasurable;
-export {Remeasurable, RemeasurableDecorator};
+export {
+	Remeasurable,
+	RemeasurableDecorator
+};

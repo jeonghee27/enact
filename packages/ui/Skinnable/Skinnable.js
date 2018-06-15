@@ -88,7 +88,7 @@ const Skinnable = hoc(defaultConfig, (config, Wrapped) => {
 		return className;
 	}
 
-	// eslint-disable-next-line
+	// eslint-disable-next-line no-shadow,enact/prop-types
 	return function Skinnable ({className, skin, ...rest}) {
 		return (
 			<SkinContext.Consumer>
