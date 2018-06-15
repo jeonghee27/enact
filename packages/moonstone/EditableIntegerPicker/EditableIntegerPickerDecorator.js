@@ -1,5 +1,4 @@
 import {addAll, is} from '@enact/core/keymap';
-import {contextTypes} from '@enact/core/internal/PubSub';
 import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
 import PropTypes from 'prop-types';
@@ -33,8 +32,6 @@ const EditableIntegerPickerDecorator = hoc((config, Wrapped) => {
 	return class extends React.Component {
 
 		static displayName = 'EditableIntegerPickerDecorator'
-
-		static contextTypes = contextTypes
 
 		static propTypes =  /** @lends moonstone/EditableIntegerPicker.EditableIntegerPickerDecorator.prototype */ {
 			/**

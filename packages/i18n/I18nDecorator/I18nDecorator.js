@@ -1,38 +1,23 @@
 /**
- * Exports the {@link i18n/I18nDecorator.I18nDecorator} component and
- * {@link i18n/I18nDecorator.contextTypes} validation rules.
+ * Adds Internationalization (I18N) support to an application using ilib.
  *
  * @module i18n/I18nDecorator
+ * @exports	I18nDecorator
+ * @exports	I18nConsumerDecorator
+ * @exports I18nContext
  */
 
-import hoc from '@enact/core/hoc';
 import {on, off} from '@enact/core/dispatcher';
-import React from 'react';
+import hoc from '@enact/core/hoc';
 import PropTypes from 'prop-types';
-import {Publisher, contextTypes as stateContextTypes} from '@enact/core/internal/PubSub';
+import React from 'react';
 
 import ilib from '../src/index.js';
 import {isRtlLocale, updateLocale} from '../locale';
 
 import getI18nClasses from './getI18nClasses';
 
-/**
- * `contextTypes` is an object that exports the default context validation rules. These must be applied
- * to any child components that wish to receive the i18n context.
- *
- * ```
- * import {contextTypes} from '@enact/i18n/I18nDecorator';
- * ...
- * myComponent.contextTypes = contextTypes;
- * ```
- *
- * @memberof i18n/I18nDecorator
- * @public
- */
-const contextTypes = {
-	rtl: PropTypes.bool,
-	updateLocale: PropTypes.func
-};
+const I18nContext = React.createContext(null);
 
 /**
  * {@link i18n/I18nDecorator.I18nDecorator} is a Higher Order Component that is used to wrap
@@ -47,10 +32,10 @@ const contextTypes = {
  * @hoc
  * @public
  */
-const IntlHoc = hoc((config, Wrapped) => {
-	return class I18nDecorator extends React.Component {
-		static contextTypes = stateContextTypes
-		static childContextTypes = {...contextTypes, ...stateContextTypes}
+const I18nDecorator = hoc((config, Wrapped) => {
+	return class extends React.Component {
+		static displayName = 'I18nDecorator'
+
 		static propTypes = /** @lends i18n/I18nDecorator.I18nDecorator.prototype */ {
 			className: PropTypes.string,
 			locale: PropTypes.string
@@ -62,26 +47,11 @@ const IntlHoc = hoc((config, Wrapped) => {
 			const locale = props.locale && props.locale !== ilibLocale ? updateLocale(props.locale) : ilibLocale;
 
 			this.state = {
-				locale: locale
-			};
-		}
-
-		getChildContext () {
-			return {
-				Subscriber: this.publisher.getSubscriber(),
+				locale: locale,
 				rtl: isRtlLocale(),
 				updateLocale: this.updateLocale
 			};
 		}
-
-		componentWillMount () {
-			this.publisher = Publisher.create('i18n', this.context.Subscriber);
-			this.publisher.publish({
-				locale: this.state.locale,
-				rtl: isRtlLocale()
-			});
-		}
-
 		componentDidMount () {
 			if (typeof window === 'object') {
 				on('languagechange', this.handleLocaleChange, window);
@@ -115,8 +85,7 @@ const IntlHoc = hoc((config, Wrapped) => {
 		 */
 		updateLocale = (newLocale) => {
 			const locale = updateLocale(newLocale);
-			this.setState({locale});
-			this.publisher.publish({
+			this.setState({
 				locale,
 				rtl: isRtlLocale()
 			});
@@ -132,11 +101,53 @@ const IntlHoc = hoc((config, Wrapped) => {
 			delete props.locale;
 
 			return (
-				<Wrapped {...props} className={classes} />
+				<I18nContext.Provider value={this.state}>
+					<Wrapped {...props} className={classes} />
+				</I18nContext.Provider>
 			);
 		}
 	};
 });
 
-export default IntlHoc;
-export {IntlHoc as I18nDecorator, contextTypes};
+const defaultConfig = {
+	localeProp: null,
+	rtlProp: null,
+	updateLocaleProp: null
+};
+
+const I18nConsumerDecorator = hoc(defaultConfig, (config, Wrapped) => {
+	const {localeProp, rtlProp, updateLocaleProp} = config;
+
+	// eslint-disable-next-line no-shadow
+	return function I18nConsumerDecorator (props) {
+		return (
+			<I18nContext.Consumer>
+				{({locale, rtl, updateLocale: update}) => {
+					const updated = {...props};
+					if (localeProp) {
+						updated[localeProp] = locale;
+					}
+
+					if (rtlProp) {
+						updated[rtlProp] = rtl;
+					}
+
+					if (updateLocaleProp) {
+						updated[updateLocaleProp] = update;
+					}
+
+					return (
+						<Wrapped {...updated} />
+					);
+				}}
+			</I18nContext.Consumer>
+		);
+	};
+});
+
+export default I18nDecorator;
+export {
+	I18nConsumerDecorator,
+	I18nContext,
+	I18nDecorator
+};

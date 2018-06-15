@@ -4,9 +4,9 @@
  * @module moonstone/Input
  */
 
+import {compose} from '@enact/core/hoc';
 import kind from '@enact/core/kind';
-import {Subscription} from '@enact/core/internal/PubSub';
-import {contextTypes} from '@enact/i18n/I18nDecorator';
+import {I18nConsumerDecorator} from '@enact/i18n/I18nDecorator';
 import {isRtlText} from '@enact/i18n/util';
 import Changeable from '@enact/ui/Changeable';
 import Pure from '@enact/ui/internal/Pure';
@@ -217,8 +217,6 @@ const InputBase = kind({
 		type: 'text'
 	},
 
-	contextTypes,
-
 	styles: {
 		css: componentCss,
 		className: 'decorator',
@@ -287,6 +285,25 @@ const InputBase = kind({
 });
 
 /**
+ * Adds Moonstone and input behaviors including Spotlight management, state management, and
+ * skinning support.
+ *
+ * @class InputDecorator
+ * @mixes ui/Changeable.Changeable
+ * @mixes spotlight/Spottable.Spottable
+ * @mixes ui/Skinnable.Skinnable
+ * @hoc
+ * @public
+ */
+const InputDecorator = compose(
+	Pure,
+	I18nConsumerDecorator({rtlProp: 'rtl'}),
+	Changeable,
+	InputSpotlightDecorator,
+	Skinnable
+);
+
+/**
  * {@link moonstone/Input.Input} is a Spottable, Moonstone styled input component. It supports pre
  * and post icons.
  *
@@ -297,28 +314,17 @@ const InputBase = kind({
  *
  * @class Input
  * @memberof moonstone/Input
- * @mixes ui/Changeable.Changeable
- * @mixes moonstone/Input/InputSpotlightDecorator
+ * @mixes moonstone/Input.InputDecorator
  * @ui
  * @public
  */
-const Input = Pure(
-	Subscription(
-		{channels: ['i18n'], mapMessageToProps: (channel, {rtl}) => ({rtl})},
-		Changeable(
-			InputSpotlightDecorator(
-				Skinnable(
-					InputBase
-				)
-			)
-		)
-	)
-);
+const Input = InputDecorator(InputBase);
 
 export default Input;
 export {
 	calcAriaLabel,
 	extractInputProps,
 	Input,
-	InputBase
+	InputBase,
+	InputDecorator
 };
