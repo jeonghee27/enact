@@ -39,6 +39,7 @@ const DaySelectorDecorator = hoc((config, Wrapped) => {
 			 * The "aria-label" for the selector.
 			 *
 			 * @memberof moonstone/DaySelector.DaySelectorDecorator
+			 * @type {String}
 			 * @private
 			 */
 			'aria-label': PropTypes.string,
@@ -113,15 +114,15 @@ const DaySelectorDecorator = hoc((config, Wrapped) => {
 			 *
 			 * Type set to "any" to avoid warnings if passed in some other unknown scenario
 			 *
-			 * @type {String}
+			 * @type {Node}
 			 * @private
 			 */
 			title: PropTypes.any
 		}
 
 		static defaultProps = {
-			disabled: false,
-			dayNameLength: 'long'
+			dayNameLength: 'long',
+			disabled: false
 		}
 
 		constructor (props) {

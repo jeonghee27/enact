@@ -87,4 +87,3 @@ export default connect(mapStateToProps, mapDispatchToProps, null, {pure: false})
 ```
 
 This will allow the `context` to flow through to the component, but it will also cause performance issues because your component will be re-rendering on every change. If you must use `context` with `react-redux`, please make the component as small as possible to reduce re-renders or use `shouldComponentUpdate`.
-

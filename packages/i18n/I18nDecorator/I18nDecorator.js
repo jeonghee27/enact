@@ -20,10 +20,9 @@ import getI18nClasses from './getI18nClasses';
 const I18nContext = React.createContext(null);
 
 /**
- * {@link i18n/I18nDecorator.I18nDecorator} is a Higher Order Component that is used to wrap
- * the root element in an app. It provides an `rtl` member on the context of the wrapped component, allowing
- * the children to check the current text directionality as well as an `updateLocale` method that can be
- * used to update the current locale.
+ * A higher-order component that is used to wrap the root element in an app. It provides an `rtl` member on the
+ * context of the wrapped component, allowing the children to check the current text directionality as well as
+ * an `updateLocale` method that can be used to update the current locale.
  *
  * There are no configurable options on this HOC.
  *
@@ -37,7 +36,22 @@ const I18nDecorator = hoc((config, Wrapped) => {
 		static displayName = 'I18nDecorator'
 
 		static propTypes = /** @lends i18n/I18nDecorator.I18nDecorator.prototype */ {
+			/**
+			 * Classname for a root app element.
+			 *
+			 * @type {String}
+			 * @public
+			 */
 			className: PropTypes.string,
+
+			/**
+			 * A string with a {@link https://tools.ietf.org/html/rfc5646|BCP 47 language tag}.
+			 *
+			 * The system locale will be used by default.
+			 *
+			 * @type {String}
+			 * @public
+			 */
 			locale: PropTypes.string
 		}
 
