@@ -2,44 +2,7 @@ import hoc from '@enact/core/hoc';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-/**
- * The `contextTypes` published by {@link ui/RadioDecorator.RadioControllerDecorator} to interact
- * with {@link ui/RadioDecorator.RadioDecorator} instances.
- *
- * @type {Object}
- * @private
- */
-const contextTypes = {
-	/**
-	 * Called by a {@link ui/RadioDecorator.RadioDecorator} when it is activated
-	 *
-	 * @type {Function}
-	 */
-	activateRadioItem: PropTypes.func,
-
-	/**
-	 * Called by a {@link ui/RadioDecorator.RadioDecorator} when it is deactivated
-	 *
-	 * @type {Function}
-	 */
-	deactivateRadioItem: PropTypes.func,
-
-	/**
-	 * Called by a {@link ui/RadioDecorator.RadioDecorator} when it is mounted to register it for
-	 * deactivations.
-	 *
-	 * @type {Function}
-	 */
-	registerRadioItem: PropTypes.func,
-
-	/**
-	 * Called by a {@link ui/RadioDecorator.RadioDecorator} when it will be unmounted to deregister
-	 * it for deactivations.
-	 *
-	 * @type {Function}
-	 */
-	deregisterRadioItem: PropTypes.func
-};
+const RadioContext = React.createContext(null);
 
 /**
  * {@link ui/RadioDecorator.RadioControllerDecorator} is a Higher-order Component that establishes
@@ -56,65 +19,73 @@ const RadioControllerDecorator = hoc((config, Wrapped) => {
 	return class extends React.Component {
 		static displayName = 'RadioControllerDecorator'
 
-		static childContextTypes = contextTypes
-
 		constructor (props) {
 			super(props);
 
-			this.active = null;
-			this.radioItems = [];
-		}
+			this.state = {
+				active: null,
+				pending: []
+			};
 
-		getChildContext () {
-			return {
-				activateRadioItem: this.activate,
-				deactivateRadioItem: this.deactivate,
-				registerRadioItem: this.register,
-				deregisterRadioItem: this.deregister
+			this.contextValue = {
+				activateRadioItem: this.activate.bind(this),
+				deactivateRadioItem: this.deactivate.bind(this)
 			};
 		}
 
-		activate = (item) => {
-			// if the active radio item isn't item and item is active, try to deactivate all the
-			// other radio items
-			if (this.active && this.active !== item) {
-				this.radioItems.forEach(radioItem => {
-					if (radioItem !== item && typeof radioItem.deactivate === 'function') {
-						radioItem.deactivate();
-					}
+		componentDidUpdate (prevProps, prevState) {
+			if (prevState.pending !== this.state.pending && this.state.pending.length) {
+				this.state.pending.forEach(item => item.deactivate());
+				this.setState({
+					pending: []
 				});
 			}
-
-			this.active = item;
 		}
 
-		deactivate = (item) => {
-			if (this.active === item) {
-				this.active = null;
-			}
+		activate (item) {
+			this.setState(state => {
+				if (state.active === item) {
+					return null;
+				}
+
+				return {
+					active: item,
+					pending: state.active ? [
+						...state.pending,
+						state.active
+					] : state.pending
+				};
+			});
 		}
 
-		register = (item) => {
-			if (this.radioItems.indexOf(item) === -1) {
-				this.radioItems.push(item);
-			}
-		}
+		deactivate (item) {
+			this.setState(state => {
+				if (state.active !== item) {
+					return null;
+				}
 
-		deregister = (item) => {
-			const index = this.radioItems.indexOf(item);
-			if (index !== -1) {
-				this.radioItems.splice(index, 1);
-			}
+				return {
+					active: null,
+					pending: item ? [
+						...state.pending,
+						item
+					] : state.pending
+				};
+			});
 		}
 
 		render () {
-			return <Wrapped {...this.props} />;
+			return (
+				<RadioContext.Provider value={this.contextValue}>
+					<Wrapped {...this.props} />
+				</RadioContext.Provider>
+			);
 		}
 	};
 });
 
 export default RadioControllerDecorator;
 export {
-	contextTypes,
+	RadioContext,
 	RadioControllerDecorator
 };

@@ -9,7 +9,7 @@ import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
 import React from 'react';
 
-import {contextTypes, RadioControllerDecorator} from './RadioControllerDecorator';
+import {RadioContext, RadioControllerDecorator} from './RadioControllerDecorator';
 
 /**
  * Default config for {@link ui/RadioDecorator.RadioDecorator}.
@@ -61,45 +61,18 @@ const defaultConfig = {
  */
 const RadioDecorator = hoc(defaultConfig, (config, Wrapped) => {
 	const {activate, deactivate, prop} = config;
-	const forwardActivate = forward(activate);
-	const forwardDeactivate = forward(deactivate);
 
 	return class extends React.Component {
 		static displayName = 'RadioDecorator'
 
-		static contextTypes = contextTypes
-
-		constructor (props) {
-			super(props);
-
-			// indicates we have a controller in context with which to sync activations
-			this.sync = false;
-		}
-
-		componentDidMount () {
-			if (this.context.registerRadioItem) {
-				this.sync = true;
-				this.context.registerRadioItem(this);
-
-				this.notifyController(this.props);
-			}
+		state = {
+			becameActive: false
 		}
 
 		componentWillReceiveProps (nextProps) {
-			this.notifyController(nextProps);
-		}
-
-		componentWillUnmount () {
-			if (this.sync) {
-				this.sync = false;
-				this.context.deregisterRadioItem(this);
-			}
-		}
-
-		notifyController (props) {
-			if (this.sync && prop && props[prop]) {
-				this.context.activateRadioItem(this);
-			}
+			this.setState({
+				becameActive: nextProps[prop] && !this.props[prop]
+			});
 		}
 
 		/**
@@ -109,36 +82,48 @@ const RadioDecorator = hoc(defaultConfig, (config, Wrapped) => {
 		 */
 		deactivate = () => {
 			if (this.props[prop]) {
-				forwardDeactivate(null, this.props);
+				forward(deactivate, {type: deactivate}, this.props);
 			}
 		}
 
-		handleActivate = () => {
-			if (this.sync) {
-				this.context.activateRadioItem(this);
-			}
-
-			forwardActivate(null, this.props);
+		handleActivate (radio, ev) {
+			radio.activateRadioItem(this);
+			forward(activate, ev, this.props);
 		}
 
-		handleDeactivate = () => {
-			if (this.sync) {
-				this.context.deactivateRadioItem(this);
+		handleDeactivate (radio, ev) {
+			radio.deactivateRadioItem(this);
+			forward(deactivate, ev, this.props);
+		}
+
+		decorateProps (radio, props) {
+			if (radio && (activate || deactivate)) {
+				props = Object.assign({}, this.props);
+
+				if (this.state.becameActive) {
+					radio.activateRadioItem(this);
+				}
+
+				if (activate) {
+					props[activate] = this.handleActivate.bind(this, radio);
+				}
+
+				if (deactivate) {
+					props[deactivate] = this.handleDeactivate.bind(this, radio);
+				}
 			}
 
-			forwardDeactivate(null, this.props);
+			return props;
 		}
 
 		render () {
-			let props = this.props;
-
-			if (activate || deactivate) {
-				props = Object.assign({}, this.props);
-				if (activate) props[activate] = this.handleActivate;
-				if (deactivate) props[deactivate] = this.handleDeactivate;
-			}
-
-			return <Wrapped {...props} />;
+			return (
+				<RadioContext.Consumer>
+					{radio => (
+						<Wrapped {...this.decorateProps(radio, this.props)} />
+					)}
+				</RadioContext.Consumer>
+			);
 		}
 	};
 });
