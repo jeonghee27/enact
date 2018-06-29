@@ -4,7 +4,7 @@ import {Job} from '@enact/core/util';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {contextTypes} from './PlaceholderDecorator';
+import {PlaceholderContext} from './PlaceholderDecorator';
 
 /**
  * Default config for [PlaceholderControllerDecorator]{@link ui/Placeholder.PlaceholderControllerDecorator}
@@ -61,12 +61,12 @@ const PlaceholderControllerDecorator = hoc(defaultConfig, (config, Wrapped) => {
 	return class extends React.Component {
 		static displayName = 'PlaceholderControllerDecorator'
 
-		static childContextTypes = contextTypes
+		constructor () {
+			super();
 
-		getChildContext () {
-			return {
-				registerPlaceholder: this.handleRegister,
-				unregisterPlaceholder: this.handleUnregister
+			this.contextValue = {
+				register: this.handleRegister.bind(this),
+				unregister: this.handleUnregister.bind(this)
 			};
 		}
 
@@ -99,8 +99,8 @@ const PlaceholderControllerDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 
-		handleRegister = (key, callback) => {
-			this.controlled.push({callback, key});
+		handleRegister (ev) {
+			this.controlled.push(ev);
 
 			// do not notify until we've initialized the thresholds
 			if (this.topThreshold !== -1 && this.leftThreshold !== -1) {
@@ -108,11 +108,11 @@ const PlaceholderControllerDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			}
 		}
 
-		handleUnregister = (key) => {
+		handleUnregister ({component}) {
 			const length = this.controlled.length;
 
 			for (let i = 0; i < length; i++) {
-				if (this.controlled[i].key === key) {
+				if (this.controlled[i].component === component) {
 					this.controlled.splice(i, 1);
 					break;
 				}
@@ -163,7 +163,9 @@ const PlaceholderControllerDecorator = hoc(defaultConfig, (config, Wrapped) => {
 			if (notify) props[notify] = this.handleNotify;
 
 			return (
-				<Wrapped {...props} />
+				<PlaceholderContext.Provider value={this.contextValue}>
+					<Wrapped {...props} />
+				</PlaceholderContext.Provider>
 			);
 		}
 	};

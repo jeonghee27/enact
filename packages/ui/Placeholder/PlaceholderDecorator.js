@@ -1,6 +1,85 @@
+import {forward} from '@enact/core/handle';
 import hoc from '@enact/core/hoc';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
+
+const PlaceholderContext = React.createContext(null);
+
+class Placeholder extends React.Component {
+	static propTypes = {
+		component: PropTypes.func,
+		onRegister: PropTypes.func,
+		onShow: PropTypes.func,
+		onUnregister: PropTypes.func
+	}
+
+	constructor () {
+		super();
+
+		this.state = {
+			visible: false
+		};
+	}
+
+	componentDidMount () {
+		if (!this.state.visible) {
+			this.emitRegister();
+		}
+	}
+
+	componentDidUpdate (prevProps, prevState) {
+		if (this.state.visible && prevState.visible !== this.state.visible) {
+			forward('onShow', {type: 'onShow'}, this.props);
+			this.emitUnregister();
+		}
+	}
+
+	componentWillUnmount () {
+		if (!this.state.visible) {
+			this.emitUnregister();
+		}
+	}
+
+	emitRegister () {
+		forward('onRegister', {
+			type: 'onRegister',
+			component: this,
+			callback: this.update
+		}, this.props);
+	}
+
+	emitUnregister () {
+		forward('onUnregister', {
+			type: 'onUnregister',
+			component: this
+		}, this.props);
+	}
+
+	update = ({leftThreshold, topThreshold}) => {
+		const {offsetLeft, offsetTop, offsetHeight, offsetWidth} = this.placeholderRef;
+
+		if (offsetTop < topThreshold + offsetHeight && offsetLeft < leftThreshold + offsetWidth) {
+			this.setState((state) => state.visible ? null : {visible: true});
+		}
+	}
+
+	initPlaceholderRef = (ref) => {
+		this.placeholderRef = ref;
+	}
+
+	render () {
+		const {children, component: PlaceholderComponent, ...rest} = this.props;
+		const {visible} = this.state;
+
+		if (visible) {
+			return children;
+		} else {
+			return (
+				<PlaceholderComponent {...rest} ref={this.initPlaceholderRef} />
+			);
+		}
+	}
+}
 
 /**
  * Default config for [PlaceholderDecorator]{@link ui/Placeholder.PlaceholderDecorator}
@@ -30,19 +109,6 @@ const defaultConfig = {
 };
 
 /**
- * The context propTypes required by `PlaceholderDecorator`. This should be set as the `childContextTypes` of a
- * container so that the container could notify when scrolling
- *
- * @memberof ui/Placeholder.PlaceholderDecorator
- * @public
- */
-const contextTypes = {
-	invalidateBounds: PropTypes.func,
-	registerPlaceholder: PropTypes.func,
-	unregisterPlaceholder: PropTypes.func
-};
-
-/**
  * [PlaceholderDecorator]{@link ui/Placeholder.PlaceholderDecorator} is a Higher-order Component that can be used that
  * a container notify the Wrapped component when scrolling.
  *
@@ -55,77 +121,30 @@ const contextTypes = {
  * @public
  */
 const PlaceholderDecorator = hoc(defaultConfig, (config, Wrapped) => {
-	const {placeholderComponent: PlaceholderComponent, style} = config;
+	const {placeholderComponent, style} = config;
 	const placeholderStyle = Object.assign({}, defaultConfig.style, style);
 
-	return class extends React.PureComponent {
-		static displayName = 'PlaceholderDecorator'
-
-		static contextTypes = contextTypes
-
-		constructor () {
-			super();
-
-			this.state = {
-				visible: false
-			};
-		}
-
-		componentDidMount () {
-			if (!this.state.visible) {
-				this.context.registerPlaceholder(this, this.update);
-			}
-		}
-
-		componentDidUpdate (prevProps, prevState) {
-			if (this.state.visible && prevState.visible !== this.state.visible) {
-				this.context.invalidateBounds();
-				this.context.unregisterPlaceholder(this);
-			}
-		}
-
-		componentWillUnmount () {
-			if (!this.state.visible) {
-				this.context.unregisterPlaceholder(this);
-			}
-		}
-
-		update = ({leftThreshold, topThreshold}) => {
-			const {offsetLeft, offsetTop, offsetHeight, offsetWidth} = this.placeholderRef;
-
-			if (offsetTop < topThreshold + offsetHeight && offsetLeft < leftThreshold + offsetWidth) {
-				this.setState((state) => state.visible ? null : {visible: true});
-			}
-		}
-
-		initPlaceholderRef = (ref) => {
-			this.placeholderRef = ref;
-		}
-
-		render () {
-			const {visible} = this.state;
-
-			if (visible) {
-				return (
-					<Wrapped
-						{...this.props}
-						ref={this.initPlaceholderRef}
-					/>
-				);
-			} else {
-				return (
-					<PlaceholderComponent
-						ref={this.initPlaceholderRef}
+	// eslint-disable-next-line no-shadow
+	return function PlaceholderDecorator (props) {
+		return (
+			<PlaceholderContext.Consumer>
+				{({register, unregister}) => (
+					<Placeholder
+						onRegister={register}
+						onUnregister={unregister}
+						component={placeholderComponent}
 						style={placeholderStyle}
-					/>
-				);
-			}
-		}
+					>
+						<Wrapped {...props} />
+					</Placeholder>
+				)}
+			</PlaceholderContext.Consumer>
+		);
 	};
 });
 
 export default PlaceholderDecorator;
 export {
-	contextTypes,
+	PlaceholderContext,
 	PlaceholderDecorator
 };
