@@ -3,9 +3,11 @@ import hoc from '@enact/core/hoc';
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import Resizeable from '../Resizable';
+
 const PlaceholderContext = React.createContext(null);
 
-class Placeholder extends React.Component {
+class PlaceholderBase extends React.Component {
 	static propTypes = {
 		component: PropTypes.func,
 		onRegister: PropTypes.func,
@@ -80,6 +82,8 @@ class Placeholder extends React.Component {
 		}
 	}
 }
+
+const Placeholder = Resizeable({resize: 'onShow'}, PlaceholderBase);
 
 /**
  * Default config for [PlaceholderDecorator]{@link ui/Placeholder.PlaceholderDecorator}

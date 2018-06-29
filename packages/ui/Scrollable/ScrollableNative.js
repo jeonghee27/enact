@@ -8,7 +8,7 @@ import {on, off} from '@enact/core/dispatcher';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
-import {contextTypes as contextTypesResize} from '../Resizable';
+import {ResizeContext} from '../Resizable';
 import ri from '../resolution';
 import Touchable from '../Touchable';
 
@@ -316,7 +316,6 @@ class ScrollableBaseNative extends Component {
 	static contextTypes = contextTypesState
 
 	static childContextTypes = {
-		...contextTypesResize,
 		...contextTypesState
 	}
 
@@ -347,6 +346,10 @@ class ScrollableBaseNative extends Component {
 		this.verticalScrollbarProps = {
 			ref: this.initVerticalScrollbarRef,
 			vertical: true
+		};
+
+		this.resizeContext = {
+			invalidateBounds: this.enqueueForceUpdate
 		};
 
 		props.cbScrollTo(this.scrollTo);
@@ -1248,28 +1251,32 @@ class ScrollableBaseNative extends Component {
 		delete rest.start;
 		delete rest.verticalScrollbar;
 
-		return containerRenderer({
-			childComponentProps: rest,
-			className: scrollableClasses,
-			componentCss: css,
-			horizontalScrollbarProps: this.horizontalScrollbarProps,
-			initChildRef: this.initChildRef,
-			initContainerRef: this.initContainerRef,
-			isHorizontalScrollbarVisible,
-			isVerticalScrollbarVisible,
-			rtl,
-			scrollTo: this.scrollTo,
-			style,
-			touchableProps: {
-				className: css.content,
-				onDrag: this.onDrag,
-				onDragEnd: this.onDragEnd,
-				onDragStart: this.onDragStart,
-				onFlick: this.onFlick,
-				onTouchStart: this.onTouchStart
-			},
-			verticalScrollbarProps: this.verticalScrollbarProps
-		});
+		return (
+			<ResizeContext.Provider value={this.resizeContext}>
+				{containerRenderer({
+					childComponentProps: rest,
+					className: scrollableClasses,
+					componentCss: css,
+					horizontalScrollbarProps: this.horizontalScrollbarProps,
+					initChildRef: this.initChildRef,
+					initContainerRef: this.initContainerRef,
+					isHorizontalScrollbarVisible,
+					isVerticalScrollbarVisible,
+					rtl,
+					scrollTo: this.scrollTo,
+					style,
+					touchableProps: {
+						className: css.content,
+						onDrag: this.onDrag,
+						onDragEnd: this.onDragEnd,
+						onDragStart: this.onDragStart,
+						onFlick: this.onFlick,
+						onTouchStart: this.onTouchStart
+					},
+					verticalScrollbarProps: this.verticalScrollbarProps
+				})}
+			</ResizeContext.Provider>
+		);
 	}
 }
 
