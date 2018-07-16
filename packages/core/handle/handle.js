@@ -124,7 +124,10 @@ const named = (fn, name) => {
 
 const bindAs = (fn, obj, name) => {
 	const namedFunction = name ? named(fn, name) : fn;
-	const bound = namedFunction.bind(obj);
+
+	const bound = function () {
+		return namedFunction.apply(obj, arguments);
+	};
 
 	if (name) {
 		obj[name] = bound;
