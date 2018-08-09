@@ -157,7 +157,7 @@ class ScrollerBase extends Component {
 					itemBounds = focusedItem.getBoundingClientRect(),
 					newItemBottom = newScrollTop + itemBounds.top + itemBounds.height - containerTop;
 
-				if (newItemBottom < scrollBottom && scrollHeightDecrease + newItemBottom > scrollBottom) {
+				if (newItemBottom > scrollBottom) {
 					// When `focusedItem` is not at the very bottom of the `Scroller` and
 					// `scrollHeightDecrease` caused a scroll.
 					const
@@ -199,7 +199,7 @@ class ScrollerBase extends Component {
 			newScrollTop += itemBottom - scrollBottom;
 		} else if (newItemTop - currentScrollTop < epsilon) {
 			// Caculate when 5-way focus up past the top.
-			newScrollTop += newItemTop - currentScrollTop;
+			newScrollTop = newItemTop;
 		}
 
 		return newScrollTop;
