@@ -93,7 +93,7 @@ class Hold {
 	}
 
 	suspend = () => {
-		clearInterval(this.holdJob);
+		window.cancelAnimationFrame(this.holdJob);
 		this.holdJob = null;
 	}
 
@@ -105,11 +105,25 @@ class Hold {
 	}
 
 	startJob () {
+		if (this.holdJob) return;
+
+		this.lastFrame = this.holdStart;
+		this.runJob();
+	}
+
+	runJob () {
 		const {frequency} = this.holdConfig;
 
-		if (!this.holdJob) {
-			this.holdJob = setInterval(this.handlePulse, frequency);
-		}
+		this.holdJob = window.requestAnimationFrame(() => {
+			const now = window.performance.now();
+
+			if (now - this.lastFrame >= frequency) {
+				this.lastFrame = now;
+				this.handlePulse();
+			}
+
+			this.runJob();
+		});
 	}
 
 	handlePulse = () => {
